@@ -1,0 +1,8 @@
+*.so
+*.o
+*.a
+splinter_send
+splinter_recv
+splinter_test
+shmbus/shmbus_test
+
