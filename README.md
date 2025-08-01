@@ -78,8 +78,7 @@ If you want bus persistence between reboots, Link your application or FFI to
 
 The persistent version:
 
-- Maps from a file (configurable via
-  `splinter_p_create(name, path, slots, val_sz)`)
+- Maps from a file instead of RAM.
 - Survives system reboots
 - Can be snapshot/dumped with `dd`, `cp`, etc.
 
