@@ -32,8 +32,9 @@ splinter/
 ├── splinter.c         ← implementation
 ├── splinter_test.c    ← example / smoke test
 ├── Makefile           ← build & test (memory + persistent builds)
+├── bindings/rust/     ← Rust bindings (auto generated)
 └── bindings/ts/
-    └── deno_ffi.ts    ← Deno FFI interface
+    └── deno_ffi.ts    ← Deno FFI interface (manually updated)
 ```
 
 ---
