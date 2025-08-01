@@ -1,6 +1,6 @@
 [package]
 name = "splinter_sys"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 [lib]
@@ -12,5 +12,4 @@ bindgen = "0.69"
 [dependencies]
 libc = "0.2"
 
-[build]
-build = "build.rs"
+
