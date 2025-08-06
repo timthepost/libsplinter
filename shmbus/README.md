@@ -4,7 +4,9 @@ _Forked off of initial implementation 7/15/2025 to serve as a reference copy.
 Included in hopes it's useful._
 
 Shmbus is very similar to splinter; in fact, splinter started out as shmbus
-and then forked off to better cater to the needs of a runtime. 
+and then forked off to better cater to the needs of a runtime. It doesn't have
+features like persistence and other improvements, but is a stable version of 
+the original simple bus. 
 
 Shmbus also has the most basic version of the envelope protocol that was
 developed, which allows one to transplant the core functionality without having 
