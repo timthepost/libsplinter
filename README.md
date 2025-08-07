@@ -20,6 +20,7 @@ speaks unless spoken to, but is always ready.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
+- 🦕 Deno and Rust bindings included!
 
 ---
 
