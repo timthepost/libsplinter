@@ -112,4 +112,5 @@ work on my local LLM stack Runa.
 
 ---
 
-For developer docs, see `docs/msgbus.md` in the repo root.
+For developer docs, see `docs/` in the repo root. Doygen users can generate auto
+documentation by just typing `doxygen`.
