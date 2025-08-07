@@ -27,7 +27,7 @@ services.
   powerful message bus.
 - **Unopinionated**: You can use any protocol you want: just write it over the
   bus instead of over a socket. Or, build your own from the base envelope
-  protocol that is included with this documentation: base-msgbus.md, which is
+  protocol that is included with this documentation: `base-protocol.md`, which is
   the basis of the author's LLM runtime.
 
 ## Building
