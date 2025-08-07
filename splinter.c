@@ -1,4 +1,13 @@
-// splinter.c
+/**
+ * @file splinter.c
+ * @brief Main implementation of the libsplinter shared memory key-value store.
+ *
+ * libsplinter provides a high-performance, lock-free, shared-memory key-value
+ * store and message bus. It is designed for efficient inter-process
+ * communication (IPC), particularly for building microkernel-like process
+ * communities around local Large Language Model (LLM) runtimes.
+ */
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -14,43 +23,92 @@
 #include <time.h>
 #include <stdint.h>
 
+/** @brief Magic number to identify a splinter memory region. */
 #define SPLINTER_MAGIC 0x534C4E54
+/** @brief Version of the splinter data format. */
 #define SPLINTER_VER   1
+/** @brief Maximum length of a key string, including null terminator. */
 #define KEY_MAX        64
+/** @brief Nanoseconds per millisecond for time calculations. */
 #define NS_PER_MS      1000000ULL
 
+/**
+ * @struct splinter_header
+ * @brief Defines the header structure for the shared memory region.
+ *
+ * This header contains metadata for the entire splinter store, including
+ * magic number for validation, version, and overall store configuration.
+ */
 struct splinter_header {
+    /** @brief Magic number (SPLINTER_MAGIC) to verify integrity. */
     uint32_t magic;
+    /** @brief Data layout version (SPLINTER_VER). */
     uint32_t version;
+    /** @brief Total number of available key-value slots. */
     uint32_t slots;
+    /** @brief Maximum size for any single value. */
     uint32_t max_val_sz;
+    /** @brief Global epoch, incremented on any write. Used for change detection. */
     atomic_uint_least64_t epoch;
 };
 
+/**
+ * @struct splinter_slot
+ * @brief Defines a single key-value slot in the hash table.
+ *
+ * Each slot holds a key, its value's location and length, and metadata
+ * for concurrent access and change tracking.
+ */
 struct splinter_slot {
+    /** @brief The FNV-1a hash of the key. 0 indicates an empty slot. */
     atomic_uint_least64_t hash;
+    /** @brief Per-slot epoch, incremented on write to this slot. Used for polling. */
     atomic_uint_least64_t epoch;
+    /** @brief Offset into the VALUES region where the value data is stored. */
     uint32_t val_off;
+    /** @brief The actual length of the stored value data. */
     uint32_t val_len;
+    /** @brief The null-terminated key string. */
     char key[KEY_MAX];
 };
 
+/** @brief Base pointer to the memory-mapped region. */
 static void *g_base = NULL;
+/** @brief Total size of the memory-mapped region. */
 static size_t g_total_sz = 0;
+/** @brief Pointer to the header within the mapped region. */
 static struct splinter_header *H;
+/** @brief Pointer to the array of slots within the mapped region. */
 static struct splinter_slot *S;
+/** @brief Pointer to the start of the value storage area. */
 static char *VALUES;
 
+/**
+ * @brief Computes the 64-bit FNV-1a hash of a string.
+ * @param s The null-terminated string to hash.
+ * @return The 64-bit hash value.
+ */
 static uint64_t fnv1a(const char *s) {
     uint64_t h = 14695981039346656037ULL;
     for (; *s; ++s) h = (h ^ (unsigned char)*s) * 1099511628211ULL;
     return h;
 }
 
+/**
+ * @brief Calculates the initial slot index for a given hash.
+ * @param hash The hash of the key.
+ * @param slots The total number of slots in the store.
+ * @return The calculated slot index.
+ */
 static inline size_t slot_idx(uint64_t hash, uint32_t slots) {
     return (size_t)(hash % slots);
 }
 
+/**
+ * @brief Adds a specified number of milliseconds to a timespec struct.
+ * @param ts Pointer to the timespec struct to modify.
+ * @param ms The number of milliseconds to add.
+ */
 static void add_ms(struct timespec *ts, uint64_t ms) {
     ts->tv_nsec += (ms % 1000) * NS_PER_MS;
     ts->tv_sec  += ms / 1000;
@@ -60,6 +118,12 @@ static void add_ms(struct timespec *ts, uint64_t ms) {
     }
 }
 
+/**
+ * @brief Internal helper to memory-map a file descriptor and set up global pointers.
+ * @param fd The file descriptor to map.
+ * @param size The size of the region to map.
+ * @return 0 on success, -1 on failure.
+ */
 static int map_fd(int fd, size_t size) {
     g_total_sz = size;
     g_base = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -70,11 +134,24 @@ static int map_fd(int fd, size_t size) {
     return 0;
 }
 
+/**
+ * @brief Creates and initializes a new splinter store.
+ *
+ * The store is created as a shared memory object (`/dev/shm/...`) unless the
+ * `SPLINTER_PERSISTENT` macro is defined, in which case it's a regular file.
+ * The function fails if the store already exists.
+ *
+ * @param name_or_path The name of the shared memory object or path to the file.
+ * @param slots The total number of key-value slots to allocate.
+ * @param max_value_sz The maximum size in bytes for any single value.
+ * @return 0 on success, -1 on failure.
+ */
 int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz) {
     int fd;
 #ifdef SPLINTER_PERSISTENT
     fd = open(name_or_path, O_RDWR | O_CREAT, 0666);
 #else
+    // O_EXCL ensures this fails if the object already exists.
     fd = shm_open(name_or_path, O_RDWR | O_CREAT | O_EXCL, 0666);
 #endif
     if (fd < 0) return -1;
@@ -82,11 +159,15 @@ int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz)
     size_t total_sz  = sizeof(struct splinter_header) + slots * sizeof(struct splinter_slot) + region_sz;
     if (ftruncate(fd, (off_t)total_sz) != 0) return -1;
     if (map_fd(fd, total_sz) != 0) return -1;
+    
+    // Initialize header
     H->magic = SPLINTER_MAGIC;
     H->version = SPLINTER_VER;
     H->slots = (uint32_t)slots;
     H->max_val_sz = (uint32_t)max_value_sz;
     atomic_store(&H->epoch, 1);
+    
+    // Initialize slots
     for (size_t i = 0; i < slots; ++i) {
         atomic_store(&S[i].hash, 0);
         atomic_store(&S[i].epoch, 0);
@@ -97,6 +178,15 @@ int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz)
     return 0;
 }
 
+/**
+ * @brief Opens an existing splinter store.
+ *
+ * The function fails if the store does not exist or if the header metadata
+ * (magic number, version) is invalid.
+ *
+ * @param name_or_path The name of the shared memory object or path to the file.
+ * @return 0 on success, -1 on failure.
+ */
 int splinter_open(const char *name_or_path) {
     int fd;
 #ifdef SPLINTER_PERSISTENT
@@ -108,73 +198,136 @@ int splinter_open(const char *name_or_path) {
     struct stat st;
     if (fstat(fd, &st) != 0) return -1;
     if (map_fd(fd, (size_t)st.st_size) != 0) return -1;
+    
+    // Validate header
     if (H->magic != SPLINTER_MAGIC || H->version != SPLINTER_VER) return -1;
     return 0;
 }
 
+/**
+ * @brief Creates a new splinter store, or opens it if it already exists.
+ *
+ * Tries to create first, and on failure, tries to open.
+ *
+ * @param name_or_path The name of the shared memory object or path to the file.
+ * @param slots The total number of key-value slots if creating.
+ * @param max_value_sz The maximum value size in bytes if creating.
+ * @return 0 on success, -1 on failure.
+ */
 int splinter_create_or_open(const char *name_or_path, size_t slots, size_t max_value_sz) {
-    int ret = -1;
-
-    ret = splinter_create(name_or_path, slots, max_value_sz);
+    int ret = splinter_create(name_or_path, slots, max_value_sz);
     return (ret == 0 ? ret : splinter_open(name_or_path));
 }
 
+/**
+ * @brief Opens an existing splinter store, or creates it if it does not exist.
+ *
+ * Tries to open first, and on failure, tries to create.
+ *
+ * @param name_or_path The name of the shared memory object or path to the file.
+ * @param slots The total number of key-value slots if creating.
+ * @param max_value_sz The maximum value size in bytes if creating.
+ * @return 0 on success, -1 on failure.
+ */
 int splinter_open_or_create(const char *name_or_path, size_t slots, size_t max_value_sz) {
-    int ret = -1;
-
-    ret = splinter_open(name_or_path);
+    int ret = splinter_open(name_or_path);
     return (ret == 0 ? ret : splinter_create(name_or_path, slots, max_value_sz));
 }
 
+/**
+ * @brief Closes the splinter store and unmaps the shared memory region.
+ */
 void splinter_close(void) {
     if (g_base) munmap(g_base, g_total_sz);
     g_base = NULL; H = NULL; S = NULL; VALUES = NULL; g_total_sz = 0;
 }
 
+/**
+ * @brief Sets or updates a key-value pair in the store.
+ *
+ * This function uses linear probing to resolve hash collisions. It searches for
+ * an empty slot or a slot with a matching key starting from the key's
+ * natural hash position. If the store is full, the operation will fail.
+ *
+ * @param key The null-terminated key string.
+ * @param val Pointer to the value data.
+ * @param len The length of the value data. Must not exceed `max_val_sz`.
+ * @return 0 on success, -1 on failure (e.g., store is full, len is too large).
+ */
 int splinter_set(const char *key, const void *val, size_t len) {
     if (!H || !key || len > H->max_val_sz) return -1;
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
+    
+    // Linear probing to find a slot
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load(&slot->hash);
+        
+        // Found an empty slot or a slot with the same key
         if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
             if (val && len > 0) memcpy(VALUES + slot->val_off, val, len);
             slot->val_len = (uint32_t)len;
             strncpy(slot->key, key, KEY_MAX - 1);
             slot->key[KEY_MAX - 1] = '\0';
-            atomic_store(&slot->hash, h);
-            atomic_fetch_add(&slot->epoch, 1);
-            atomic_fetch_add(&H->epoch, 1);
+            atomic_store(&slot->hash, h); // Mark as in-use
+            atomic_fetch_add(&slot->epoch, 1); // Increment slot epoch
+            atomic_fetch_add(&H->epoch, 1);  // Increment global epoch
             return 0;
         }
     }
-    return -1;
+    return -1; // Store is full
 }
 
+/**
+ * @brief Retrieves the value associated with a key.
+ *
+ * @param key The null-terminated key string.
+ * @param buf The buffer to copy the value data into. Can be NULL to query size.
+ * @param buf_sz The size of the provided buffer.
+ * @param out_sz Pointer to a size_t to store the value's actual length. Can be NULL.
+ * @return 0 on success, -1 on failure (e.g., key not found). If the buffer is too
+ * small, returns -1 and sets `errno` to `EMSGSIZE`.
+ */
 int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
     if (!H || !key) return -1;
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
+    
+    // Linear probing to find the key
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         if (atomic_load(&slot->hash) == h && strncmp(slot->key, key, KEY_MAX) == 0) {
             size_t len = slot->val_len;
             if (out_sz) *out_sz = len;
             if (buf) {
-                if (buf_sz < len) { errno = EMSGSIZE; return -1; }
+                if (buf_sz < len) {
+                    errno = EMSGSIZE;
+                    return -1;
+                }
                 memcpy(buf, VALUES + slot->val_off, len);
             }
             return 0;
         }
     }
-    return -1;
+    return -1; // Not found
 }
 
+/**
+ * @brief Lists all keys currently in the store.
+ *
+ * @param out_keys An array of `char*` to be filled with pointers to the keys
+ * within the shared memory. These pointers are only valid as
+ * long as the store is open.
+ * @param max_keys The maximum number of keys to write to `out_keys`.
+ * @param out_count Pointer to a size_t to store the number of keys found.
+ * @return 0 on success, -1 on failure.
+ */
 int splinter_list(char **out_keys, size_t max_keys, size_t *out_count) {
     if (!H || !out_keys || !out_count) return -1;
     size_t count = 0;
     for (size_t i = 0; i < H->slots && count < max_keys; ++i) {
+        // A non-zero hash and value length indicates a valid, active key.
         if (atomic_load(&S[i].hash) && S[i].val_len > 0) {
             out_keys[count++] = S[i].key;
         }
@@ -183,11 +336,24 @@ int splinter_list(char **out_keys, size_t max_keys, size_t *out_count) {
     return 0;
 }
 
+/**
+ * @brief Waits for a key's value to be changed (updated).
+ *
+ * This function provides a publish-subscribe mechanism. It blocks until the
+ * per-slot epoch for the given key is incremented by a `splinter_set` call.
+ *
+ * @param key The key to monitor for changes.
+ * @param timeout_ms The maximum time to wait in milliseconds.
+ * @return 0 if the value changed, -1 on timeout or if the key doesn't exist.
+ * On timeout, `errno` is set to `ETIMEDOUT`.
+ */
 int splinter_poll(const char *key, uint64_t timeout_ms) {
     if (!H || !key) return -1;
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
     struct splinter_slot *slot = NULL;
+    
+    // Find the slot corresponding to the key first.
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *s = &S[(idx + i) % H->slots];
         if (atomic_load(&s->hash) == h && strncmp(s->key, key, KEY_MAX) == 0) {
@@ -195,12 +361,15 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
             break;
         }
     }
-    if (!slot) return -1;
+    if (!slot) return -1; // Key does not exist.
+
     uint64_t start_epoch = atomic_load(&slot->epoch);
     struct timespec deadline;
     clock_gettime(CLOCK_REALTIME, &deadline);
     add_ms(&deadline, timeout_ms);
-    struct timespec sleep_ts = {0, 1000 * NS_PER_MS};
+    
+    // Sleep in short intervals until the slot's epoch changes or timeout occurs.
+    struct timespec sleep_ts = {0, 10 * NS_PER_MS}; // 10ms sleep
     while (atomic_load(&slot->epoch) == start_epoch) {
         struct timespec now;
         clock_gettime(CLOCK_REALTIME, &now);
@@ -211,5 +380,6 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
         }
         nanosleep(&sleep_ts, NULL);
     }
-    return 0;
+    
+    return 0; // Epoch changed, indicating an update.
 }

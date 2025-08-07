@@ -1,9 +1,16 @@
-# Splinter Message Bus Protocol
+# Splinter Message Bus Base Protocol
 
 _Splinter_ message bus is a shared‑memory, append‑only ring buffer that provides
 loss‑tolerant, low‑latency communication between isolated components. Everything
 — from IPC to LLM token, memory or context pipelines can travel through this
 channel.
+
+This is a base protocol that you can extend to be something more, or use as-is
+for whatever need it might fit.
+
+I just humbly suggest that you use _something_, or what you'll end up with is
+pretty much unmaintainable, unobservable debugging-resistant chaos; ask me how I
+know :)
 
 ## 1. Transport Layer
 
