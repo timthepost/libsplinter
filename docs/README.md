@@ -25,8 +25,8 @@ services.
   function that allows a process to "subscribe" to a key and wait efficiently
   until another process updates it. This turns the simple key-value store into a
   powerful message bus.
-- **Unopinionated**: You can use any protocol you want: just write it over the
-  bus instead of over a socket. Or, build your own from the base envelope
+- **Unopinionated**: You can use any wire protocol you want: just write it over
+  the bus instead of over a socket. Or, build your own from the base envelope
   protocol that is included with this documentation: `base-protocol.md`, which is
   the basis of the author's LLM runtime.
 
@@ -41,8 +41,17 @@ On most systems with a GNU development toolchain (e.g. Debian, Fedora):
 make
 ```
 
-There is a `make install` option you can use in a chroot or a container; see the
-makefile for more options and Rust / Deno bindings.
+To generate Rust bindings automatically, type:
+
+```sh
+make rust_bindings
+```
+
+Deno bindings are kept up-to-date with any public header updates through a manual
+process I hope to automate at some point. PRs welcome to sort that out (and add 
+more proper tests).
+
+There is a `make install` option you can use in a chroot or container.
 
 ---
 
