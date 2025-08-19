@@ -103,6 +103,7 @@ rather tight constraints.
 ## Next Goals
 
 - [ ] `splinterctl` CLI utility
+- [ ] `splinterest` "Breakout Box Meets Scope" style tool to observe bus activity
 - [ ] `splinterd` daemon TTL eviction or replication
 - [ ] Optional history ring buffer (per key)
 - [ ] QUIC-based (?) bridge protocol
