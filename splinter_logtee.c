@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     size_t msg_sz = 0;
 
     if (splinter_create_or_open(bus, 128, 1024) != 0) {
-        fprintf(stderr, "splinter-pipe: failed to open bus %s\n", bus);
+        fprintf(stderr, "splinter_logtee: failed to open bus %s\n", bus);
         return 1;
     }
 
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
         if (rc == 0) {
             if (splinter_get(key, msg, sizeof(msg), &msg_sz) != 0) {
                 fprintf(stderr,
-                        "splinter-pipe: failed to read from %s (key %s)\n",
+                        "splinter_logtee: failed to read from %s (key %s)\n",
                         bus, key);
                 return 2;
             }

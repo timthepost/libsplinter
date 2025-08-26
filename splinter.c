@@ -1,6 +1,7 @@
 /**
  * Copyright 2025 Tim Post
- * License: Apache 2
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
  * @file splinter.c
  * @brief Main implementation of the libsplinter shared memory key-value store.
  *
@@ -9,9 +10,11 @@
  * communication (IPC), particularly for building microkernel-like process
  * communities around local Large Language Model (LLM) runtimes.
  *
- * Inspired in part by the Xen project, Keir's papers on practical lock-free
- * programming in particular, and Xenstore (in concept, not really 
- * implementation).
+ * Inspired in part by the Xen project & Keir's papers on practical lock-free
+ * programming, and Xenstore (in concept, not so much implementation).
+ *
+ * Short-term (ephemeral) memory, IPC, KV Storage, pub/sub, caching, and more
+ * are all great uses for libsplinter.
  */
 
 #ifndef _GNU_SOURCE
