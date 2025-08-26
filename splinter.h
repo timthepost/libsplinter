@@ -1,4 +1,6 @@
 /**
+ * Copyright 2025 Tim Post
+ * License: Apache 2
  * @file splinter.h
  * @brief Public API for the libsplinter shared memory key-value store.
  *
