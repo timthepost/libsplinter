@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
             int available = term_rows - used_above_debug - used_below_debug;
             int max_debug_rows = (available > 0 ? available : 0);
 
-            printf("\n--- Debug ---\n");
+            printf("\n--- Debug [%s] ---\n", argv[1]);
             int start = debug_line_count > max_debug_rows ?
                         debug_line_count - max_debug_rows : 0;
             for (int i = start; i < debug_line_count; i++) {
