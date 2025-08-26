@@ -4,33 +4,39 @@
 #include <string.h>
 #include <unistd.h>
 
-#define RUNA_KEY "runa_response"
+#define DEFAULT_BUS "splinter_debug"
+#define DEFAULT_KEY "__debug"
 #define MAX_LEN 4096
 #define TIMEOUT_MS 100
 
-#define BUS_NAME "/runa_debug"
-
 int main(void) {
-    if (splinter_open(BUS_NAME) != 0) {
-        fprintf(stderr, "splinter-recv: failed to open bus\n");
+    int rc = 0, errlvl = 0;
+    // will be modified by a future signal handler
+    volatile unsigned int run = 1;
+    char msg[MAX_LEN];
+    size_t msg_sz = 0;
+    
+    if (splinter_create_or_open(DEFAULT_BUS, 128, 1024) != 0) {
+        fprintf(stderr, "splinter-recv: failed to open bus %s\n", DEFAULT_BUS);
         return 1;
     }
 
-    // Poll until a message is available
-    while (splinter_poll(RUNA_KEY, TIMEOUT_MS) != 0) {
-        usleep(1000); // sleep 1ms
-    }
+    printf("splinter-recv: listening to %s on %s ...\n", DEFAULT_KEY, DEFAULT_BUS);
 
-    char msg[MAX_LEN];
-    size_t msg_sz = 0;
+    do {
+        rc = splinter_poll(DEFAULT_KEY, TIMEOUT_MS);
+        if (rc == 0) {
+            // watch fired
+            if (splinter_get(DEFAULT_KEY, msg, sizeof(msg), &msg_sz) != 0) {
+                fprintf(stderr, "splinter-recv: failed to read data from %s (key %s)\n", 
+                    DEFAULT_BUS, DEFAULT_KEY);
+                splinter_close();
+                run = 0;
+                errlvl = 2;
+            }
+            printf("splinter-recv: %.*s\n", (int)msg_sz, msg);
+        }
+    } while (run);
 
-    if (splinter_get(RUNA_KEY, msg, sizeof(msg), &msg_sz) != 0) {
-        fprintf(stderr, "splinter-recv: failed to get message\n");
-        splinter_close();
-        return 2;
-    }
-
-    printf("%.*s\n", (int)msg_sz, msg);
-    splinter_close();
-    return 0;
+    return errlvl;
 }
