@@ -53,7 +53,7 @@ splinter_send: splinter_send.c splinter.o
 
 # A bus-to-file tap (WIP)
 splinter_logtee: splinter_logtee.c splinter.o
-	$(CC) $(CFLAGS) -o @@ splinter_logtee.c splinter.o
+	$(CC) $(CFLAGS) -o $@ splinter_logtee.c splinter.o
 
 # A neat little tool to watch system utilization while squawking on a debug bus.
 sidecar: sidecar.c splinter.o
