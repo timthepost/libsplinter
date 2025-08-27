@@ -275,7 +275,10 @@ int splinter_set(const char *key, const void *val, size_t len) {
         
         // Found an empty slot or a slot with the same key
         if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
-            if (val && len > 0) memcpy(VALUES + slot->val_off, val, len);
+            if (val && len > 0) { 
+                memset(VALUES + slot->val_off, 0, H->max_val_sz);
+                memcpy(VALUES + slot->val_off, val, len);
+            }
             slot->val_len = (uint32_t)len;
             memset(slot->key, 0, KEY_MAX);
             strncpy(slot->key, key, KEY_MAX - 1);
