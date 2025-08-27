@@ -277,6 +277,7 @@ int splinter_set(const char *key, const void *val, size_t len) {
         if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
             if (val && len > 0) memcpy(VALUES + slot->val_off, val, len);
             slot->val_len = (uint32_t)len;
+            memset(slot->key, 0, KEY_MAX);
             strncpy(slot->key, key, KEY_MAX - 1);
             slot->key[KEY_MAX - 1] = '\0';
             atomic_store(&slot->hash, h); // Mark as in-use
