@@ -35,7 +35,7 @@ splinter/
 ├── splinter_test.c      ← example / smoke test
 ├── splinter_send.c      ← simple tool to send data on the bus
 ├── splinter_recv.c      ← simple tool to receive data on the bus
-├── splinter_logtee.c    ← simple tool to receive data on the bus
+├── splinter_logtee.c    ← simple tool to drain bus keys to a file (non-destructively)
 ├── Makefile             ← build & test (memory + persistent builds)
 ├── bindings/rust/       ← Rust bindings (auto generated)
 └── bindings/ts/
