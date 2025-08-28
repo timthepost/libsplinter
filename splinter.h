@@ -66,6 +66,17 @@ void splinter_close(void);
 int splinter_set(const char *key, const void *val, size_t len);
 
 /**
+ * @brief "unsets" a key. 
+ * This function does one atomic operation to zero the slot hash, which marks the
+ * slot available for write. It then zeroes out the used key and value regions,
+ * and resets the slot.
+ *
+ * @param key The null-terminated key string.
+ * @return length of value deleted, -1 if key not found, - 2 if null key/store
+ */
+int splinter_unset(const char *key);
+
+/**
  * @brief Retrieves the value associated with a key.
  * @param key The null-terminated key string.
  * @param buf The buffer to copy the value data into. Can be NULL to query size.

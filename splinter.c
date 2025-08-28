@@ -251,6 +251,42 @@ void splinter_close(void) {
     g_base = NULL; H = NULL; S = NULL; VALUES = NULL; g_total_sz = 0;
 }
 
+
+/**
+ * @brief "unsets" a key. 
+ * This function does one atomic operation to zero the slot hash, which marks the
+ * slot available for write. It then zeroes out the used key and value regions,
+ * and resets the slot.
+ *
+ * @param key The null-terminated key string.
+ * @return length of value deleted on success, -1 if key not found, - 2 if store or key
+ * are invalid.
+ */
+int splinter_unset(const char *key) {
+    int ret = 0;
+    if (!H || !key) return -2;
+    uint64_t h = fnv1a(key);
+    size_t idx = slot_idx(h, H->slots);
+
+    for (size_t i = 0; i < H->slots; ++i) {
+        struct splinter_slot *slot = &S[(idx + i) % H->slots];
+        uint64_t slot_hash = atomic_load(&slot->hash);
+        if (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0) {
+            ret = slot->val_len;
+            // marking the hash 0 effectively marks the slot unused
+            atomic_store(&slot->hash, 0);
+            // the rest of this is cleanup
+            memset(VALUES + slot->val_off, 0, H->max_val_sz); 
+            memset(slot->key, 0, KEY_MAX);
+            slot->val_len = 0;
+            // return the value length of what we just whacked
+            return ret;
+        }
+    }
+    // didn't find it.
+    return -1;
+}
+
 /**
  * @brief Sets or updates a key-value pair in the store.
  *
@@ -272,8 +308,9 @@ int splinter_set(const char *key, const void *val, size_t len) {
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load(&slot->hash);
-        
+  
         // Found an empty slot or a slot with the same key
+        // Failure to call memset could leave orphaned data fragments on the bus unnecessarily.
         if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
             if (val && len > 0) { 
                 memset(VALUES + slot->val_off, 0, H->max_val_sz);
