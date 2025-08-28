@@ -100,7 +100,15 @@ That may sound simple in theory, but keeping it performant in a way that also
 supports workflows like tokenizing input _on the bus_ while in transit adds
 rather tight constraints.
 
----
+For **high-bandwidth** network solutions like 25G RoCE, RDMA becomes very 
+practical (albeit latency goes from a few nanoseconds to maybe 10ms). If that's
+not a problem, then no need to even use the full 200GB that things like the
+NVIDIA/Mellanox Cards go up to. You can also use the persistent mode on 
+NVMe/RDMA setups. This won't be as fast as "native", and can still get 
+racey if latency is inconsistent. 
+
+Some kind of domain tick mechanism will likely be adopted prior to synchronization
+becoming officially supported.
 
 ### Next Major Feature Goals
 
