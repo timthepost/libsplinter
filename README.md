@@ -108,7 +108,8 @@ NVMe/RDMA setups. This won't be as fast as "native", and can still get
 racey if latency is inconsistent. 
 
 Some kind of domain tick mechanism will likely be adopted prior to synchronization
-becoming officially supported.
+becoming officially supported. Yes, hyperscale problems, but thankfully not hyperscale
+prices. This stuff is still off-the-shelf.
 
 ### Next Major Feature Goals
 
