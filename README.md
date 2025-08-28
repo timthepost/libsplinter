@@ -102,16 +102,16 @@ rather tight constraints.
 
 ---
 
-## Next Goals
+### Next Major Feature Goals
 
-- [ ] `splinterctl` CLI utility
-- [ ] `splinterest` "Breakout Box Meets Scope" style tool to observe bus activity
-- [ ] `splinterd` daemon TTL eviction or replication
-- [ ] Optional history ring buffer (per key)
-- [ ] QUIC-based (?) bridge protocol
+- [ ] `splinterctl` CLI utility that includes snapshot / dump functionality
+- [ ] `splinterd` daemon TTL eviction, policy server
+- [ ] `splinterp` perf analysis tool (reads, writes)
 
-Replication is lowest on the priorities right now, as development mostly matches
-work on my local LLM stack Runa.
+### Next Planned Chores
+
+- [ ] Maybe a TAP-compatible test suite, and scripts to test the tools?
+- [ ] Tools need proper argument validation & parsing, version info, help summary
 
 ---
 
