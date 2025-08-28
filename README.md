@@ -29,16 +29,17 @@ speaks unless spoken to, but is always ready.
 
 ```
 splinter/
-├── README.md          ← this doc
-├── splinter.h         ← public API
-├── splinter.c         ← implementation
-├── splinter_test.c    ← example / smoke test
-├── splinter_send.c    ← simple tool to send data on the bus
-├── splinter_recv.c    ← simple tool to receive data on the bus
-├── Makefile           ← build & test (memory + persistent builds)
-├── bindings/rust/     ← Rust bindings (auto generated)
+├── README.md            ← this doc
+├── splinter.h           ← public API
+├── splinter.c           ← implementation
+├── splinter_test.c      ← example / smoke test
+├── splinter_send.c      ← simple tool to send data on the bus
+├── splinter_recv.c      ← simple tool to receive data on the bus
+├── splinter_logtee.c    ← simple tool to receive data on the bus
+├── Makefile             ← build & test (memory + persistent builds)
+├── bindings/rust/       ← Rust bindings (auto generated)
 └── bindings/ts/
-    └── deno_ffi.ts    ← Deno FFI interface (manually updated)
+    └── deno_ffi.ts      ← Deno FFI interface (manually updated)
 ```
 
 ---
