@@ -16,7 +16,7 @@ speaks unless spoken to, but is always ready.
 
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
-- 🧹 Auto-vacuuming (always zeroes out on init, unset and update)
+- 🧹 Auto-vacuuming (always zeroes out individual keys and value regions on creation, unset and update)
 - 🧵 Thread-safe single-writer, multi-reader semantics
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
