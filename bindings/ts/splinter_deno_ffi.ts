@@ -17,6 +17,7 @@ const lib = Deno.dlopen("../../libsplinter.so", {
   },
   "splinter_open": { parameters: ["buffer"], result: "i32" },
   "splinter_set": { parameters: ["buffer", "pointer", "usize"], result: "i32" },
+  "splinter_unset": { parameters: ["buffer"], result: "i32" },
   "splinter_get": {
     parameters: ["buffer", "pointer", "usize", "pointer"],
     result: "i32",
