@@ -300,34 +300,41 @@ int splinter_unset(const char *key) {
  * @return 0 on success, -1 on failure (e.g., store is full, len is too large).
  */
 int splinter_set(const char *key, const void *val, size_t len) {
-    if (!H || !key || len > H->max_val_sz) return -1;
+    if (!H || !key) return -1;
+    if (len == 0 || len > H->max_val_sz) return -1;
+
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
-    
-    // Linear probing to find a slot
+
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load(&slot->hash);
-  
-        // Found an empty slot or a slot with the same key
-        // Failure to call memset could leave orphaned data fragments on the bus unnecessarily.
+
         if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
-            if (val && len > 0) { 
-                memset(VALUES + slot->val_off, 0, H->max_val_sz);
-                memcpy(VALUES + slot->val_off, val, len);
+            uint8_t *dst = VALUES + slot->val_off;
+
+            // bounds check against arena
+            size_t arena_sz = H->slots * H->max_val_sz;
+            if (slot->val_off >= arena_sz || slot->val_off + len > arena_sz) {
+                return -1; // invalid offset → fail safe
             }
+
+            memset(dst, 0, H->max_val_sz);
+            memcpy(dst, val, len);
+
             slot->val_len = (uint32_t)len;
             memset(slot->key, 0, KEY_MAX);
             strncpy(slot->key, key, KEY_MAX - 1);
             slot->key[KEY_MAX - 1] = '\0';
-            atomic_store(&slot->hash, h); // Mark as in-use
-            atomic_fetch_add(&slot->epoch, 1); // Increment slot epoch
-            atomic_fetch_add(&H->epoch, 1);  // Increment global epoch
+            atomic_store(&slot->hash, h);
+            atomic_fetch_add(&slot->epoch, 1);
+            atomic_fetch_add(&H->epoch, 1);
             return 0;
         }
     }
-    return -1; // Store is full
+    return -1;
 }
+
 
 /**
  * @brief Retrieves the value associated with a key.
