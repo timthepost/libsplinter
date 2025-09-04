@@ -16,8 +16,9 @@ speaks unless spoken to, but is always ready.
 
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
+- 🔑 Lock-free design (utilizes atomic operations with seqlock for contention, EAGAIN for non-block operation)
 - 🧹 Auto-vacuuming (always zeroes out individual keys and value regions on creation, unset and update)
-- 🧵 Thread-safe single-writer, multi-reader semantics
+- 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW contract is broken at huge scale.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
