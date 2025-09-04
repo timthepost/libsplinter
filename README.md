@@ -36,6 +36,8 @@ splinter/
 ├── splinter_send.c      ← simple tool to send data on the bus
 ├── splinter_recv.c      ← simple tool to receive data on the bus
 ├── splinter_logtee.c    ← simple tool to drain bus keys to a file (non-destructively)
+├── splinter_perf.c      ← MRSW test harness (16 threads) for read concurrency
+├── splinter_torture.c   ← MRMW test harness (for worst-case outcomes under misuse)
 ├── Makefile             ← build & test (memory + persistent builds)
 ├── bindings/rust/       ← Rust bindings (auto generated)
 └── bindings/ts/
