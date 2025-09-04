@@ -90,7 +90,7 @@ static struct splinter_header *H;
 /** @brief Pointer to the array of slots within the mapped region. */
 static struct splinter_slot *S;
 /** @brief Pointer to the start of the value storage area. */
-static char *VALUES;
+static uint8_t *VALUES;
 
 /**
  * @brief Computes the 64-bit FNV-1a hash of a string.
@@ -139,7 +139,7 @@ static int map_fd(int fd, size_t size) {
     if (g_base == MAP_FAILED) return -1;
     H = (struct splinter_header *)g_base;
     S = (struct splinter_slot *)(H + 1);
-    VALUES = (char *)(S + H->slots);
+    VALUES = (uint8_t *)(S + H->slots);
     return 0;
 }
 
@@ -253,17 +253,19 @@ void splinter_close(void) {
 
 
 /**
- * @brief "unsets" a key. 
- * This function does one atomic operation to zero the slot hash, which marks the
- * slot available for write. It then zeroes out the used key and value regions,
- * and resets the slot.
+ * @brief "unsets" a key (delete).
+ *
+ * This function atomically marks the slot as free. With seqlock semantics,
+ * if the slot is observed in the middle of a write (odd epoch), it returns
+ * -1 with errno = EAGAIN so the caller can retry.
  *
  * @param key The null-terminated key string.
- * @return length of value deleted on success, -1 if key not found, - 2 if store or key
- * are invalid.
+ * @return length of value deleted on success,
+ *         -1 if key not found,
+ *         -2 if store or key are invalid,
+ *         -1 with errno = EAGAIN if writer in progress.
  */
 int splinter_unset(const char *key) {
-    int ret = 0;
     if (!H || !key) return -2;
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
@@ -271,21 +273,34 @@ int splinter_unset(const char *key) {
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load(&slot->hash);
+
         if (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0) {
-            ret = slot->val_len;
-            // marking the hash 0 effectively marks the slot unused
+            uint64_t start_epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
+            if (start_epoch & 1) {
+                // Writer in progress
+                errno = EAGAIN;
+                return -1;
+            }
+
+            int ret = slot->val_len;
+
+            // Mark the hash 0 → slot unused
             atomic_store(&slot->hash, 0);
-            // the rest of this is cleanup
-            memset(VALUES + slot->val_off, 0, H->max_val_sz); 
+
+            // Cleanup
+            memset(VALUES + slot->val_off, 0, H->max_val_sz);
             memset(slot->key, 0, KEY_MAX);
             slot->val_len = 0;
-            // return the value length of what we just whacked
+
+            // Increment slot epoch to mark the change (leave even)
+            atomic_fetch_add(&slot->epoch, 2);
             return ret;
         }
     }
-    // didn't find it.
-    return -1;
+
+    return -1; // didn't find it
 }
+
 
 /**
  * @brief Sets or updates a key-value pair in the store.
@@ -301,62 +316,98 @@ int splinter_unset(const char *key) {
  */
 int splinter_set(const char *key, const void *val, size_t len) {
     if (!H || !key) return -1;
-    if (len == 0 || len > H->max_val_sz) return -1;
+    if (len == 0 || len > H->max_val_sz) return -1; // require non-zero len
 
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
+    const size_t arena_sz = (size_t)H->slots * (size_t)H->max_val_sz;
 
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
-        uint64_t slot_hash = atomic_load(&slot->hash);
+        uint64_t slot_hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
 
         if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
-            uint8_t *dst = VALUES + slot->val_off;
-
-            // bounds check against arena
-            size_t arena_sz = H->slots * H->max_val_sz;
-            if (slot->val_off >= arena_sz || slot->val_off + len > arena_sz) {
-                return -1; // invalid offset → fail safe
+            // Try to acquire the slot's seqlock: flip epoch from even -> odd.
+            uint64_t e = atomic_load_explicit(&slot->epoch, memory_order_relaxed);
+            if (e & 1ull) {
+                // writer already in progress for this slot; skip and continue probing
+                continue;
+            }
+            // attempt to CAS epoch: e -> e+1 (make odd)
+            uint64_t want = e + 1;
+            if (!atomic_compare_exchange_weak_explicit(&slot->epoch, &e, want,
+                                                      memory_order_acq_rel, memory_order_relaxed)) {
+                // CAS failed (epoch changed), retry next slot
+                continue;
             }
 
+            // We have the slot in "writer active" (odd epoch) state.
+            // Now validate the offset/range before touching memory.
+            if ((size_t)slot->val_off >= arena_sz || (size_t)slot->val_off + len > arena_sz) {
+                // leave epoch balanced (make it even again) and fail safely
+                atomic_fetch_add_explicit(&slot->epoch, 1, memory_order_release);
+                return -1;
+            }
+
+            // Perform the write: value -> val_len -> key -> publish hash -> complete epoch
+            uint8_t *dst = (uint8_t *)VALUES + slot->val_off;
+
+            // Clear full slot value region (keeps old tail bytes from leaking).
             memset(dst, 0, H->max_val_sz);
             memcpy(dst, val, len);
 
+            // Publish length (plain store is fine)
             slot->val_len = (uint32_t)len;
+
+            // Update key (write full key buffer so readers can't see a partial key)
             memset(slot->key, 0, KEY_MAX);
             strncpy(slot->key, key, KEY_MAX - 1);
             slot->key[KEY_MAX - 1] = '\0';
-            atomic_store(&slot->hash, h);
-            atomic_fetch_add(&slot->epoch, 1);
-            atomic_fetch_add(&H->epoch, 1);
+
+            // Only now publish the hash so readers will match only once value+key are in place.
+            atomic_store_explicit(&slot->hash, h, memory_order_release);
+
+            // End seqlock: bump epoch to even (writer done). Use release to publish writes.
+            atomic_fetch_add_explicit(&slot->epoch, 1, memory_order_release);
+
+            // Update global epoch (best-effort, relaxed).
+            atomic_fetch_add_explicit(&H->epoch, 1, memory_order_relaxed);
+
             return 0;
         }
     }
-    return -1;
+    return -1; // store full / no suitable slot
 }
 
-
 /**
- * @brief Retrieves the value associated with a key.
+ * @brief Retrieves the value associated with a key (seqlock aware).
  *
  * @param key The null-terminated key string.
  * @param buf The buffer to copy the value data into. Can be NULL to query size.
  * @param buf_sz The size of the provided buffer.
  * @param out_sz Pointer to a size_t to store the value's actual length. Can be NULL.
- * @return 0 on success, -1 on failure (e.g., key not found). If the buffer is too
- * small, returns -1 and sets `errno` to `EMSGSIZE`.
+ * @return 0 on success, -1 on failure. On retry condition, returns -1 and sets
+ * errno = EAGAIN. If the buffer is too small, returns -1 and sets errno = EMSGSIZE.
  */
 int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
     if (!H || !key) return -1;
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
-    
-    // Linear probing to find the key
+
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
+
         if (atomic_load(&slot->hash) == h && strncmp(slot->key, key, KEY_MAX) == 0) {
+            uint64_t start = atomic_load_explicit(&slot->epoch, memory_order_acquire);
+            if (start & 1) {
+                // writer in progress
+                errno = EAGAIN;
+                return -1;
+            }
+
             size_t len = slot->val_len;
             if (out_sz) *out_sz = len;
+
             if (buf) {
                 if (buf_sz < len) {
                     errno = EMSGSIZE;
@@ -364,11 +415,22 @@ int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
                 }
                 memcpy(buf, VALUES + slot->val_off, len);
             }
-            return 0;
+
+            uint64_t end = atomic_load_explicit(&slot->epoch, memory_order_acquire);
+            if (start == end && !(end & 1)) {
+                // consistent snapshot
+                return 0;
+            }
+
+            // inconsistent snapshot, ask caller to retry
+            errno = EAGAIN;
+            return -1;
         }
     }
+
     return -1; // Not found
 }
+
 
 /**
  * @brief Lists all keys currently in the store.
@@ -399,18 +461,22 @@ int splinter_list(char **out_keys, size_t max_keys, size_t *out_count) {
  * This function provides a publish-subscribe mechanism. It blocks until the
  * per-slot epoch for the given key is incremented by a `splinter_set` call.
  *
+ * With seqlock semantics, if the slot is observed in the middle of a write
+ * (odd epoch), this call returns immediately with errno = EAGAIN so the
+ * caller can retry cleanly.
+ *
  * @param key The key to monitor for changes.
  * @param timeout_ms The maximum time to wait in milliseconds.
- * @return 0 if the value changed, -1 on timeout or if the key doesn't exist.
- * On timeout, `errno` is set to `ETIMEDOUT`.
+ * @return 0 if the value changed, -1 on timeout, -1 with errno = EAGAIN
+ *         if a write was observed in progress.
  */
 int splinter_poll(const char *key, uint64_t timeout_ms) {
     if (!H || !key) return -1;
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
     struct splinter_slot *slot = NULL;
-    
-    // Find the slot corresponding to the key first.
+
+    // Find the slot corresponding to the key
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *s = &S[(idx + i) % H->slots];
         if (atomic_load(&s->hash) == h && strncmp(s->key, key, KEY_MAX) == 0) {
@@ -420,14 +486,28 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
     }
     if (!slot) return -1; // Key does not exist.
 
-    uint64_t start_epoch = atomic_load(&slot->epoch);
+    uint64_t start_epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
+    if (start_epoch & 1) {
+        // Writer in progress
+        errno = EAGAIN;
+        return -1;
+    }
+
     struct timespec deadline;
     clock_gettime(CLOCK_REALTIME, &deadline);
     add_ms(&deadline, timeout_ms);
-    
-    // Sleep in short intervals until the slot's epoch changes or timeout occurs.
+
     struct timespec sleep_ts = {0, 10 * NS_PER_MS}; // 10ms sleep
-    while (atomic_load(&slot->epoch) == start_epoch) {
+    while (1) {
+        uint64_t cur_epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
+        if (cur_epoch & 1) {
+            errno = EAGAIN;
+            return -1; // Writer still in progress
+        }
+        if (cur_epoch != start_epoch) {
+            return 0; // Value changed
+        }
+
         struct timespec now;
         clock_gettime(CLOCK_REALTIME, &now);
         if ((now.tv_sec > deadline.tv_sec) ||
@@ -437,6 +517,5 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
         }
         nanosleep(&sleep_ts, NULL);
     }
-    
-    return 0; // Epoch changed, indicating an update.
 }
+
