@@ -16,8 +16,9 @@ speaks unless spoken to, but is always ready.
 
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
+- 🔑 Lock-free design (utilizes atomic operations with seqlock for contention, EAGAIN for non-block operation)
 - 🧹 Auto-vacuuming (always zeroes out individual keys and value regions on creation, unset and update)
-- 🧵 Thread-safe single-writer, multi-reader semantics
+- 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW contract is broken at huge scale.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
@@ -36,6 +37,8 @@ splinter/
 ├── splinter_send.c      ← simple tool to send data on the bus
 ├── splinter_recv.c      ← simple tool to receive data on the bus
 ├── splinter_logtee.c    ← simple tool to drain bus keys to a file (non-destructively)
+├── splinter_perf.c      ← MRSW test harness (16 threads) for read concurrency
+├── splinter_torture.c   ← MRMW test harness (for worst-case outcomes under misuse)
 ├── Makefile             ← build & test (memory + persistent builds)
 ├── bindings/rust/       ← Rust bindings (auto generated)
 └── bindings/ts/
