@@ -47,6 +47,8 @@
  *
  * This header contains metadata for the entire splinter store, including
  * magic number for validation, version, and overall store configuration.
+ *
+ * NOTE: We add parse_failures/last_failure_epoch for diagnostics.
  */
 struct splinter_header {
     /** @brief Magic number (SPLINTER_MAGIC) to verify integrity. */
@@ -59,6 +61,10 @@ struct splinter_header {
     uint32_t max_val_sz;
     /** @brief Global epoch, incremented on any write. Used for change detection. */
     atomic_uint_least64_t epoch;
+
+    /* Diagnostics: counts of parse failures reported by clients / harnesses */
+    atomic_uint_least64_t parse_failures;
+    atomic_uint_least64_t last_failure_epoch;
 };
 
 /**
@@ -67,6 +73,9 @@ struct splinter_header {
  *
  * Each slot holds a key, its value's location and length, and metadata
  * for concurrent access and change tracking.
+ *
+ * We changed val_len to atomic to avoid tearing on platforms where a plain
+ * 32-bit write could be observed partially by a reader.
  */
 struct splinter_slot {
     /** @brief The FNV-1a hash of the key. 0 indicates an empty slot. */
@@ -75,8 +84,8 @@ struct splinter_slot {
     atomic_uint_least64_t epoch;
     /** @brief Offset into the VALUES region where the value data is stored. */
     uint32_t val_off;
-    /** @brief The actual length of the stored value data. */
-    uint32_t val_len;
+    /** @brief The actual length of the stored value data (atomic). */
+    atomic_uint_least32_t val_len;
     /** @brief The null-terminated key string. */
     char key[KEY_MAX];
 };
@@ -174,14 +183,16 @@ int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz)
     H->version = SPLINTER_VER;
     H->slots = (uint32_t)slots;
     H->max_val_sz = (uint32_t)max_value_sz;
-    atomic_store(&H->epoch, 1);
+    atomic_store_explicit(&H->epoch, 1, memory_order_relaxed);
+    atomic_store_explicit(&H->parse_failures, 0, memory_order_relaxed);
+    atomic_store_explicit(&H->last_failure_epoch, 0, memory_order_relaxed);
     
     // Initialize slots
     for (size_t i = 0; i < slots; ++i) {
-        atomic_store(&S[i].hash, 0);
-        atomic_store(&S[i].epoch, 0);
+        atomic_store_explicit(&S[i].hash, 0, memory_order_relaxed);
+        atomic_store_explicit(&S[i].epoch, 0, memory_order_relaxed);
         S[i].val_off = (uint32_t)(i * max_value_sz);
-        S[i].val_len = 0;
+        atomic_store_explicit(&S[i].val_len, 0, memory_order_relaxed);
         memset(S[i].key, 0, KEY_MAX);
     }
     return 0;
@@ -272,7 +283,7 @@ int splinter_unset(const char *key) {
 
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
-        uint64_t slot_hash = atomic_load(&slot->hash);
+        uint64_t slot_hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
 
         if (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0) {
             uint64_t start_epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
@@ -282,18 +293,18 @@ int splinter_unset(const char *key) {
                 return -1;
             }
 
-            int ret = slot->val_len;
+            int ret = (int)atomic_load_explicit(&slot->val_len, memory_order_acquire);
 
             // Mark the hash 0 → slot unused
-            atomic_store(&slot->hash, 0);
+            atomic_store_explicit(&slot->hash, 0, memory_order_release);
 
             // Cleanup
             memset(VALUES + slot->val_off, 0, H->max_val_sz);
             memset(slot->key, 0, KEY_MAX);
-            slot->val_len = 0;
+            atomic_store_explicit(&slot->val_len, 0, memory_order_release);
 
             // Increment slot epoch to mark the change (leave even)
-            atomic_fetch_add(&slot->epoch, 2);
+            atomic_fetch_add_explicit(&slot->epoch, 2, memory_order_release);
             return ret;
         }
     }
@@ -356,13 +367,16 @@ int splinter_set(const char *key, const void *val, size_t len) {
             memset(dst, 0, H->max_val_sz);
             memcpy(dst, val, len);
 
-            // Publish length (plain store is fine)
-            slot->val_len = (uint32_t)len;
+            // Publish length atomically (release so readers see full bytes)
+            atomic_store_explicit(&slot->val_len, (uint32_t)len, memory_order_release);
 
             // Update key (write full key buffer so readers can't see a partial key)
             memset(slot->key, 0, KEY_MAX);
             strncpy(slot->key, key, KEY_MAX - 1);
             slot->key[KEY_MAX - 1] = '\0';
+
+            // Ensure prior stores are visible before publishing hash
+            atomic_thread_fence(memory_order_release);
 
             // Only now publish the hash so readers will match only once value+key are in place.
             atomic_store_explicit(&slot->hash, h, memory_order_release);
@@ -397,7 +411,8 @@ int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
 
-        if (atomic_load(&slot->hash) == h && strncmp(slot->key, key, KEY_MAX) == 0) {
+        if (atomic_load_explicit(&slot->hash, memory_order_acquire) == h &&
+            strncmp(slot->key, key, KEY_MAX) == 0) {
             uint64_t start = atomic_load_explicit(&slot->epoch, memory_order_acquire);
             if (start & 1) {
                 // writer in progress
@@ -405,7 +420,8 @@ int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
                 return -1;
             }
 
-            size_t len = slot->val_len;
+            /* load length atomically */
+            size_t len = (size_t)atomic_load_explicit(&slot->val_len, memory_order_acquire);
             if (out_sz) *out_sz = len;
 
             if (buf) {
@@ -447,7 +463,8 @@ int splinter_list(char **out_keys, size_t max_keys, size_t *out_count) {
     size_t count = 0;
     for (size_t i = 0; i < H->slots && count < max_keys; ++i) {
         // A non-zero hash and value length indicates a valid, active key.
-        if (atomic_load(&S[i].hash) && S[i].val_len > 0) {
+        if (atomic_load_explicit(&S[i].hash, memory_order_acquire) &&
+            atomic_load_explicit(&S[i].val_len, memory_order_acquire) > 0) {
             out_keys[count++] = S[i].key;
         }
     }
@@ -479,7 +496,8 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
     // Find the slot corresponding to the key
     for (size_t i = 0; i < H->slots; ++i) {
         struct splinter_slot *s = &S[(idx + i) % H->slots];
-        if (atomic_load(&s->hash) == h && strncmp(s->key, key, KEY_MAX) == 0) {
+        if (atomic_load_explicit(&s->hash, memory_order_acquire) == h &&
+            strncmp(s->key, key, KEY_MAX) == 0) {
             slot = s;
             break;
         }
@@ -518,4 +536,3 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
         nanosleep(&sleep_ts, NULL);
     }
 }
-
