@@ -6,5 +6,4 @@ splinter_recv
 splinter_test
 splinter_logtee
 splinter_perf
-shmbus/shmbus_test
 docs/auto

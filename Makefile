@@ -14,7 +14,6 @@ TESTS = splinter_test
 
 # Default target
 all: $(SHARED_LIBS)  $(STATIC_LIBS) $(BIN_PROGS) $(TESTS)
-	$(MAKE) -C shmbus/
 
 # Object build
 splinter.o: splinter.c splinter.h
@@ -89,7 +88,6 @@ uninstall:
 clean:
 	rm -f $(BIN_PROGS) $(SHARED_LIBS) $(STATIC_LIBS) $(TESTS)
 	rm -f *.o
-	$(MAKE) -C shmbus/ clean
 
 # Clean artifacts and bindings
 .PHONY: distclean
