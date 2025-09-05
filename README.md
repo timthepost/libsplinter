@@ -70,8 +70,8 @@ Each Splinter instance is backed by a named region, either:
 
 Slot region layout includes:
 
-- Key (up to 63 chars)
-- Value length + offset
+- Key (constant-defined max length)
+- Atomic Value length + offset
 - Atomic epoch version
 - FNV-1a 64-bit hash of key
 
