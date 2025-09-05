@@ -20,7 +20,6 @@ typedef struct {
     const char *store_name;
     int slots;
     int max_value_size;
-
     int num_threads;        // total threads (includes writer)
     int test_duration_ms;
     int num_keys;           // size of hot keyset
@@ -35,14 +34,13 @@ typedef struct {
     atomic_int get_fail;
     atomic_int set_fail;
     atomic_int integrity_fail;  // value parse/monotonicity failures
-    atomic_int retries;         // seqlock retries
+    atomic_int retries; // seqlock retries
 } counters_t;
 
 typedef struct {
     cfg_t *cfg;
     counters_t *ctr;
     volatile int *running;
-
     // shared keyset
     char **keys;
     int num_keys;
@@ -54,27 +52,20 @@ static inline long now_ms(void) {
     return (long)(ts.tv_sec*1000LL + ts.tv_nsec/1000000LL);
 }
 
-/* --- Per-thread RNG (xorshift32) --- */
-static inline unsigned xorshift32(unsigned *s) {
-    unsigned x = *s;
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return *s = x;
-}
-
 static void *writer_main(void *arg) {
     shared_t *sh = (shared_t*)arg;
     cfg_t *cfg = sh->cfg;
 
+    // value buffer (embed version + payload)
     char *buf = malloc(cfg->max_value_size);
     if (!buf) { perror("malloc"); return NULL; }
 
     unsigned ver = 1;
-    size_t payload_len = cfg->max_value_size / 2;
+    size_t payload_len = cfg->max_value_size / 2; // deterministic size, < max
     if (payload_len < 64) payload_len = 64;
 
     while (*sh->running) {
+        // round-robin keys to spread contention
         for (int i = 0; i < sh->num_keys && *sh->running; i++) {
             unsigned long nonce = (unsigned long)now_ms();
             int n = snprintf(buf, cfg->max_value_size,
@@ -99,7 +90,7 @@ static void *writer_main(void *arg) {
             }
             if (cfg->writer_period_us > 0) usleep(cfg->writer_period_us);
         }
-        ver++;
+        ver++; // bump after a full sweep
     }
 
     free(buf);
@@ -111,7 +102,8 @@ static bool parse_ver(const char *val, size_t len, unsigned *out_ver) {
     if (memcmp(val, "ver:", 4) != 0) return false;
     char tmp[16] = {0};
     size_t i = 4, j = 0;
-    while (i < len && j < sizeof(tmp)-1 && val[i] >= '0' && val[i] <= '9') {
+    while (i < len && j < sizeof(tmp)-1 &&
+           val[i] >= '0' && val[i] <= '9') {
         tmp[j++] = val[i++];
     }
     if (i >= len || val[i] != '|') return false;
@@ -125,21 +117,20 @@ static void *reader_main(void *arg) {
 
     char *buf = malloc((size_t)cfg->max_value_size + 1);
     if (!buf) { perror("malloc"); return NULL; }
-    size_t got_size = 0;
 
-    // Per-thread observed versions
-    unsigned *observed = calloc((size_t)sh->num_keys, sizeof(unsigned));
+    // per-thread observed versions
+    unsigned *observed = calloc((size_t)cfg->num_keys, sizeof(unsigned));
     if (!observed) { perror("calloc"); free(buf); return NULL; }
 
-    static __thread unsigned seed = 0;
-    if (seed == 0)
-        seed = 0x9e3779b9u ^ (unsigned)pthread_self();
+    size_t got_size = 0;
+    unsigned backoff_counter = 0;
 
     while (*sh->running) {
         for (int t = 0; t < 256 && *sh->running; t++) {
-            int idx = (int)(xorshift32(&seed) % sh->num_keys);
+            int idx = rand() % sh->num_keys;
 
             for (;;) {
+                /* allow shutdown while we're retrying */
                 if (!*sh->running) break;
 
                 int rc = splinter_get(sh->keys[idx], buf,
@@ -160,14 +151,20 @@ static void *reader_main(void *arg) {
                             observed[idx] = ver;
                         }
                     }
+                    backoff_counter = 0; /* reset backoff after success */
                     break;
                 } else if (errno == EAGAIN) {
+                    /* seqlock told us to retry */
                     atomic_fetch_add(&sh->ctr->retries, 1);
-#if defined(__x86_64__) || defined(__i386__)
-                    __asm__ __volatile__("pause" ::: "memory");
-#endif
-                    static __thread unsigned spin = 0;
-                    if ((++spin & 0xFF) == 0) sched_yield();
+
+                    /* light backoff to avoid tight spinning on shutdown or heavy contention */
+                    if ((++backoff_counter & 0xFF) == 0) {
+                        sched_yield();
+                    } else if ((backoff_counter & 0xF) == 0) {
+                        /* very short nanosleep occasionally (cooperative) */
+                        struct timespec ts = {0, 1000}; /* 1us */
+                        nanosleep(&ts, NULL);
+                    }
                     continue;
                 } else {
                     atomic_fetch_add(&sh->ctr->get_fail, 1);
@@ -189,7 +186,8 @@ static void prepopulate(shared_t *sh) {
     for (int i = 0; i < sh->num_keys; i++) {
         int n = snprintf(v, sizeof(v), "ver:%u|nonce:%lu|data:SEED",
                          1u, (unsigned long)now_ms());
-        if (n > 0) (void)splinter_set(sh->keys[i], v, (size_t)n);
+        if (n < 0) n = 0;
+        (void)splinter_set(sh->keys[i], v, (size_t)n);
     }
 }
 
@@ -201,7 +199,7 @@ static void print_stats(cfg_t *cfg, counters_t *c, long ms) {
     int fget = atomic_load(&c->get_fail);
     int fset = atomic_load(&c->set_fail);
     int bad  = atomic_load(&c->integrity_fail);
-    int retr = atomic_load(&c->retries);
+    int retries = atomic_load(&c->retries);
 
     double sec = ms / 1000.0;
     double ops = (gets + sets) / sec;
@@ -211,15 +209,16 @@ static void print_stats(cfg_t *cfg, counters_t *c, long ms) {
            cfg->num_threads, cfg->num_threads - 1);
     printf("Duration: %d ms\n", cfg->test_duration_ms);
     printf("Hot keys: %d\n", cfg->num_keys);
-    printf("Total ops: %d (gets=%d, sets=%d)\n", gets + sets, gets, sets);
+    printf("Total ops: %d (gets=%d, sets=%d)\n",
+           gets + sets, gets, sets);
     printf("Throughput: %.0f ops/sec\n", ops);
     printf("Get: ok=%d fail=%d\n", okg, fget);
     printf("Set: ok=%d fail=%d\n", oks, fset);
     printf("Integrity failures: %d\n", bad);
     printf("Retries (EAGAIN):   %d (%.2f%% of gets, %.2f per successful get)\n",
-           retr,
-           gets ? (100.0 * retr / gets) : 0.0,
-           okg  ? ((double)retr / okg)   : 0.0);
+           retries,
+           gets ? (100.0 * retries / gets) : 0.0,
+           okg ? ((double)retries / okg) : 0.0);
     printf("================================\n");
 }
 
@@ -234,7 +233,7 @@ int main(int argc, char **argv) {
         .store_name = "mrsw_store",
         .slots = 50000,
         .max_value_size = 4096,
-        .num_threads = 32,
+        .num_threads = 32,         // 31 readers + 1 writer
         .test_duration_ms = 60000,
         .num_keys = 20000,
         .writer_period_us = 0,
