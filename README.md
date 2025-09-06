@@ -117,13 +117,18 @@ prices. This stuff is still off-the-shelf.
 
 - [ ] `splinterctl` CLI utility that includes snapshot / dump functionality
 - [ ] `splinterd` daemon TTL eviction, policy server
-- [ ] `splinterp` perf analysis tool (reads, writes)
 
 ### Next Planned Chores
 
 - [ ] Maybe a TAP-compatible test suite, and scripts to test the tools?
+- [ ] Validate correctness of the test harness itself; improve UX of perf test use and output
+      usefulness (very cryptic right now)
 - [ ] Tools need proper argument validation & parsing, version info, help summary
 
+### Help Wanted
+
+If someone wants to own the Rust bindings (and crate) - please let me know! `timthepost@protonmail.com`
+or just open an issue on GH.
 ---
 
 For developer docs, see `docs/` in the repo root. Doygen users can generate auto
