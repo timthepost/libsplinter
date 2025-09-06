@@ -7,7 +7,7 @@
 agents and ephemeral memory workflows, Splinter sits behind the scenes —
 synchronizing state between inference, retrieval, UI, and coordination layers.
 
-Inspired by the wisdom and discretion of _Master Splinter_, this bus never
+Inspired by the wisdom and discretion of _[Master Splinter](https://en.wikipedia.org/wiki/Splinter_(Teenage_Mutant_Ninja_Turtles))_, this bus never
 speaks unless spoken to, but is always ready.
 
 ---
