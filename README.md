@@ -113,6 +113,8 @@ Some kind of domain tick mechanism will likely be adopted prior to synchronizati
 becoming officially supported. Yes, hyperscale problems, but thankfully not hyperscale
 prices. This stuff is still off-the-shelf.
 
+---
+
 ### Next Major Feature Goals
 
 - [ ] `splinterctl` CLI utility that includes snapshot / dump functionality
