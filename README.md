@@ -129,6 +129,7 @@ prices. This stuff is still off-the-shelf.
 
 If someone wants to own the Rust bindings (and crate) - please let me know! `timthepost@protonmail.com`
 or just open an issue on GH.
+
 ---
 
 For developer docs, see `docs/` in the repo root. Doygen users can generate auto
