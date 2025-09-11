@@ -64,23 +64,34 @@ splinter_perf: splinter_perf.c splinter.o
 rust_bindings: libsplinter.so
 	cd bindings/rust && cargo build
 
+# Better experience if non-root tries root targets
+.PHONY: be_root
+
+be_root:
+	@if [ "$$(id -u)" != "0" ]; then \
+		echo "Error: Try that again, but as root." >&2; \
+		/bin/false >/dev/null 2>&1; \
+	fi
+
 # Install artifacts
 .PHONY: install
 
-install:
+install: be_root
 	install -m 0755 $(SHARED_LIBS) $(PREFIX)/lib/
 	install -m 0644 $(STATIC_LIBS) $(PREFIX)/lib/
 	install -m 0755 $(BIN_PROGS) $(PREFIX)/bin/
 	install -m 0644 $(SHARED_HEADERS) $(PREFIX)/include/
+	ldconfig
 
 # Un-install artifacts
 .PHONY: uninstall
 
-uninstall:
+uninstall: be_root
 	rm -f $(PREFIX)/lib/$(SHARED_LIBS)
 	rm -f $(PREFIX)/lib/$(STATIC_LIBS)
 	rm -f $(PREFIX)/bin/$(BIN_PROGS)
 	rm -f $(PREFIX)/include/$(SHARED_HEADERS)
+	ldconfig
 
 # Clean artifacts
 .PHONY: clean
