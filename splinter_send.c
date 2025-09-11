@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEFAULT_BUS "/runa_debug"
-#define DEFAULT_KEY "runa_response"
+#define DEFAULT_BUS "/splinter_debug"
+#define DEFAULT_KEY "splinter_response"
 
 int main(int argc, char **argv) {
     const char *bus = DEFAULT_BUS;
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
         value = argv[3];
     }
 
-    if (splinter_open(bus) != 0) {
+    if (splinter_open_or_create(bus, 128, 1024) != 0) {
         fprintf(stderr, "splinter-send: failed to open bus at %s\n", bus);
         return 1;
     }
