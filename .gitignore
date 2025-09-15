@@ -5,5 +5,5 @@ splinter_send
 splinter_recv
 splinter_test
 splinter_logtee
-splinter_perf
+splinter_stress
 docs/auto

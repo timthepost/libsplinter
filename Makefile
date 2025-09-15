@@ -9,7 +9,7 @@ STATIC_LIBS = libsplinter.a libsplinter_p.a
 SHARED_HEADERS = splinter.h
 
 # Helpers & tests
-BIN_PROGS = splinter_recv splinter_send splinter_logtee splinter_perf
+BIN_PROGS = splinter_recv splinter_send splinter_logtee splinter_stress
 TESTS = splinter_test
 
 # Default target
@@ -55,8 +55,8 @@ splinter_logtee: splinter_logtee.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_logtee.c splinter.o
 
 # Useful for actually testing libsplinter performance
-splinter_perf: splinter_perf.c splinter.o
-	$(CC) $(CFLAGS) -o $@ splinter_perf.c splinter.o
+splinter_stress: splinter_stress.c splinter.o
+	$(CC) $(CFLAGS) -o $@ splinter_stress.c splinter.o
 
 # Rust bindings; Deno bindings aren't quite automate-able yet.
 .PHONY: rust_bindings
