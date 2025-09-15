@@ -94,8 +94,10 @@ splinter/
 
 ```bash
 make        # builds both memory and persistent modes
-./splinter_test
+make tests
 ```
+
+Prompts for additional tests will be shown after the build.
 
 This builds:
 
@@ -166,10 +168,10 @@ prices. This stuff is still off-the-shelf.
 
 ### Next Planned Chores
 
-- [ ] Maybe a TAP-compatible test suite, and scripts to test the tools?
-- [ ] Validate correctness of the test harness itself; improve UX of perf test use and output
+- [*] Maybe a TAP-compatible test suite, and scripts to test the tools?
+- [*] Validate correctness of the test harness itself; improve UX of perf test use and output
       usefulness (very cryptic right now)
-- [ ] Tools need proper argument validation & parsing, version info, help summary
+- [-] Tools need proper argument validation & parsing, version info, help summary
 
 ### Help Wanted
 
