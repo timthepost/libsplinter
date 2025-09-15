@@ -37,11 +37,10 @@ splinter/
 ├── splinter_send.c      ← simple tool to send data on the bus
 ├── splinter_recv.c      ← simple tool to receive data on the bus
 ├── splinter_logtee.c    ← simple tool to drain bus keys to a file (non-destructively)
-├── splinter_perf.c      ← MRSW test harness (16 threads) for read concurrency
+├── splinter_stress.c    ← MRSW stress harness (16 threads default) for read concurrency
 ├── Makefile             ← build & test (memory + persistent builds)
 ├── bindings/rust/       ← Rust bindings (auto generated)
-└── bindings/ts/
-    └── deno_ffi.ts      ← Deno FFI interface (manually updated)
+└── bindings/ts/         ← TypeScript (Deno) bindings & class, tests (manually curated)
 ```
 
 ---
