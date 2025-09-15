@@ -1,11 +1,15 @@
-// cli/splinter_send.c
+/**
+ * A very crude tool to write to a key.
+ *
+ * This needs to be proper-ized (--help, --version, short options, etc)
+ */
 #include "splinter.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define DEFAULT_BUS "/splinter_debug"
-#define DEFAULT_KEY "splinter_response"
+#define DEFAULT_BUS "splinter_debug"
+#define DEFAULT_KEY "__debug"
 
 int main(int argc, char **argv) {
     const char *bus = DEFAULT_BUS;
