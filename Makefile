@@ -56,7 +56,7 @@ splinter_logtee: splinter_logtee.c splinter.o
 
 # Useful for actually testing libsplinter performance
 splinter_stress: splinter_stress.c splinter.o
-	$(CC) $(CFLAGS) -o $@ splinter_stress.c splinter.o
+	$(CC) $(CFLAGS) -o $@ -DHAVE_VALGRIND_H splinter_stress.c splinter.o
 
 # Rust bindings; Deno bindings aren't quite automate-able yet.
 .PHONY: rust_bindings
