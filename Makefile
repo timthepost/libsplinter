@@ -1,6 +1,8 @@
 CC ?= gcc
 AR ?= ar
 CFLAGS := -std=c11 -O2 -Wall -Wextra -D_GNU_SOURCE -fPIC
+# un-comment if you have valgrind-dev
+# CFLAGS += -DHAVE_VALGRIND_H
 PREFIX ?= /usr/local
 
 # Library objects
@@ -40,7 +42,7 @@ libsplinter_p.a: splinter_p.o
 
 # Test binary (uses memory-backed .so by default)
 splinter_test: splinter_test.c splinter.o
-	$(CC) $(CFLAGS) -DHAVE_VALGRIND_H -o $@ splinter_test.c splinter.o
+	$(CC) $(CFLAGS) -o $@ splinter_test.c splinter.o
 
 # A testing tool to block for exactly one message on the bus
 splinter_recv: splinter_recv.c splinter.o
@@ -56,7 +58,7 @@ splinter_logtee: splinter_logtee.c splinter.o
 
 # Useful for actually testing libsplinter performance
 splinter_stress: splinter_stress.c splinter.o
-	$(CC) $(CFLAGS) -o $@ -DHAVE_VALGRIND_H splinter_stress.c splinter.o
+	$(CC) $(CFLAGS) -o $@ splinter_stress.c splinter.o
 
 # Rust bindings; Deno bindings aren't quite automate-able yet.
 .PHONY: rust_bindings
