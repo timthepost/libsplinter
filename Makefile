@@ -40,7 +40,7 @@ libsplinter_p.a: splinter_p.o
 
 # Test binary (uses memory-backed .so by default)
 splinter_test: splinter_test.c splinter.o
-	$(CC) $(CFLAGS) -o $@ splinter_test.c splinter.o
+	$(CC) $(CFLAGS) -DHAVE_VALGRIND_H -o $@ splinter_test.c splinter.o
 
 # A testing tool to block for exactly one message on the bus
 splinter_recv: splinter_recv.c splinter.o
@@ -107,3 +107,14 @@ distclean: clean
 	rm -rf bindings/rust/target
 	rm -f  bindings/rust/Cargo.lock
 	rm -f  bindings/rust/src/bindings.rs
+
+# Tests
+.PHONY: tests
+
+tests: splinter_test splinter_stress
+	./splinter_test
+	@echo ""
+	@echo "You can run ./splinter_stress to run stress tests."
+	@echo "See ./splinter_stress --help for more."
+	@echo ""
+	@echo "You can/should also run tests under valgrind if you have it installed."
