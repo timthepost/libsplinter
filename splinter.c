@@ -61,6 +61,8 @@ struct splinter_header {
     uint32_t max_val_sz;
     /** @brief Global epoch, incremented on any write. Used for change detection. */
     atomic_uint_least64_t epoch;
+    /** @brief toggle for zeroing out the value region prior to writing there. */
+    atomic_uint_least32_t auto_vacuum;
 
     /* Diagnostics: counts of parse failures reported by clients / harnesses */
     atomic_uint_least64_t parse_failures;
@@ -184,6 +186,7 @@ int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz)
     H->slots = (uint32_t)slots;
     H->max_val_sz = (uint32_t)max_value_sz;
     atomic_store_explicit(&H->epoch, 1, memory_order_relaxed);
+    atomic_store_explicit(&H->auto_vacuum, 1, memory_order_relaxed);
     atomic_store_explicit(&H->parse_failures, 0, memory_order_relaxed);
     atomic_store_explicit(&H->last_failure_epoch, 0, memory_order_relaxed);
     
@@ -255,13 +258,31 @@ int splinter_open_or_create(const char *name_or_path, size_t slots, size_t max_v
 }
 
 /**
+ * @brief Sets the auto_vacuum atomic feature flag of the current bus (0 or 1)
+ * @return -2 if the bus is unavailable, 0 otherwise.
+ */
+int splinter_set_av(unsigned int mode) {
+    if (!H) return -2;
+    atomic_store_explicit(&H->auto_vacuum, mode, memory_order_relaxed);
+    return 0;   
+}
+
+/**
+ * @brief Get the auto_vacuum atomic feature flag of the current bus, as int.
+ * @return -2 if the bus is unavailable, value of the (unsigned) flag otherwise. 
+ */
+int splinter_get_av(void) {
+    if (!H) return -2;
+    return (int) atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed);
+}
+
+/**
  * @brief Closes the splinter store and unmaps the shared memory region.
  */
 void splinter_close(void) {
     if (g_base) munmap(g_base, g_total_sz);
     g_base = NULL; H = NULL; S = NULL; VALUES = NULL; g_total_sz = 0;
 }
-
 
 /**
  * @brief "unsets" a key (delete).
@@ -299,7 +320,10 @@ int splinter_unset(const char *key) {
             atomic_store_explicit(&slot->hash, 0, memory_order_release);
 
             // Cleanup
-            memset(VALUES + slot->val_off, 0, H->max_val_sz);
+
+            if (atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed) == 1) {
+                memset(VALUES + slot->val_off, 0, H->max_val_sz);
+            }
             memset(slot->key, 0, KEY_MAX);
             atomic_store_explicit(&slot->val_len, 0, memory_order_release);
 
@@ -364,7 +388,9 @@ int splinter_set(const char *key, const void *val, size_t len) {
             uint8_t *dst = (uint8_t *)VALUES + slot->val_off;
 
             // Clear full slot value region (keeps old tail bytes from leaking).
-            memset(dst, 0, H->max_val_sz);
+            if (atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed) == 1) {
+                memset(VALUES + slot->val_off, 0, H->max_val_sz);
+            }
             memcpy(dst, val, len);
 
             // Publish length atomically (release so readers see full bytes)

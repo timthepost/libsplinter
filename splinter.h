@@ -57,6 +57,16 @@ int splinter_create_or_open(const char *name_or_path, size_t slots, size_t max_v
 void splinter_close(void);
 
 /**
+ * @brief Set the value of the auto_vacuum flag on the current bus. 
+ */
+ int splinter_set_av(unsigned int mode);
+
+ /**
+  * @brief Get the value of the auto_vacuum flag on the current bus as integer.
+  */
+int splinter_get_av(void);
+
+/**
  * @brief Sets or updates a key-value pair in the store.
  * @param key The null-terminated key string.
  * @param val Pointer to the value data.

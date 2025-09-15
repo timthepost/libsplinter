@@ -255,6 +255,7 @@ int main(int argc, char **argv) {
         perror("splinter_create_or_open");
         return 1;
     }
+    splinter_set_av(0);
 
     printf("This is going to take a little while ...\n");
 
