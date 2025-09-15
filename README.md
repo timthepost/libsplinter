@@ -17,12 +17,57 @@ speaks unless spoken to, but is always ready.
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
 - 🔑 Lock-free design (utilizes atomic operations with seqlock for contention, EAGAIN for non-block operation)
-- 🧹 Auto-vacuuming (always zeroes out individual keys and value regions on creation, unset and update)
+- 🧹 Auto-vacuuming by default for hygenic memory mode; toggle-able instantaneously to hyper-scale mode without reloading. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW contract is broken at huge scale.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
 - 🦕 Deno and Rust bindings included!
+
+---
+
+## How Does Splinter Compare With Other Stores?
+
+It's important to first re-state: Splinter isn’t a database — it’s a **shared-memory exchange**.  It’s designed for the 
+**multi-reader, single-writer (MRSW)** case where speed matters more than schema (though it holds up surprisingly well
+with multiple concurrent writers, we don't design for / suggest it). 
+
+Unlike traditional KV stores, Splinter gives you a choice:  
+
+- **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before reuse. Perfect for LLM scratchpads and
+  training contexts where stale data must never leak back.
+  
+- **Throughput mode (`auto_vacuum=off`)** — skips scrubbing for maximum raw speed. Ideal for message buses, ephemeral
+  caches, or event streams where yesterday’s payload doesn’t matter.  
+
+This toggle makes Splinter unique: the same lightweight library can behave like a data autoclave or like a firehose, 
+depending on your workload.
+
+Here's a table to help you see where Splinter lands in contrast with what's around:
+
+| Feature / System          | **Splinter**                | SQLite (`:memory:` / shm) | LMDB                 | Tokyo/Kyoto Cabinet | Kernel Seqlock/RCU |
+|---------------------------|------------------------------|---------------------------|----------------------|---------------------|--------------------|
+| Language / API            | C (simple, flat API)        | C (SQL layer)             | C (B+tree API)       | C                   | Kernel only        |
+| Persistence               | Optional (mem-only focus)   | Yes (journaling)          | Yes (copy-on-write)  | Yes (files/dbs)     | No                 |
+| Concurrency Model         | **Single-writer, many-reader (MRSW)** | Serialized via locks/transactions | **Single-writer, many-reader (MRSW)** | Basic locks         | **Single-writer, many-reader (MRSW)** |
+| Lock-Free Reads           | ✅ Yes (seqlock snapshot)   | ❌ No                      | ✅ Yes (MVCC pages)  | ❌ No                | ✅ Yes             |
+| Write Safety              | Atomic + seqlock            | Transaction journal        | Page copy-on-write   | Record lock         | Sequence lock      |
+| Hygiene / Auto-Vacuum     | **Toggleable (scrub or not)** | Heavyweight VACUUM        | None (stale pages reclaimed) | None               | N/A                |
+| Typical Use               | **LLM scratchpad, message bus, ephemeral KV** | Relational queries, structured cache | Embedded KV DB with persistence | Lightweight persistent KV | Kernel timekeeping, counters |
+| Overhead per Write        | Low (memcpy + atomics)      | High (SQL parse + journaling) | Medium (page churn) | Medium              | Low (in-kernel)    |
+| Throughput Focus          | **Yes, bus-scale**          | ❌ No                      | Balanced (read-heavy) | Balanced            | Yes (in kernel)    |
+
+Splinter is the only user-space C library (I/we know of) that combines:  
+
+- Lock-free reads (seqlock snapshots)  
+- Single-writer atomicity without global mutexes  
+- Optional "sterile memory" mode for training-safe hygiene  
+- Lightweight enough to double as a pub/sub message bus
+
+This is easily shared and synchronized between languages through Splinter's bindings - you can easily share
+address space between Inference (in C / llama.cpp) and TypeScript (Deno / Oak) for instance. Moving model
+context histories around can really become just changing pointer locations, and so many other high-performance
+pub/sub workflows!
 
 ---
 
