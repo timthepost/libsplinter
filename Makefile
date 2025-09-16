@@ -1,8 +1,6 @@
 CC ?= gcc
 AR ?= ar
 CFLAGS := -std=c11 -O2 -Wall -Wextra -D_GNU_SOURCE -fPIC
-# un-comment if you have valgrind-dev
-# CFLAGS += -DHAVE_VALGRIND_H
 PREFIX ?= /usr/local
 
 # Library objects
