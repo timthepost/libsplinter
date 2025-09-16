@@ -17,7 +17,7 @@ speaks unless spoken to, but is always ready.
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
 - 🔑 Lock-free design (utilizes atomic operations with seqlock for contention, EAGAIN for non-block operation)
-- 🧹 Auto-vacuuming by default for hygenic memory mode; toggle-able instantaneously to hyper-scale mode without reloading. 
+- 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly to hyper-scale mode without reloading. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW contract is broken at huge scale.
 - ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress!
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
@@ -138,17 +138,22 @@ The persistent version:
 - Can be snapshot/dumped with `dd`, `cp`, etc.
 
 However, understand the limitations of the underlying file system and whatever
-media is backing it. Network synchronization is currently not supported, but is
-being contemplated in a way that:
+media is backing it. NVMe storage will be quite fast, rotating media will be 
+much slower.
 
-- nodes run memory-only stores that sync among each other over secure sockets,
-  and,
-- one (or more) of the memory-only stores also synchronizes to a local
-  persistent store.
+## Network Synchronization
 
-That may sound simple in theory, but keeping it performant in a way that also
-supports workflows like tokenizing input _on the bus_ while in transit adds
-rather tight constraints.
+Network synchronization is currently not _officially_ supported and probably will
+not be unless the project picks up equipment donations or people willing to give 
+access to machines with high-bandwidth cards in them for testing and development.
+
+If you'd like to help in this way, please email me directly at 
+`timthepost@protonmail.com` with libsplinter somewhere in the subject line. 
+
+That said, you have some options you can try right now, and I'll do my best to 
+help if I can:
+
+### Funded Startup Budget
 
 For **high-bandwidth** network solutions like 25G RoCE, RDMA becomes very 
 practical (albeit latency goes from a few nanoseconds to maybe 10ms). If that's
@@ -157,23 +162,59 @@ NVIDIA/Mellanox Cards go up to. You can also use the persistent mode on
 NVMe/RDMA setups. This won't be as fast as "native", and can still get 
 racey if latency is inconsistent. 
 
-Some kind of domain tick mechanism will likely be adopted prior to synchronization
-becoming officially supported. Yes, hyperscale problems, but thankfully not hyperscale
-prices. This stuff is still off-the-shelf.
+### Broke College Student Self-Funding A Research Project
+
+You have options! They just require a little more time on your part.
+
+#### NFS (Best Bet)
+
+Your easiest route is going to be to use persistent mode and NFS.
+
+You can have a setup where a network server hosts the stores, and all compute 
+nodes mount via NFS. They all mmap the same region, so while it's a little slower, 
+it's definitely sound and will work probably without issue. 
+
+Use small block sizes on the client side to lower latency and think about the
+size of your writes / reads, something like:
+
+```bash
+mount -t nfs -o rsize=8192,wsize=8192,timeo=14,intr,vers=3 \
+  server:/export/splinter /mnt/splinter
+```
+
+You may have to play with / tune this, but it should work reliably.
+
+#### Make A UDP Bridge
+
+You can broadcast key updates over UDP and have nodes write them upon
+receiving the packets. Hey, it's UDP - it is what it is. But it's an
+option and on a decent local network it should be fine. 
+
+I'd love a PR with whatever you come up with.
+
+#### Make A Deno / Oak -> REST Gateway
+
+Use the Deno FFI bindings + Oak to make a very simple REST interface. I'll include
+a sample one at some point, but any LLM can roll this for you in a few seconds with
+the included FFI bindings and TS class for Splinter.
 
 ---
 
 ### Next Major Feature Goals
+
+"*" = In Progress
 
 - [ ] `splinterctl` CLI utility that includes snapshot / dump functionality
 - [ ] `splinterd` daemon TTL eviction, policy server
 
 ### Next Planned Chores
 
-- [*] Maybe a TAP-compatible test suite, and scripts to test the tools?
-- [*] Validate correctness of the test harness itself; improve UX of perf test use and output
+"*" = In Progress
+
+- [✅] Maybe a TAP-compatible test suite, and scripts to test the tools?
+- [✅] Validate correctness of the test harness itself; improve UX of perf test use and output
       usefulness (very cryptic right now)
-- [-] Tools need proper argument validation & parsing, version info, help summary
+- [*] Tools need proper argument validation & parsing, version info, help summary
 
 ### Help Wanted
 
