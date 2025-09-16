@@ -234,7 +234,7 @@ the included FFI bindings and TS class for Splinter.
 "*" = In Progress
 
 - [ ] `splinterctl` CLI utility that includes snapshot / dump functionality
-- [ ] `splinterd` daemon TTL eviction, policy server
+- [ ] `splinterd` daemon to enforce ttl eviction
 
 ### Next Planned Chores
 
@@ -242,8 +242,8 @@ the included FFI bindings and TS class for Splinter.
 
 - [✅] Maybe a TAP-compatible test suite, and scripts to test the tools?
 - [✅] Validate correctness of the test harness itself; improve UX of perf test use and output
-      usefulness (very cryptic right now)
-- [*] Tools need proper argument validation & parsing, version info, help summary
+       usefulness (very cryptic right now)
+- [✅] Tools need proper argument validation & parsing, version info, help summary
 
 ### Help Wanted
 
