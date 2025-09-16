@@ -2,10 +2,11 @@
 
 > _“I am always here, my sons. Even when unseen.”_
 
-**Splinter** is a minimalist, high-speed message bus using shared memory
-(`memfd`) or memory-mapped files for persistent backing. Designed to support AI
-agents and ephemeral memory workflows, Splinter sits behind the scenes —
-synchronizing state between inference, retrieval, UI, and coordination layers.
+**Splinter** is a minimalist, high-speed message bus and subscribable KV store 
+using shared memory (`memfd`) or memory-mapped files for persistent backing. 
+Designed to support AI agents and ephemeral memory workflows, Splinter sits 
+behind the scenes — synchronizing state between inference, retrieval, UI, 
+and coordination layers.
 
 Inspired by the wisdom and discretion of _[Master Splinter](https://en.wikipedia.org/wiki/Splinter_(Teenage_Mutant_Ninja_Turtles))_, this bus never
 speaks unless spoken to, but is always ready.
