@@ -3,10 +3,20 @@
 > _“I am always here, my sons. Even when unseen.”_
 
 **Splinter** is a minimalist, high-speed message bus and subscribable KV store 
-using shared memory (`memfd`) or memory-mapped files for persistent backing. 
+that operates in shared memory (`memfd`) or uses memory-mapped files for 
+persistent backing. 
+
 Designed to support AI agents and ephemeral memory workflows, Splinter sits 
 behind the scenes — synchronizing state between inference, retrieval, UI, 
 and coordination layers.
+
+But, Splinter isn't limited to inference, training and generation workflows;
+it can power advanced IPC and messaging systems at extreme scales, or just 
+act as a lightweight, subscribeable and reliable KV store.
+
+Rust and TypeScript (Deno) bindings included, designed to be FFI-friendly
+for other languages, too. Splinter is a bridge to share address space 
+between otherwise incompatible environments.
 
 Inspired by the wisdom and discretion of _[Master Splinter](https://en.wikipedia.org/wiki/Splinter_(Teenage_Mutant_Ninja_Turtles))_, this bus never
 speaks unless spoken to, but is always ready.
