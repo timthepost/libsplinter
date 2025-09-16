@@ -4,7 +4,7 @@
 #ifndef SPLINTER_CONFIG_H
 #define SPLINTER_CONFIG_H
 
-#define SPLINTER_VERSION "0.0.3"
+#define SPLINTER_VERSION "0.0.4"
 
 // so tools can be used without many / any arguments
 #define DEFAULT_BUS "splinter_debug"
