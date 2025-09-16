@@ -22,7 +22,8 @@ speaks unless spoken to, but is always ready.
      hyper-scale no-scrubbing mode without reloading. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW
      contract is broken at huge scale.
-- ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress!
+- ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress
+     with vacuuming disabled.
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
