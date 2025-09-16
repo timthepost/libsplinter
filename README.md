@@ -29,8 +29,8 @@ speaks unless spoken to, but is always ready.
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
 - 🔑 Lock-free design (utilizes atomic operations with seqlock for contention,
      EAGAIN for non-block operation)
-- 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly for
-     hyper-scale no-scrubbing mode without reloading. 
+- 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly without
+     reloading or restarting anything. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW
      contract is broken at huge scale.
 - ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress
@@ -40,6 +40,9 @@ speaks unless spoken to, but is always ready.
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
 - 🦕 Deno and Rust bindings included!
+- ⚙️ Embeddable and extendable; easy to build upon! Apache 2 license by default,
+     dual-MIT license available at low-cost / free (reach out to
+     `timthepost@protonmail.com`)
 
 ---
 
