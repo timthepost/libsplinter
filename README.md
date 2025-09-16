@@ -19,6 +19,8 @@ speaks unless spoken to, but is always ready.
 - 🔑 Lock-free design (utilizes atomic operations with seqlock for contention, EAGAIN for non-block operation)
 - 🧹 Auto-vacuuming by default for hygenic memory mode; toggle-able instantaneously to hyper-scale mode without reloading. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW contract is broken at huge scale.
+- ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress!
+- ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
