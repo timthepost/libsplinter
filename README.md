@@ -80,7 +80,7 @@ splinter/
 ├── README.md            ← this doc
 ├── splinter.h           ← public API
 ├── splinter.c           ← implementation
-├── splinter_test.c      ← example / smoke test
+├── splinter_test.c      ← TAP-compatible unit tests
 ├── splinter_send.c      ← simple tool to send data on the bus
 ├── splinter_recv.c      ← simple tool to receive data on the bus
 ├── splinter_logtee.c    ← simple tool to drain bus keys to a file (non-destructively)
@@ -140,6 +140,8 @@ The persistent version:
 However, understand the limitations of the underlying file system and whatever
 media is backing it. NVMe storage will be quite fast, rotating media will be 
 much slower.
+
+---
 
 ## Network Synchronization
 
