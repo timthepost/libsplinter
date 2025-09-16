@@ -229,23 +229,17 @@ the included FFI bindings and TS class for Splinter.
 
 ---
 
-### Next Major Feature Goals
-
-"*" = In Progress
+### Next Major Feature Goals:
 
 - [ ] `splinterctl` CLI utility that includes snapshot / dump functionality
+
 - [ ] `splinterd` daemon to enforce ttl eviction
 
-### Next Planned Chores
+### Next Planned Chores:
 
-"*" = In Progress
-
-- [✅] ~~Maybe a TAP-compatible test suite, and scripts to test the tools?~~
-- [✅] ~~Validate correctness of the test harness itself; improve UX of perf test use and output
-       usefulness (very cryptic right now)~~
-- [✅] ~~Tools need proper argument validation & parsing, version info, help summary~~
-
-### Help Wanted
+- [ ] Create a Lume docs site for the library
+      
+### Help Wanted:
 
 If someone wants to own the Rust bindings (and crate) - please let me know! `timthepost@protonmail.com`
 or just open an issue on GH.
