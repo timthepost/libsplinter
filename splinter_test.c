@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include "splinter.h"
+#include "config.h"
 
 #ifdef HAVE_VALGRIND_H
 #include <valgrind/valgrind.h>
