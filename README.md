@@ -240,10 +240,10 @@ the included FFI bindings and TS class for Splinter.
 
 "*" = In Progress
 
-- [✅] Maybe a TAP-compatible test suite, and scripts to test the tools?
-- [✅] Validate correctness of the test harness itself; improve UX of perf test use and output
-       usefulness (very cryptic right now)
-- [✅] Tools need proper argument validation & parsing, version info, help summary
+- [✅] ~~Maybe a TAP-compatible test suite, and scripts to test the tools?~~
+- [✅] ~~Validate correctness of the test harness itself; improve UX of perf test use and output
+       usefulness (very cryptic right now)~~
+- [✅] ~~Tools need proper argument validation & parsing, version info, help summary~~
 
 ### Help Wanted
 
