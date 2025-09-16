@@ -31,10 +31,11 @@
 #include <errno.h>
 #include <time.h>
 #include <stdint.h>
+#include "config.h"
 
 /** @brief Magic number to identify a splinter memory region. */
 #define SPLINTER_MAGIC 0x534C4E54
-/** @brief Version of the splinter data format. */
+/** @brief Version of the splinter data format (not the library version). */
 #define SPLINTER_VER   1
 /** @brief Maximum length of a key string, including null terminator. */
 #define KEY_MAX        64
