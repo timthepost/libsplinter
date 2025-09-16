@@ -44,7 +44,12 @@ Unlike traditional KV stores, Splinter gives you a choice:
   training contexts where stale data must never leak back.
   
 - **Throughput mode (`auto_vacuum=off`)** — skips scrubbing for maximum raw speed. Ideal for message buses, ephemeral
-  caches, or event streams where yesterday’s payload doesn’t matter.  
+  caches, or event streams where yesterday’s payload doesn’t matter.
+
+Note that even with `auto_vacuum` disabled, leaks are only possible when a reader _deliberately_ under-reads the bus;
+that is to say reads less than the informed value length (which is atomic). It's a very unlikely scenario that's only
+caused in the real world by synchronization problems, but because contamination in training is on the table, we make
+a big deal about it. ***Most non-scientific users won't ever care about or notice scrubbing and vacuum settings.***
 
 This toggle makes Splinter unique: the same lightweight library can behave like a data autoclave or like a firehose, 
 depending on your workload.
