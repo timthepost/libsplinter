@@ -16,9 +16,12 @@ speaks unless spoken to, but is always ready.
 
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
-- 🔑 Lock-free design (utilizes atomic operations with seqlock for contention, EAGAIN for non-block operation)
-- 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly to hyper-scale mode without reloading. 
-- 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW contract is broken at huge scale.
+- 🔑 Lock-free design (utilizes atomic operations with seqlock for contention,
+     EAGAIN for non-block operation)
+- 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly for
+     hyper-scale no-scrubbing mode without reloading. 
+- 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW
+     contract is broken at huge scale.
 - ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress!
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
