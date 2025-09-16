@@ -41,15 +41,18 @@ with multiple concurrent writers, we don't design for / suggest it).
 Unlike traditional KV stores, Splinter gives you a choice:  
 
 - **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before reuse. Perfect for LLM scratchpads and
-  training contexts where stale data must never leak back.
+  training contexts where stale data must never leak back. It's like taking a shower and washing your clothes with
+  every step you take. No contamination, but it requires every update to write twice.
   
 - **Throughput mode (`auto_vacuum=off`)** — skips scrubbing for maximum raw speed. Ideal for message buses, ephemeral
-  caches, or event streams where yesterday’s payload doesn’t matter.
+  caches, or event streams where under-reading will not happen (or matter). Reading past the atomic advertised value
+  length (up to the max value length) could result in fetching random stale data. This isn't possible through normal
+  use of the library, but could happen if you've got synchronization issues going on in your code.
 
 Note that even with `auto_vacuum` disabled, leaks are only possible when a reader _deliberately_ under-reads the bus;
-that is to say reads less than the informed value length (which is atomic). It's a very unlikely scenario that's only
-caused in the real world by synchronization problems, but because contamination in training is on the table, we make
-a big deal about it. ***Most non-scientific users won't ever care about or notice scrubbing and vacuum settings.***
+that is to say reads less than the informed value length (which is atomic). It's a very unlikely scenario, but we'd be
+irresponsible not to call it out as a possibility. ***Most non-scientific users won't ever care about or notice 
+scrubbing and vacuum settings.***
 
 This toggle makes Splinter unique: the same lightweight library can behave like a data autoclave or like a firehose, 
 depending on your workload. And, you can toggle on-the-fly; it's just setting a number, no re-loads or anything 
