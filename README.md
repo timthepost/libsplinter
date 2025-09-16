@@ -52,7 +52,8 @@ caused in the real world by synchronization problems, but because contamination 
 a big deal about it. ***Most non-scientific users won't ever care about or notice scrubbing and vacuum settings.***
 
 This toggle makes Splinter unique: the same lightweight library can behave like a data autoclave or like a firehose, 
-depending on your workload.
+depending on your workload. And, you can toggle on-the-fly; it's just setting a number, no re-loads or anything 
+required.
 
 Here's a table to help you see where Splinter lands in contrast with what's around:
 
