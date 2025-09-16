@@ -49,14 +49,14 @@ Unlike traditional KV stores, Splinter gives you a choice:
   length (up to the max value length) could result in fetching random stale data. This isn't possible through normal
   use of the library, but could happen if you've got synchronization issues going on in your code.
 
-Note that even with `auto_vacuum` disabled, leaks are only possible when a reader _deliberately_ under-reads the bus;
-that is to say reads less than the informed value length (which is atomic). It's a very unlikely scenario, but we'd be
-irresponsible not to call it out as a possibility. ***Most non-scientific users won't ever care about or notice 
-scrubbing and vacuum settings.***
+Leaks are a very unlikely scenario, but it would be irresponsible not to call it out as a possibility. ***Most non-scientific 
+users won't ever care about or notice scrubbing and vacuum settings.*** Splinter "just works" - it was built to be 
+intuitive and (relatively) fool-proof. 
 
-This toggle makes Splinter unique: the same lightweight library can behave like a data autoclave or like a firehose, 
-depending on your workload. And, you can toggle on-the-fly; it's just setting a number, no re-loads or anything 
-required.
+The toggle-ability, especially on-the-fly, however, _does_ make Splinter unique: the same lightweight (minus comments, it's under
+500 lines of code) library can behave like a data autoclave or like a firehose, depending on your workload. And, you can toggle on-the-fly; 
+it's just setting a number, no re-loads or anything required. It's small because it's engineered to be as tiny as possible,
+not because it's not capable or serious.
 
 Here's a table to help you see where Splinter lands in contrast with what's around:
 
