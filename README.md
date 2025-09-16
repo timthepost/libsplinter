@@ -22,7 +22,8 @@ speaks unless spoken to, but is always ready.
      hyper-scale no-scrubbing mode without reloading. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW
      contract is broken at huge scale.
-- ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress!
+- ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress
+     with vacuuming disabled.
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
@@ -40,13 +41,22 @@ with multiple concurrent writers, we don't design for / suggest it).
 Unlike traditional KV stores, Splinter gives you a choice:  
 
 - **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before reuse. Perfect for LLM scratchpads and
-  training contexts where stale data must never leak back.
+  training contexts where stale data must never leak back. It's like taking a shower and washing your clothes with
+  every step you take. No contamination, but it requires every update to write twice.
   
 - **Throughput mode (`auto_vacuum=off`)** — skips scrubbing for maximum raw speed. Ideal for message buses, ephemeral
-  caches, or event streams where yesterday’s payload doesn’t matter.  
+  caches, or event streams where under-reading will not happen (or matter). Reading past the atomic advertised value
+  length (up to the max value length) could result in fetching random stale data. This isn't possible through normal
+  use of the library, but could happen if you've got synchronization issues going on in your code.
 
-This toggle makes Splinter unique: the same lightweight library can behave like a data autoclave or like a firehose, 
-depending on your workload.
+Leaks are a very unlikely scenario, but it would be irresponsible not to call it out as a possibility. ***Most non-scientific 
+users won't ever care about or notice scrubbing and vacuum settings.*** Splinter "just works" - it was built to be 
+intuitive and (relatively) fool-proof. 
+
+The toggle-ability, especially on-the-fly, however, _does_ make Splinter unique: the same lightweight (minus comments, it's under
+500 lines of code) library can behave like a data autoclave or like a firehose, depending on your workload. And, you can toggle on-the-fly; 
+it's just setting a number, no re-loads or anything required. It's small because it's engineered to be as tiny as possible,
+not because it's not capable or serious.
 
 Here's a table to help you see where Splinter lands in contrast with what's around:
 
