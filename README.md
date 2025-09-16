@@ -162,7 +162,7 @@ NVIDIA/Mellanox Cards go up to. You can also use the persistent mode on
 NVMe/RDMA setups. This won't be as fast as "native", and can still get 
 racey if latency is inconsistent. 
 
-### Broke College Student Self-Funding A Research Project
+### Broke College Student Self-Funding A Research Project Budget
 
 You have options! They just require a little more time on your part.
 
