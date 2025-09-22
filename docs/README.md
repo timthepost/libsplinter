@@ -198,12 +198,12 @@ int main() {
 
 Libsplinter uses a single value region and stores offsets for recalling specific values by key. Value slots can be up to a configurable length, typically 4k. By default, splinter zeros out the entire 4k prior to every update, so that writes that are smaller than the current occupied size don't leave fragments old values behind, becaus they aren't large enough to overwrite them completely. 
 
-This is the default because, for LLM workloads, even a slight nonzero chance of stale data leaking back into active keys and corrupting training or context is unnacceptable. The circumstances under which it can happen aren't even a supported use case, but if you have any kind of synchronization issues where threads flip from being readers to writers erroneously, it becomes likely enough that I coded defensively against it.
+This is the default because, for LLM workloads, even a slight nonzero chance of stale data leaking back into active keys and corrupting training or context is unnacceptable. Those piping LLM workflows are also using serializiation and protocols _that are easy to test for tearing_ but _extremely difficult to test for staleness or leakage_ In most cases, LLM workflows _want_ torn reads because they're easier to spot.
+
+The circumstances under which torn reads can happen aren't even a supported use case, but if you have any kind of synchronization issues where threads flip from being readers to writers erroneously, it becomes likely enough to happen accidentally that I coded defensively against it.
 
 So, in "Facebook / Anthropic" scale levels (which we're not even designed to serve), you can turn
-off the extra memset() and get zero torn read guarantee instead.
-
-To do this, just:
+off the extra `memset()` call and get zero torn read guarantee instead of no leak guarantee:
 
 `splinter_set_av(0);`
 
@@ -318,7 +318,9 @@ static inline uint32_t splinter_flag_snapshot(const splinter_bus_header_t *hdr) 
 }
 ```
 
-This just splits use of them down the middle which isn't strictly necessary; I cant' imagine ever needing more than a few flags ever for internal housekeeping use, so the majority (28 - 30) of the rest of them could be implementation-defined pretty safely. 
+Finally, we will need to update `splinter_set_av()` and `splinter_get_av()` to set the first flag instead, and also clear flags / flip the auto vacuum flag to on by default in `splinter_create()`.
+
+This plan just splits use of them down the middle which isn't strictly necessary; I cant' imagine ever needing more than a few flags ever for internal housekeeping use, so the majority (28 - 30) of the rest of them could be implementation-defined pretty safely. It would depend on what the additional need was. 
 
 Either way, you don't need to do anything other than set it to 0 before changing the header over, if you're currently using persistent mode. 
 
