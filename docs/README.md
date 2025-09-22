@@ -194,6 +194,23 @@ int main() {
 
 ---
 
+## Advanced Usage - Auto Vacuum (Auto-scrubbing)
+
+Libsplinter uses a single value region and stores offsets for recalling specific values by key. Value slots can be up to a configurable length, typically 4k. By default, splinter zeros out the entire 4k prior to every update, so that writes that are smaller than the current occupied size don't leave fragments old values behind, becaus they aren't large enough to overwrite them completely. 
+
+This is the default because, for LLM workloads, even a slight nonzero chance of stale data leaking back into active keys and corrupting training or context is unnacceptable. The circumstances under which it can happen aren't even a supported use case, but if you have any kind of synchronization issues where threads flip from being readers to writers erroneously, it becomes likely enough that I coded defensively against it.
+
+So, in "Facebook / Anthropic" scale levels (which we're not even designed to serve), you can turn
+off the extra memset() and get zero torn read guarantee instead.
+
+To do this, just:
+
+`splinter_set_av(0);`
+
+See `splinter_stress.c` for more. 
+
+---
+
 ## API Reference
 
 ### Setup and Teardown
@@ -217,8 +234,93 @@ int main() {
 - `int splinter_list(char **out_keys, size_t max_keys, size_t *out_count)` Fills
   an array with pointers to all keys in the store.
 
+### Bus Management
+ - `int splinter_set_av(unsigned int mode)` Sets the auto vacuum mode of the current
+   bus to `mode` (0 = off, 1 = on, default = 1). See the docs prior to changing this.
+ - `int splinter_get_av(void)` Gets the (atomic) value of the auto vacuum toggle. 
+
 ### Pub/Sub
 
 - `int splinter_poll(const char *key, uint64_t timeout_ms)` Blocks until the
   specified key is updated by a `splinter_set` call, or until the timeout is
   reached.
+
+#### Adding Additional Feature Flags:
+
+Right now we only have one feature, so there's no reason to build up around having many, but if the need arises there is a plan (which you can implement yourself if you need it right now):
+
+Currently, Splinter's global bus data structure looks like this:
+
+```c
+struct splinter_header {
+    /** @brief Magic number (SPLINTER_MAGIC) to verify integrity. */
+    uint32_t magic;
+    /** @brief Data layout version (SPLINTER_VER). */
+    uint32_t version;
+    /** @brief Total number of available key-value slots. */
+    uint32_t slots;
+    /** @brief Maximum size for any single value. */
+    uint32_t max_val_sz;
+    /** @brief Global epoch, incremented on any write. Used for change detection. */
+    atomic_uint_least64_t epoch;
+    /** @brief toggle for zeroing out the value region prior to writing there. */
+    atomic_uint_least32_t auto_vacuum;
+
+    /* Diagnostics: counts of parse failures reported by clients / harnesses */
+    atomic_uint_least64_t parse_failures;
+    atomic_uint_least64_t last_failure_epoch;
+};
+```
+
+This is later type-defined as `splinter_header_t` opqauely in the library.
+
+The only _current_ feature flag is `auto_vacuum`, which consumes the entire `atomic_uint_least32_t`. This isn't wasteful because we have no other features; there's no other 
+purpose it can currently serve. 
+
+Should that change, we can easily just break that down into 32 individual flags, with the first few being reserved for system use and the rest being available as `USR_FLAG_NN`.  The bus structure itself doesn't change (well, the variable name changes from `auto_vacuum` to `flags`), and 
+then instead of treating it like a Boolean value, we do something like:
+
+```c
+/* System flags (0–15) */
+#define SPL_FLAG_AUTO_VACUUM   (1u << 0)
+#define SPL_FLAG_RES_GP2       (1u << 1)
+#define SPL_FLAG_RES_GP3       (1u << 2)
+/* ... */
+#define SPL_FLAG_RES_GP16      (1u << 15)
+
+/* User flags (16–31) */
+#define SPL_FLAG_USR1          (1u << 16)
+#define SPL_FLAG_USR2          (1u << 17)
+/* ... */
+#define SPL_FLAG_USR16         (1u << 31)
+```
+
+But we don't want to have to expose (in addition to these new constants) anything 
+more than `splinter_header_t` in the public header. So, rather than just inviting
+callers to operate on `flags` directly by exposing the structure, we create some
+helpers, for instance:
+
+```c
+static inline void splinter_flag_set(splinter_bus_header_t *hdr, uint32_t mask) {
+    atomic_fetch_or(&hdr->flags, mask);
+}
+
+static inline void splinter_flag_clear(splinter_bus_header_t *hdr, uint32_t mask) {
+    atomic_fetch_and(&hdr->flags, ~mask);
+}
+
+static inline int splinter_flag_test(const splinter_bus_header_t *hdr, uint32_t mask) {
+    return (atomic_load(&hdr->flags) & mask) != 0;
+}
+
+static inline uint32_t splinter_flag_snapshot(const splinter_bus_header_t *hdr) {
+    return atomic_load(&hdr->flags);
+}
+```
+
+This just splits use of them down the middle which isn't strictly necessary; I cant' imagine ever needing more than a few flags ever for internal housekeeping use, so the majority (28 - 30) of the rest of them could be implementation-defined pretty safely. 
+
+Either way, you don't need to do anything other than set it to 0 before changing the header over, if you're currently using persistent mode. 
+
+***If it looks like Splinter needs more than one feature flag***, this is definitely how I'll implement it. I'm just not doing it yet as it adds weight to the public header without more than one consumer of the field. 
+
