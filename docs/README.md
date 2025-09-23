@@ -301,19 +301,19 @@ callers to operate on `flags` directly by exposing the structure, we create some
 helpers, for instance:
 
 ```c
-static inline void splinter_flag_set(splinter_bus_header_t *hdr, uint32_t mask) {
+void splinter_flag_set(splinter_bus_header_t *hdr, uint32_t mask) {
     atomic_fetch_or(&hdr->flags, mask);
 }
 
-static inline void splinter_flag_clear(splinter_bus_header_t *hdr, uint32_t mask) {
+void splinter_flag_clear(splinter_bus_header_t *hdr, uint32_t mask) {
     atomic_fetch_and(&hdr->flags, ~mask);
 }
 
-static inline int splinter_flag_test(const splinter_bus_header_t *hdr, uint32_t mask) {
+int splinter_flag_test(const splinter_bus_header_t *hdr, uint32_t mask) {
     return (atomic_load(&hdr->flags) & mask) != 0;
 }
 
-static inline uint32_t splinter_flag_snapshot(const splinter_bus_header_t *hdr) {
+uint32_t splinter_flag_snapshot(const splinter_bus_header_t *hdr) {
     return atomic_load(&hdr->flags);
 }
 ```
