@@ -260,7 +260,9 @@ int main(int argc, char **argv) {
 
     printf("This is going to take a little while ...\n");
 #ifdef HAVE_VALGRIND_H
-    printf("Valgrind Detected! This will likely quadruple the test length (or more)\n");
+    if (RUNNING_ON_VALGRIND) {
+        printf("Valgrind Detected! This will likely quadruple the test length (or more)\n");
+    }
 #endif
     printf("Please be patient ...\n");
     char **keys = calloc((size_t)cfg.num_keys, sizeof(char*));
