@@ -118,6 +118,4 @@ tests: splinter_test splinter_stress
 	@echo "See ./splinter_stress --help for more."
 	@echo ""
 	@echo "You can/should also run tests under valgrind if you have it installed."
-	@echo "Un-comment line 5 in this Makefile to enable integration, rebuild, and"
-	@echo "run valgrind ./splinter_tests or (if you have a while) valgrind ./splinter_stress"
-	@echo "This will soon be automatic-ish ..."
+	@echo "Enable via HAVE_VALGRIND_H in config.h if you haven't already."
