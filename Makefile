@@ -88,7 +88,7 @@ install: be_root
 	install -m 0755 $(SHARED_LIBS) $(PREFIX)/lib/
 	install -m 0644 $(STATIC_LIBS) $(PREFIX)/lib/
 	install -m 0755 $(BIN_PROGS) $(PREFIX)/bin/
-	ln -s $(PREFIX)/bin/splinter_cli $(PREFIX)/bin/splinterctl
+	ln -s -f $(PREFIX)/bin/splinter_cli $(PREFIX)/bin/splinterctl
 	install -m 0644 $(SHARED_HEADERS) $(PREFIX)/include/
 	ldconfig
 
