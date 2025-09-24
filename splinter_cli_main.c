@@ -4,6 +4,19 @@
 
 #include "splinter_cli.h"
 
+/**
+ * TODO:
+ *  - Implement command structures, helpers, aliases and "watch"
+ *  - Test async input with watch
+ *  - Implement getopt_long() arguments
+ *  - Implement commands and command help displays
+ *     - first the structural ones (help, exit, etc)
+ *     - then the rest of the splinter ones (get, set, etc)
+ *     - then access them non-interactively successfully as appropriate
+ *  - (Maybe) implement code for editor with "edit" command just to access for now?
+ *  - (Maybe) implement some kind of test harness to test the commands?
+ */
+
 enum mode {
     MODE_REPL,
     MODE_NO_REPL
@@ -50,6 +63,6 @@ int main (int argc, char *argv[]) {
     if (m == MODE_REPL) {
         rc = cli_handle_input(0, "DancingSkeleton > ");
     }
-    
+
     return rc;
 }
