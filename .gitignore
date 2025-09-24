@@ -7,4 +7,5 @@ splinter_test
 splinter_logtee
 splinter_stress
 splinter_cli
+splinterctl
 docs/auto
