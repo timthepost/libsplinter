@@ -1,14 +1,16 @@
 CC ?= gcc
 AR ?= ar
-CFLAGS := -std=c11 -O2 -Wall -Wextra -D_GNU_SOURCE -fPIC
+CFLAGS := -std=c11 -O2 -Wall -Wextra -D_GNU_SOURCE -fPIC -I3rdparty/
 PREFIX ?= /usr/local
 
 # Library objects
 SHARED_LIBS = libsplinter.so libsplinter_p.so
 STATIC_LIBS = libsplinter.a libsplinter_p.a
 SHARED_HEADERS = splinter.h
-CLI_SOURCES := $(shell echo splinter_cli_*.c)
-CLI_HEADERS := splinter_cli.h
+
+# Good enough for now (if the CLI gets appreciably large, it needs a directory)
+CLI_SOURCES := $(shell echo splinter_cli_*.c) 3rdparty/linenoise.c
+CLI_HEADERS := splinter_cli.h 3rdparty/linenoise.h
 
 # Helpers & tests
 BIN_PROGS = splinter_recv splinter_send splinter_logtee splinter_stress splinter_cli
