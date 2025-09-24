@@ -7,13 +7,15 @@ PREFIX ?= /usr/local
 SHARED_LIBS = libsplinter.so libsplinter_p.so
 STATIC_LIBS = libsplinter.a libsplinter_p.a
 SHARED_HEADERS = splinter.h
+CLI_SOURCES := $(shell echo splinter_cli_*.c)
+CLI_HEADERS := splinter_cli.h
 
 # Helpers & tests
-BIN_PROGS = splinter_recv splinter_send splinter_logtee splinter_stress
+BIN_PROGS = splinter_recv splinter_send splinter_logtee splinter_stress splinter_cli
 TESTS = splinter_test
 
 # Default target
-all: $(SHARED_LIBS)  $(STATIC_LIBS) $(BIN_PROGS) $(TESTS)
+all: $(SHARED_LIBS) $(STATIC_LIBS) $(BIN_PROGS) $(TESTS)
 
 # Object build
 splinter.o: splinter.c splinter.h
@@ -57,6 +59,10 @@ splinter_logtee: splinter_logtee.c splinter.o
 # Useful for actually testing libsplinter performance
 splinter_stress: splinter_stress.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_stress.c splinter.o
+
+# A basic, but extensible CLI to navigate and manage stores
+splinter_cli: $(CLI_SOURCES) $(CLI_HEADERS) splinter.o splinter.h
+	$(CC) $(CFLAGS) -o $@ $(CLI_SOURCES) splinter.o
 
 # Rust bindings; Deno bindings aren't quite automate-able yet.
 .PHONY: rust_bindings
