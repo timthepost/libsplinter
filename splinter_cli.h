@@ -24,5 +24,9 @@ typedef struct cli_state {
     char *current;
 } cli_state_t;
 
+// Prototypes for runtime functions
+int cli_handle_input(int async, const char *prompt);
+
+// Prototypes for individual command entry points
 
 #endif // SPLINTER_CLI_H

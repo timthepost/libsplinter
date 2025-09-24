@@ -34,6 +34,7 @@ enum mode select_mode(const char *argv0) {
 
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
+    int rc = 0;
 
     // If you absolutely need to disable implicit checking based on
     // invocation, comment out the select_mode() line and just let 
@@ -46,5 +47,9 @@ int main (int argc, char *argv[]) {
     printf("I am in %s mode.\n", 
         m == MODE_REPL ? "interactive" : "non-interactive");
     
-    return 0;
+    if (m == MODE_REPL) {
+        rc = cli_handle_input(0, "DancingSkeleton > ");
+    }
+    
+    return rc;
 }
