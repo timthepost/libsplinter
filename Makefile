@@ -119,7 +119,7 @@ distclean: clean
 	rm -f  bindings/rust/src/bindings.rs
 
 # Tests
-.PHONY: tests
+.PHONY: tests test
 
 tests: splinter_test splinter_stress
 	./splinter_test
@@ -129,3 +129,5 @@ tests: splinter_test splinter_stress
 	@echo ""
 	@echo "You can/should also run tests under valgrind if you have it installed."
 	@echo "Enable via HAVE_VALGRIND_H in config.h if you haven't already."
+
+test: tests
