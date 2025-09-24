@@ -39,6 +39,9 @@ static char *hints(const char *buf, int *color, int *bold) {
      * white = 37;
     */
 
+    // strncasecmp len should be the length of the full command 
+    // after completion, for completion to work correctly.
+
     if (!strncasecmp(buf,"f", 4)) {
         *color = 32;
         *bold = 1;
@@ -79,7 +82,9 @@ int cli_handle_input(int async, const char *prompt) {
              * This is lesser-common, but also the most complex case, 
              * it's likely we're watching polls fire while also in interactive input
              * mode. Fortunately, line noise provides for this (e.g. IRC use)
+             * Will require another argument (probably a watch structure?)
              */
+            fprintf(stderr, "Note: async behavior is not yet stable.\n");
             struct linenoiseState ls;
             char buf[1024];
             linenoiseEditStart(&ls,-1,-1,buf,sizeof(buf), prompt);
