@@ -6,7 +6,10 @@
 #include "splinter_cli.h"
 #include "linenoise.h"
 
-void completion(const char *buf, linenoiseCompletions *lc) {
+// Will need to manually (for now) curate commands here
+
+// fires whenever the user presses tab
+static void completion(const char *buf, linenoiseCompletions *lc) {
     if (buf[0] == '\0') return;
 
     switch (buf[0]) {
@@ -23,7 +26,8 @@ void completion(const char *buf, linenoiseCompletions *lc) {
     return;
 }
 
-char *hints(const char *buf, int *color, int *bold) {
+// callback that provides completion hints
+static char *hints(const char *buf, int *color, int *bold) {
     /* 
      * Colors:
      * red = 31
@@ -35,18 +39,16 @@ char *hints(const char *buf, int *color, int *bold) {
      * white = 37;
     */
 
-    // TODO - Pull these in from exported command modules
-
-    if (!strncasecmp(buf,"fi", 4)) {
-        *color = 35;
-        *bold = 0;
-        return "zz ";
+    if (!strncasecmp(buf,"f", 4)) {
+        *color = 32;
+        *bold = 1;
+        return "izz ";
     }
 
-    if (!strncasecmp(buf,"bu", 4)) {
-        *color = 36;
-        *bold = 0;
-        return "zz ";
+    if (!strncasecmp(buf,"b", 4)) {
+        *color = 32;
+        *bold = 1;
+        return "uzz ";
     }
 
     return NULL;
@@ -94,7 +96,7 @@ int cli_handle_input(int async, const char *prompt) {
                 retval = select(ls.ifd+1, &readfds, NULL, NULL, &tv);
                 if (retval == -1) {
                     perror("select()");
-                    exit(1);
+                    return -1;
                 } else if (retval) {
                     line = linenoiseEditFeed(&ls);
                     if (line != linenoiseEditMore) break;
@@ -107,20 +109,25 @@ int cli_handle_input(int async, const char *prompt) {
                 }
             }
             linenoiseEditStop(&ls);
-            if (line == NULL) exit(0); /* Ctrl+D/C. */
+            if (line == NULL) return 0; /* Ctrl+D/C. */
         }
 
         // TODO - Work in the exported command structure here
         // Demo from library to test integration:
 
         if (line[0] != '\0') {
+            // TODO: See if it's a runnable command, if so grab args and execute
+            // for now we just reply back.
             printf("echoreply: '%s'\n", line);
             linenoiseHistoryAdd(line);
             linenoiseHistorySave(histfile);
         }
 
         free(line);
+
+        // loop end
     } while (1);
 
     return 0;
 }
+
