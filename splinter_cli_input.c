@@ -6,16 +6,24 @@
 #include "splinter_cli.h"
 #include "linenoise.h"
 
-static void completion(const char *buf, linenoiseCompletions *lc) {
-    //  Not sure if I can automate this easily. Hmmmm...
+void completion(const char *buf, linenoiseCompletions *lc) {
+    if (buf[0] == '\0') return;
 
-    if (buf[0] == 'h') {
-        linenoiseAddCompletion(lc,"hello");
-        linenoiseAddCompletion(lc,"hello there");
+    switch (buf[0]) {
+        case 'f':
+            linenoiseAddCompletion(lc,"fizz");
+            break;
+        case 'b':
+            linenoiseAddCompletion(lc,"buzz");
+            break;
+        default:
+            break;
     }
+
+    return;
 }
 
-static char *hints(const char *buf, int *color, int *bold) {
+char *hints(const char *buf, int *color, int *bold) {
     /* 
      * Colors:
      * red = 31
@@ -29,26 +37,24 @@ static char *hints(const char *buf, int *color, int *bold) {
 
     // TODO - Pull these in from exported command modules
 
-    if (!strncasecmp(buf,"hello", 5)) {
+    if (!strncasecmp(buf,"fi", 4)) {
         *color = 35;
-        *bold = 1;
-        return " world :)";
+        *bold = 0;
+        return "zz ";
     }
 
-    if (!strncasecmp(buf,"hello there", 11)) {
+    if (!strncasecmp(buf,"bu", 4)) {
         *color = 36;
-        *bold = 1;
-        return " everyone!";
+        *bold = 0;
+        return "zz ";
     }
 
     return NULL;
 }
 
 int cli_handle_input(int async, const char *prompt) {
-    char *line;
+    char *line = NULL;
     const char *histfile = "~/.splinter_history";
-    
-    if (prompt == NULL) return -1;
 
     // hints and completion are a little sketchy right now ...
     linenoiseSetCompletionCallback(completion);
@@ -57,7 +63,7 @@ int cli_handle_input(int async, const char *prompt) {
     // history naming after argv[0] (splinterctl separate) or is this okay?
     linenoiseHistoryLoad(histfile);
 
-    while(1) {
+    do {
         if (!async) {
             /**
              * This is the most common use.
@@ -107,18 +113,14 @@ int cli_handle_input(int async, const char *prompt) {
         // TODO - Work in the exported command structure here
         // Demo from library to test integration:
 
-        if (line[0] != '\0' && line[0] != '/') {
+        if (line[0] != '\0') {
             printf("echoreply: '%s'\n", line);
             linenoiseHistoryAdd(line);
             linenoiseHistorySave(histfile);
-        } else if (!strncmp(line, "/mask", 5)) {
-            linenoiseMaskModeEnable();
-        } else if (!strncmp(line, "/unmask", 7)) {
-            linenoiseMaskModeDisable();
-        } else if (line[0] == '/') {
-            printf("Monkey + Typewriter = %s\n", line);
         }
+
         free(line);
-    }
+    } while (1);
+
     return 0;
 }
