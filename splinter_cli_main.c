@@ -3,6 +3,9 @@
 #include <libgen.h>
 
 #include "splinter_cli.h"
+#include "config.h"
+#include "build.h"
+#include "linenoise.h"
 
 /**
  * TODO:
@@ -45,23 +48,60 @@ enum mode select_mode(const char *argv0) {
     return MODE_REPL;
 }
 
+void print_version_info(char *progname) {
+    fprintf(stderr,  "%s version %s build %s\n",
+        progname, 
+        SPLINTER_VERSION, 
+        SPLINTER_BUILD);
+    return;
+}
+
+void  print_usage(char *progname) {
+    fprintf(stderr, "Usage: %s\n       %s  [--no-repl] [--help] [bus_name] [command1 command2 ...]\n",
+        progname, 
+        progname);
+    return;
+}
+
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
     int rc = 0;
+    char *progname = basename(argv[0]);
 
     // If you absolutely need to disable implicit checking based on
     // invocation, comment out the select_mode() line and just let 
     // arguments decide it.
-    m = select_mode(argv[0]);
-    
-    puts("Hello from splinter_cli.");
-    
-    printf("Argument 0 is '%s', and %d arguments were passed.\n", argv[0], argc);
-    printf("I am in %s mode.\n", 
-        m == MODE_REPL ? "interactive" : "non-interactive");
-    
-    if (m == MODE_REPL) {
-        rc = cli_handle_input(0, "DancingSkeleton > ");
+    m = select_mode(progname);
+
+    /* Will probably use getopt_long() */
+    while(argc > 1) {
+        argc--;
+        argv++;
+        if (!strncmp(*argv,"--no-repl", 9)) {
+            m = MODE_NO_REPL;
+        } else if (!strncmp(*argv,"--help", 6)) {
+            print_version_info(progname);
+            print_usage(progname);
+            // un-comment to trap and print key bindings
+            // linenoisePrintKeyCodes();
+            return 0;
+        } else {
+            fprintf(stderr,"%s: unsure how to handle argument %d: %s\n",
+                progname, 
+                argc, 
+                *argv);
+        }
+    }
+
+    print_version_info(progname);
+
+    if (m == MODE_REPL) {        
+        fprintf(stderr,"To quit press ctrl-c, ctrl-d or type 'quit'.\n");
+        // read, hint, complete, tokenize, dispatch, repeat.
+        rc = cli_handle_input(0, "> ");
+    } else {
+        fprintf(stderr, "non-interactive mode not yet implemented.\n");
+        rc = 254;
     }
 
     return rc;
