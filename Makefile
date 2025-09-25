@@ -20,7 +20,7 @@ TESTS = splinter_test
 all: $(SHARED_LIBS) $(STATIC_LIBS) $(BIN_PROGS) $(TESTS)
 
 # Object build
-splinter.o: splinter.c splinter.h
+splinter.o: splinter.c splinter.h build.h
 	$(CC) $(CFLAGS) -c splinter.c -o $@
 
 # Memory-backed shared object

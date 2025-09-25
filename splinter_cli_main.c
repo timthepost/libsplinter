@@ -4,7 +4,6 @@
 
 #include "splinter_cli.h"
 #include "config.h"
-#include "build.h"
 #include "linenoise.h"
 
 /**
