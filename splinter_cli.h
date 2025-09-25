@@ -4,29 +4,25 @@
 #include "splinter.h"
 #include <stdbool.h>
 
-typedef struct cli_user {
-    // contains the name of selected store + formatted errorlevel / debug info
-    char prompt[128];
-    // last returned errorlevel
-    int32_t last_error;
-    // last returned error message, if any (null otherwise)
-    char *last_error_message;
-    // whether or not this is an interactive user
-    bool is_interactive;
+/* Types for module command entry and help */
+typedef int (*mod_entry_t)(int, char *[]);
+typedef void (*mod_help_t)(unsigned int);
 
-    // Still needed: editline history
-} cli_user_t;
-
-typedef struct cli_state {
-    // Do we have an open store?
-    bool online;
-    // What is the path name?
-    char *current;
-} cli_state_t;
+typedef struct cli_module {
+    const char *name;
+    const char *description;
+    bool is_alias;
+    mod_entry_t entry;
+    mod_help_t help;
+} cli_module_t;
 
 // Prototypes for runtime functions
 int cli_handle_input(int async, const char *prompt);
 
 // Prototypes for individual command entry points
+int cmd_help(int argc, char *argv[]);
+void help_cmd_help(unsigned);
+
+extern cli_module_t command_modules[];
 
 #endif // SPLINTER_CLI_H

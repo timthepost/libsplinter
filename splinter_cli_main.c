@@ -24,6 +24,20 @@ enum mode {
     MODE_NO_REPL
 };
 
+cli_module_t command_modules[] = {
+    {
+        "help",
+        "Help with this program, and commands it offers",
+        false,
+        &cmd_help,
+	    &help_cmd_help,
+    },
+    
+    // more commands will go here ...
+    
+    { NULL , NULL , NULL , NULL , NULL }
+};
+
 // Safely set mode from invoked name
 // See POSIX exec family standards regarding argv[0] not being guaranteed,
 // so we're extremely defensive about allowing the 'splinterctl' shortcut 
