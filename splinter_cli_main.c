@@ -26,17 +26,18 @@ enum mode {
 
 cli_module_t command_modules[] = {
     {
+        0,
         "help",
+        4,
         "Help with this program, and commands it offers",
-        false,
-        false,
+        -1,
         &cmd_help,
 	    &help_cmd_help,
     },
     
     // more commands will go here ...
     
-    { NULL , NULL , NULL , NULL,  NULL , NULL }
+    { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
 
 // Safely set mode from invoked name

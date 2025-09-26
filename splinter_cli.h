@@ -10,10 +10,17 @@ typedef void (*mod_help_t)(unsigned int);
 
 // A command (module)
 typedef struct cli_module {
+    // correlates to array position for easy lookup
+    int id;
+    // name of the command, e.g. set / get / help
     const char *name;
+    // computed length of the command to speed up linear probing
+    size_t name_len;
+    // What it does
     const char *description;
-    bool is_alias;
-    bool interactive_only;
+    // Is this just another name for another command? Set this to its id.
+    int alias_of;
+    // If alias, set these to null (we resolve the root entry points)
     mod_entry_t entry;
     mod_help_t help;
 } cli_module_t;
