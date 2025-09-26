@@ -126,6 +126,56 @@ char **cli_slice_args(char *const src[], size_t n) {
 }
 
 /**
+ * re-assemble args back into a single space-delimited string
+ * does not deal with quotes yet. Used for history in non-interactive
+ * mode.
+ */
+char *cli_rejoin_args(char *const src[]) {
+    if (!src) {
+        char *empty = malloc(1);
+        if (empty) empty[0] = '\0';
+        return empty;
+    }
+
+    size_t total = 0;
+    size_t count = 0;
+    size_t i;
+    
+    for (i = 0; src[i] != NULL; ++i) {
+        total += strlen(src[i]);
+        ++count;
+    }
+
+    /* return empty string */
+    if (count == 0) {
+        char *empty = malloc(1);
+        if (empty) empty[0] = '\0';
+        return empty;
+    }
+
+    /* spaces between items = count - 1 */
+    total += (count > 1) ? (count - 1) : 0;
+    total += 1; /* terminating NULL */
+
+    char *out = malloc(total);
+    if (!out) return NULL;
+
+    char *p = out;
+    for (i = 0; i < count; ++i) {
+        size_t len = strlen(src[i]);
+        memcpy(p, src[i], len);
+        p += len;
+        if (i + 1 < count) {
+            *p++ = ' ';
+        }
+    }
+
+    *p = '\0';
+    
+    return out;
+}
+
+/**
  * Helper to free an allocated argument stack
  */
 void cli_free_argv(char *argv[]) {

@@ -7,7 +7,6 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <libgen.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -210,6 +209,10 @@ int main (int argc, char *argv[]) {
             for (i = 0; mod_args[i]; i++) printf("mod:  [%d/%d]: %s\n", i, argc, mod_args[i]);
             idx = cli_find_module(mod_args[0]);
             if (idx >= 0) {
+                buff = cli_rejoin_args(mod_args);
+                linenoiseHistoryAdd(buff);
+                free(buff);
+                buff = NULL;
                 rc = cli_run_module(idx, _argc, mod_args);
             } else {
                 fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
@@ -225,6 +228,7 @@ int main (int argc, char *argv[]) {
     }
 
     // we've at least tried to process something at this point, so save history.
+    // history is logged from both interactive and non-interactive modes.
     if (historyfile != NULL && historylen > 0) linenoiseHistorySave(historyfile);
     
     // linenoise's atexit doesn't get entered at normal termination, so explicitly
