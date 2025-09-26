@@ -8,6 +8,9 @@
 #include "config.h"
 #include "linenoise.h"
 
+extern char **history;
+extern void freeHistory(void);
+
 /**
  * TODO:
  *  - Implement command structures, helpers, aliases and "watch"
@@ -165,6 +168,12 @@ int main (int argc, char *argv[]) {
 
     // we've at least tried to process something at this point, so save history.
     if (historyfile != NULL && historylen > 0) linenoiseHistorySave(historyfile);
+    
+    // linenoise's atexit doesn't get entered at normal termination, so explicitly
+    // free history prior to exiting if in non-repl mode (just a nit)
+    if (m == MODE_NO_REPL) {
+        if (history) freeHistory();
+    }
     
     return rc;
 }
