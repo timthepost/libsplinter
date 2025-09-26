@@ -161,21 +161,6 @@ int main (int argc, char *argv[]) {
     // comment out m = select_mode() and allow arguments to decide it exclusively.
     m = select_mode(progname);
 
-    /* Will probably use getopt_long() */
-    while(argc > 1) {
-        argc--;
-        argv++;
-        if (!strncmp(*argv,"--no-repl", 9)) {
-            m = MODE_NO_REPL;
-        } else if (!strncmp(*argv,"--help", 6)) {
-            print_version_info(progname);
-            print_usage(progname);
-            // un-comment to trap and print key bindings
-            // linenoisePrintKeyCodes();
-            return 0;
-        }
-    }
-
     // input processors add to history, we have to manage the rest.
     if (historyfile != NULL && historylen > 0) linenoiseHistoryLoad(historyfile);
     
@@ -216,13 +201,13 @@ int main (int argc, char *argv[]) {
 
         } while (1);
     } else {
-        // int i;
-        // for (i = 0; argv[i]; i++) printf("[%d/%d]: %s\n", i, argc, argv[i]);
+        int i;
+        for (i = 0; argv[i]; i++) printf("main: [%d/%d]: %s\n", i, argc, argv[i]);
         if (argc > 0) { 
             // twiddle from getopt (todo)
             _argc = argc - 1;
-            mod_args = cli_slice_args(argv, argc);
-            // for (i = 0; mod_args[i]; i++) printf("[%d/%d]: %s\n", i, argc, mod_args[i]);
+            mod_args = cli_slice_args(argv, _argc);
+            for (i = 0; mod_args[i]; i++) printf("mod:  [%d/%d]: %s\n", i, argc, mod_args[i]);
             idx = cli_find_module(mod_args[0]);
             if (idx >= 0) {
                 rc = cli_run_module(idx, _argc, mod_args);
