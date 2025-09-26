@@ -13,13 +13,13 @@ extern void freeHistory(void);
 
 /**
  * TODO:
- *  - Implement mod helpers and "watch"
- *  - Test async input with watch
  *  - Implement getopt_long() arguments
  *  - Implement commands and command help displays
- *     - first the structural ones (help, exit, etc)
+ *     - first the structural ones (help, config, etc)
  *     - then the rest of the splinter ones (get, set, etc)
  *     - then access them non-interactively successfully as appropriate
+ *  - Implement "watch"
+ *  - Test async input with watch
  *  - (Maybe) implement code for editor with "edit" command just to access for now?
  *  - (Maybe) implement some kind of test harness to test the commands?
  */
@@ -121,7 +121,7 @@ static char *hints(const char *buf, int *color, int *bold) {
 
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
-    int rc = 0, _argc = 0, i;
+    int rc = 0, _argc = 0, i, idx = -1;
     char *progname = basename(argv[0]), *buff;
     char prompt[64] = { 0 };
     char **mod_args = { 0 };
@@ -190,7 +190,16 @@ int main (int argc, char *argv[]) {
             }
 
             // Here we should match input and launch commands
-            for (i = 0; i < _argc; i++) printf("[%d/%d]: %s\n", i, _argc, mod_args[i]);
+            idx = cli_find_module(mod_args[0]);
+            if (idx >= 0) {
+                rc = cli_run_module(idx, _argc, mod_args);
+            } else {
+                fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
+                // TODO - a cli system struct that tracks last error, etc,
+                // which modules can write to directly. Then we just show
+                // it.
+                rc = 1;
+            }
 
             // Put everything away for the next turn
             cli_free_argv(mod_args);
