@@ -99,7 +99,7 @@ int main (int argc, char *argv[]) {
     if (historyenv <= INT_MAX) {
         historylen = historyenv;
     } else {
-        fprintf(stderr, "Warning: SPLINTER_HISTORY_LEN enviornment variable (%ld) exceeds INT_MAX; setting unchanged.",
+        fprintf(stderr, "Warning: SPLINTER_HISTORY_LEN env variable value (%ld) exceeds INT_MAX; ignoring.",
             historyenv);
     }
 
