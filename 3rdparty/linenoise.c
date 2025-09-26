@@ -134,7 +134,7 @@ static int mlmode = 0;  /* Multi line mode. Default is single line. */
 static int atexit_registered = 0; /* Register atexit just 1 time. */
 static int history_max_len = LINENOISE_DEFAULT_HISTORY_MAX_LEN;
 static int history_len = 0;
-static char **history = NULL;
+char **history = NULL;
 
 enum KEY_ACTION{
 	KEY_NULL = 0,	    /* NULL */
@@ -1224,7 +1224,7 @@ void linenoiseFree(void *ptr) {
 
 /* Free the history, but does not reset it. Only used when we have to
  * exit() to avoid memory leaks are reported by valgrind & co. */
-static void freeHistory(void) {
+void freeHistory(void) {
     if (history) {
         int j;
 
