@@ -46,14 +46,17 @@ static char *hints(const char *buf, int *color, int *bold) {
 char **cli_input_args(const char *prompt, int *argc) {
     char *line = NULL;
     char **argv = { 0 };
+    
     linenoiseSetCompletionCallback(completion);
     linenoiseSetHintsCallback(hints);
 
     line = linenoise(prompt);
     if (line == NULL) return NULL;
-
+    
+    linenoiseHistoryAdd(line);
     argv = cli_unroll_argv(line, argc);
     free(line);
+
     return(argv);
 }
 
