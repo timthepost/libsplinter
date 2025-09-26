@@ -13,11 +13,8 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
     if (buf[0] == '\0') return;
 
     switch (buf[0]) {
-        case 'f':
-            linenoiseAddCompletion(lc,"fizz");
-            break;
-        case 'b':
-            linenoiseAddCompletion(lc,"buzz");
+        case 'h':
+            linenoiseAddCompletion(lc,"help");
             break;
         default:
             break;
@@ -42,16 +39,10 @@ static char *hints(const char *buf, int *color, int *bold) {
     // strncasecmp len should be the length of the full command 
     // after completion, for completion to work correctly.
 
-    if (!strncasecmp(buf,"f", 4)) {
+    if (!strncasecmp(buf,"h", 4)) {
         *color = 32;
         *bold = 1;
-        return "izz ";
-    }
-
-    if (!strncasecmp(buf,"b", 4)) {
-        *color = 32;
-        *bold = 1;
-        return "uzz ";
+        return "elp ";
     }
 
     return NULL;
@@ -72,20 +63,9 @@ int cli_handle_input(int async, const char *prompt) {
 
     do {
         if (!async) {
-            /**
-             * This is the most common use.
-             * If not async (e.g. not watching a watch fire while also interactive) 
-             * then life is easy - just wait for CTRL-D/C and be done. 
-             */
             line = linenoise(prompt);
             if (line == NULL) break;
         } else {
-            /**
-             * This is lesser-common, but also the most complex case, 
-             * it's likely we're watching polls fire while also in interactive input
-             * mode. Fortunately, line noise provides for this (e.g. IRC use)
-             * Will require another argument (probably a watch structure?)
-             */
             fprintf(stderr, "Note: async behavior is not yet stable.\n");
             struct linenoiseState ls;
             char buf[1024];
@@ -118,9 +98,6 @@ int cli_handle_input(int async, const char *prompt) {
             linenoiseEditStop(&ls);
             if (line == NULL) return 0; /* Ctrl+D/C. */
         }
-
-        // TODO - Work in the exported command structure here
-        // Demo from library to test integration:
 
         if (line[0] != '\0') {
             // TODO: See if it's a runnable command, if so grab args and execute
