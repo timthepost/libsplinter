@@ -80,8 +80,10 @@ void  print_usage(char *progname) {
 
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
-    int rc = 0, async = 0;
+    int rc = 0, _argc = 0, i;
     char *progname = basename(argv[0]);
+    char prompt[64] = { 0 };
+    char **mod_args = { 0 };
 
     // If you absolutely need to disable implicit checking based on
     // invocation, comment out the select_mode() line and just let 
@@ -100,8 +102,6 @@ int main (int argc, char *argv[]) {
             // un-comment to trap and print key bindings
             // linenoisePrintKeyCodes();
             return 0;
-        } else if (!strncmp(*argv,"--async", 7)) { 
-            async = 1;
         } else {
             fprintf(stderr,"%s: unsure how to handle argument %d: %s\n",
                 progname, 
@@ -110,13 +110,26 @@ int main (int argc, char *argv[]) {
         }
     }
 
+    snprintf(prompt, 3, "# ");
     print_version_info(progname);
 
+    // read the line
+    // if it asks for async mode deal with it
+    // otherwise just run the command
+
+
     if (m == MODE_REPL) {        
-        fprintf(stderr,"To quit press ctrl-c, ctrl-d or type 'quit'.\n");
-        // read, hint, complete, tokenize, dispatch, repeat.
-        rc = cli_handle_input(async, "> ");
+        fprintf(stderr,"To quit, press ctrl-c or ctrl-d.\n");
+        do {
+            mod_args = cli_input_args(prompt, &_argc);
+            if (mod_args == NULL || _argc == 0) break;
+            for (i = 0; i < _argc; i++) printf("[%d/%d]: %s\n", i, _argc, mod_args[i]);
+            cli_free_argv(mod_args);
+            mod_args = NULL;
+            _argc = 0;
+        } while (1);
     } else {
+        // non-interactive mode is processed from command line args, not the line editor
         fprintf(stderr, "non-interactive mode not yet implemented.\n");
         rc = 254;
     }

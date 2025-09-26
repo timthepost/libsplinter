@@ -26,7 +26,8 @@ typedef struct cli_module {
 } cli_module_t;
 
 // Prototypes for runtime functions
-int cli_handle_input(int async, const char *prompt);
+char **cli_input_args(const char *prompt, int *argc);
+int cli_input_args_async(const char *prompt);
 char **cli_unroll_argv(const char *input, int *out_argc);
 void cli_free_argv(char *argv[]);
 int cli_find_module(const char *name);
