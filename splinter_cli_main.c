@@ -79,7 +79,7 @@ void  print_usage(char *progname) {
 
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
-    int rc = 0;
+    int rc = 0, async = 0;
     char *progname = basename(argv[0]);
 
     // If you absolutely need to disable implicit checking based on
@@ -99,6 +99,8 @@ int main (int argc, char *argv[]) {
             // un-comment to trap and print key bindings
             // linenoisePrintKeyCodes();
             return 0;
+        } else if (!strncmp(*argv,"--async", 7)) { 
+            async = 1;
         } else {
             fprintf(stderr,"%s: unsure how to handle argument %d: %s\n",
                 progname, 
@@ -112,7 +114,7 @@ int main (int argc, char *argv[]) {
     if (m == MODE_REPL) {        
         fprintf(stderr,"To quit press ctrl-c, ctrl-d or type 'quit'.\n");
         // read, hint, complete, tokenize, dispatch, repeat.
-        rc = cli_handle_input(0, "> ");
+        rc = cli_handle_input(async, "> ");
     } else {
         fprintf(stderr, "non-interactive mode not yet implemented.\n");
         rc = 254;

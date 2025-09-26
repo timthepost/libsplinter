@@ -66,7 +66,7 @@ int cli_handle_input(int async, const char *prompt) {
             line = linenoise(prompt);
             if (line == NULL) break;
         } else {
-            fprintf(stderr, "Note: async behavior is not yet stable.\n");
+            fprintf(stderr, "Async mode :: Typing pauses output, enter processes input, ctrl-c/d quits.\n");
             struct linenoiseState ls;
             char buf[1024];
             linenoiseEditStart(&ls,-1,-1,buf,sizeof(buf), prompt);
