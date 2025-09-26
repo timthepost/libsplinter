@@ -55,7 +55,7 @@ char **cli_input_args(const char *prompt, int *argc) {
     
     linenoiseHistoryAdd(line);
     argv = cli_unroll_argv(line, argc);
-    free(line);
+    linenoiseFree(line);
 
     return(argv);
 }
