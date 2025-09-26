@@ -48,12 +48,10 @@ char **cli_unroll_argv(const char *input, int *out_argc) {
             const char *q = start;
             char *w = token;
             while (q < p) {
-                if (*q == '\\' && (q + 1) < p) {
-                    ++q;
-                    *w++ = *q++;
-                } else {
-                    *w++ = *q++;
-                }
+                // advance past escape
+                if (*q == '\\' && (q + 1) < p) ++q;
+                // now just a simple copy
+                *w++ = *q++;
             }
             *w = '\0';
             if (*p == '"') ++p; /* skip closing quote */
