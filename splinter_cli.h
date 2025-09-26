@@ -18,10 +18,12 @@ typedef struct cli_module {
 
 // Prototypes for runtime functions
 int cli_handle_input(int async, const char *prompt);
+char **cli_unroll_argv(const char *input, int *out_argc);
+void cli_free_argv(char *argv[]);
 
 // Prototypes for individual command entry points
 int cmd_help(int argc, char *argv[]);
-void help_cmd_help(unsigned);
+void help_cmd_help(unsigned int level);
 
 extern cli_module_t command_modules[];
 
