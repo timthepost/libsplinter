@@ -41,6 +41,7 @@ int cli_find_module(const char *name);
 int cli_find_alias(int idx);
 int cli_run_module(int idx, int argc, char *argv[]);
 void cli_show_module_help(int idx, unsigned int level);
+char **cli_slice_args(char *const src[], size_t n);
 
 // Prototypes for individual command entry points
 int cmd_help(int argc, char *argv[]);

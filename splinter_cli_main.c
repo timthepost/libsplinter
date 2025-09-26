@@ -132,7 +132,7 @@ static char *hints(const char *buf, int *color, int *bold) {
 
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
-    int rc = 0, _argc = 0, i, idx = -1;
+    int rc = 0, _argc = 0, idx = -1;
     char *progname = basename(argv[0]), *buff;
     char prompt[64] = { 0 };
     char **mod_args = { 0 };
@@ -173,11 +173,6 @@ int main (int argc, char *argv[]) {
             // un-comment to trap and print key bindings
             // linenoisePrintKeyCodes();
             return 0;
-        } else {
-            fprintf(stderr,"%s: unsure how to handle argument %d: %s\n",
-                progname, 
-                argc, 
-                *argv);
         }
     }
 
@@ -203,15 +198,11 @@ int main (int argc, char *argv[]) {
                 continue;
             }
 
-            // Here we should match input and launch commands
             idx = cli_find_module(mod_args[0]);
             if (idx >= 0) {
                 rc = cli_run_module(idx, _argc, mod_args);
             } else {
                 fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
-                // TODO - a cli system struct that tracks last error, etc,
-                // which modules can write to directly. Then we just show
-                // it.
                 rc = 1;
             }
 
@@ -219,12 +210,33 @@ int main (int argc, char *argv[]) {
             cli_free_argv(mod_args);
             mod_args = NULL;
             _argc = 0;
+
+            // Here is where any janitorial things like refreshing
+            // atomic views could happen. The kaboose on the input train.
+
         } while (1);
     } else {
-        // getopt_long will shift the processed stuff, can copy what's left into
-        // an argv[] array to pass to modules once that's in place.
-        for (i = 1; argv[i]; i++) printf("[%d/%d]: %s\n", i, argc, argv[i]);
-        rc = 0;
+        // int i;
+        // for (i = 0; argv[i]; i++) printf("[%d/%d]: %s\n", i, argc, argv[i]);
+        if (argc > 0) { 
+            // twiddle from getopt (todo)
+            _argc = argc - 1;
+            mod_args = cli_slice_args(argv, argc);
+            // for (i = 0; mod_args[i]; i++) printf("[%d/%d]: %s\n", i, argc, mod_args[i]);
+            idx = cli_find_module(mod_args[0]);
+            if (idx >= 0) {
+                rc = cli_run_module(idx, _argc, mod_args);
+            } else {
+                fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
+            }
+            free(mod_args);
+            mod_args = NULL;
+            _argc = 0;
+        } else {
+            // temporary (help display coming)
+            fprintf(stderr, "Usage: %s [args] <command>\n", progname);
+            rc = 1;
+        }
     }
 
     // we've at least tried to process something at this point, so save history.
