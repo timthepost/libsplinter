@@ -1,3 +1,10 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_util.c
+ * @brief Splinter CLI utilties for working with modules
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>

@@ -1,3 +1,10 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli.h
+ * @brief Splinter CLI global header
+ */
 #ifndef SPLINTER_CLI_H
 #define SPLINTER_CLI_H
 
@@ -25,8 +32,6 @@ typedef struct cli_module {
     mod_help_t help;
 } cli_module_t;
 
-#define NUM_MODULES (sizeof(command_modules)/sizeof(command_modules[0]) - 1)
-
 // Prototypes for runtime functions
 char **cli_input_args(const char *prompt, int *argc);
 int cli_input_args_async(const char *prompt);
@@ -43,5 +48,7 @@ void help_cmd_help(unsigned int level);
 
 // And finally an array of modules to hold them all
 extern cli_module_t command_modules[];
+
+#define NUM_MODULES (sizeof(command_modules)/sizeof(command_modules[0]) - 1)
 
 #endif // SPLINTER_CLI_H

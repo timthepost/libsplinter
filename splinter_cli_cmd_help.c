@@ -1,3 +1,10 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_cmd_help.c
+ * @brief Splinter CLI "help" command implementation
+ */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

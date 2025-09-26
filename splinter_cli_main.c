@@ -1,3 +1,10 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_main.c
+ * @brief Splinter CLI main entry / completion & hint setup / parsing / executing
+ */
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
@@ -135,9 +142,12 @@ int main (int argc, char *argv[]) {
     // the long. 
     long int historyenv = 0;
     int historylen = -1;
+
+    // These can also be set via command line. 
     const char *historyfile = getenv("SPLINTER_HISTORY_FILE");
     const char *tmp = getenv("SPLINTER_HISTORY_LEN");
     
+    // We set history length initially from env if appropriate
     if (tmp != NULL) historyenv = strtol(tmp, &buff, 10);
     if (historyenv <= INT_MAX) {
         historylen = historyenv;
