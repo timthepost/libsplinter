@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "splinter_cli.h"
 
@@ -9,7 +10,13 @@
  * name, or -1 if not found.
  */
 int cli_find_module(const char *name) {
-    printf("Looking for %s\n", name);
+    unsigned int i;
+    
+    for (i = 0; command_modules[i].name != NULL; i++) {
+        if (! strncmp(name, command_modules[i].name, command_modules[i].name_len))
+            return command_modules[i].id;
+    }
+
     return -1;
 }
 
@@ -18,24 +25,34 @@ int cli_find_module(const char *name) {
  * of the module its aliased to, or -1 if not an alias. 
  */
 int cli_find_alias(int idx) {
-    printf("Looking for %d\n", idx);
-    return -1;
+    if (! command_modules[idx].name) {
+        errno = EINVAL;
+        return -1;
+    }
+    return command_modules[idx].alias_of;
 }
 
 /**
  * Run the module at the specified index by its defined entry point and 
  * proxy its return value. Sets errno if idx is invalid.
  */
-int cli_run_module(int idx) {
-    printf("Looking for %d\n", idx);
-    errno = EINVAL;
-    return -1;
+int cli_run_module(int idx, int argc, char *argv[]) {
+    if (! command_modules[idx].name || ! command_modules[idx].entry) {
+        errno = EINVAL;
+        return -1;
+    }
+    return command_modules[idx].entry(argc, argv);
 }
 
 /**
  * Show a modules help (to the specified level) by index.
  */
-void cli_show_module_help(int idx) {
-    printf("Looking for %u\n", idx);
+void cli_show_module_help(int idx, unsigned int level) {
+    if (! command_modules[idx].name || ! command_modules[idx].help) {
+        errno = EINVAL;
+        return;
+    }
+
+    command_modules[idx].help(level);
     return;
 }
