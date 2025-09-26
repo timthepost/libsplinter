@@ -13,7 +13,7 @@ extern void freeHistory(void);
 
 /**
  * TODO:
- *  - Implement command structures, helpers, aliases and "watch"
+ *  - Implement mod helpers and "watch"
  *  - Test async input with watch
  *  - Implement getopt_long() arguments
  *  - Implement commands and command help displays
@@ -83,6 +83,42 @@ void  print_usage(char *progname) {
     return;
 }
 
+// fires whenever the user presses tab
+static void completion(const char *buf, linenoiseCompletions *lc) {
+    if (buf[0] == '\0') return;
+
+    switch (buf[0]) {
+        case 'h':
+            linenoiseAddCompletion(lc,"help");
+            break;
+        default:
+            break;
+    }
+
+    return;
+}
+
+// callback that provides completion hints
+static char *hints(const char *buf, int *color, int *bold) { 
+    /* foreground colors you can use:
+     * red = 31
+     * green = 32
+     * yellow = 33
+     * blue = 34
+     * magenta = 35
+     * cyan = 36
+     * white = 37;
+     */
+
+    if (!strncasecmp(buf,"h", 4)) {
+        *color = 32;
+        *bold = 1;
+        return "elp ";
+    }
+
+    return NULL;
+}
+
 int main (int argc, char *argv[]) {
     enum mode m = MODE_REPL;
     int rc = 0, _argc = 0, i;
@@ -139,6 +175,8 @@ int main (int argc, char *argv[]) {
 
     if (m == MODE_REPL) {        
         fprintf(stderr,"To quit, press ctrl-c or ctrl-d.\n");
+        linenoiseSetCompletionCallback(completion);
+        linenoiseSetHintsCallback(hints);
         do {
             // unpack the arguments into an argv[] style array
             mod_args = cli_input_args(prompt, &_argc);
