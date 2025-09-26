@@ -8,6 +8,13 @@
 #include "config.h"
 #include "linenoise.h"
 
+
+/**
+ * We deviate from linenoise default here (which hides these)
+ * but we need direct access to the history array for non-repl
+ * cleanup on exit (non-repl gets logged in history, too, but 
+ * different handlers when not getting direct input). 
+ */
 extern char **history;
 extern void freeHistory(void);
 
@@ -39,9 +46,6 @@ cli_module_t command_modules[] = {
         &cmd_help,
 	    &help_cmd_help,
     },
-    
-    // more commands will go here ...
-    
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
 
@@ -83,7 +87,7 @@ void  print_usage(char *progname) {
     return;
 }
 
-// fires whenever the user presses tab
+// fires whenever the user presses tab for tab / auto completion
 static void completion(const char *buf, linenoiseCompletions *lc) {
     if (buf[0] == '\0') return;
 
@@ -98,7 +102,7 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
     return;
 }
 
-// callback that provides completion hints
+// callback that provides completion hints while typing
 static char *hints(const char *buf, int *color, int *bold) { 
     /* foreground colors you can use:
      * red = 31
