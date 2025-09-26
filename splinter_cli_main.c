@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "splinter_cli.h"
 #include "config.h"
@@ -79,16 +81,31 @@ void  print_usage(char *progname) {
 }
 
 int main (int argc, char *argv[]) {
-    const char *historyfile = "/home/dev/.splinter_history";
     enum mode m = MODE_REPL;
     int rc = 0, _argc = 0, i;
-    char *progname = basename(argv[0]);
+    char *progname = basename(argv[0]), *buff;
     char prompt[64] = { 0 };
     char **mod_args = { 0 };
 
-    // If you absolutely need to disable implicit checking based on
-    // invocation, comment out the select_mode() line and just let 
-    // arguments decide it.
+    // Malicious code can mess with numeric env values and try to make you overflow
+    // other things. So we extract a long safely from the env, then an int safely from
+    // the long. 
+    long int historyenv = 0;
+    int historylen = -1;
+    const char *historyfile = getenv("SPLINTER_HISTORY_FILE");
+    const char *tmp = getenv("SPLINTER_HISTORY_LEN");
+    
+    if (tmp != NULL) historyenv = strtol(tmp, &buff, 10);
+    if (historyenv <= INT_MAX) {
+        historylen = historyenv;
+    } else {
+        fprintf(stderr, "Warning: SPLINTER_HISTORY_LEN enviornment variable (%ld) exceeds INT_MAX; setting unchanged.",
+            historyenv);
+    }
+
+
+    // If you absolutely need to disable the implicit mode check based on invocation, 
+    // comment out m = select_mode() and allow arguments to decide it exclusively.
     m = select_mode(progname);
 
     /* Will probably use getopt_long() */
@@ -111,10 +128,8 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    // TODO: get this location from the environment as well as argument
-    // Also, we load and save the history file here, the argument unroller
-    // 
-    linenoiseHistoryLoad(historyfile);
+    // input processors add to history, we have to manage the rest.
+    if (historyfile != NULL && historylen > 0) linenoiseHistoryLoad(historyfile);
     
     snprintf(prompt, 3, "# ");
     print_version_info(progname);
@@ -146,7 +161,7 @@ int main (int argc, char *argv[]) {
     }
 
     // we've at least tried to process something at this point, so save history.
-    linenoiseHistorySave(historyfile);
+    if (historyfile != NULL && historylen > 0) linenoiseHistorySave(historyfile);
     
     return rc;
 }
