@@ -60,6 +60,8 @@ static char *hints(const char *buf, int *color, int *bold) {
 int cli_handle_input(int async, const char *prompt) {
     char *line = NULL;
     const char *histfile = "~/.splinter_history";
+    int argc = 0, i;
+    char **argv = NULL;
 
     // hints and completion are a little sketchy right now ...
     linenoiseSetCompletionCallback(completion);
@@ -126,6 +128,10 @@ int cli_handle_input(int async, const char *prompt) {
             printf("echoreply: '%s'\n", line);
             linenoiseHistoryAdd(line);
             linenoiseHistorySave(histfile);
+            argv = cli_unroll_argv(line, &argc);
+            for (i = 0; argv[i]; i++)
+                fprintf(stdout, "  > %d / %d: %s\n", i, argc, argv[i]);
+            cli_free_argv(argv);
         }
 
         free(line);
