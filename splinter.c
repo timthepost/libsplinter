@@ -192,7 +192,8 @@ int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz)
     atomic_store_explicit(&H->last_failure_epoch, 0, memory_order_relaxed);
     
     // Initialize slots
-    for (size_t i = 0; i < slots; ++i) {
+    size_t i;
+    for (i = 0; i < slots; ++i) {
         atomic_store_explicit(&S[i].hash, 0, memory_order_relaxed);
         atomic_store_explicit(&S[i].epoch, 0, memory_order_relaxed);
         S[i].val_off = (uint32_t)(i * max_value_sz);
@@ -303,7 +304,8 @@ int splinter_unset(const char *key) {
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
 
-    for (size_t i = 0; i < H->slots; ++i) {
+    size_t i;
+    for (i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
 
@@ -358,7 +360,8 @@ int splinter_set(const char *key, const void *val, size_t len) {
     size_t idx = slot_idx(h, H->slots);
     const size_t arena_sz = (size_t)H->slots * (size_t)H->max_val_sz;
 
-    for (size_t i = 0; i < H->slots; ++i) {
+    size_t i;
+    for (i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
 
@@ -435,7 +438,8 @@ int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
     uint64_t h = fnv1a(key);
     size_t idx = slot_idx(h, H->slots);
 
-    for (size_t i = 0; i < H->slots; ++i) {
+    size_t i;
+    for (i = 0; i < H->slots; ++i) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
 
         if (atomic_load_explicit(&slot->hash, memory_order_acquire) == h &&
@@ -487,8 +491,9 @@ int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
  */
 int splinter_list(char **out_keys, size_t max_keys, size_t *out_count) {
     if (!H || !out_keys || !out_count) return -1;
-    size_t count = 0;
-    for (size_t i = 0; i < H->slots && count < max_keys; ++i) {
+    size_t count = 0, i;
+    
+    for (i = 0; i < H->slots && count < max_keys; ++i) {
         // A non-zero hash and value length indicates a valid, active key.
         if (atomic_load_explicit(&S[i].hash, memory_order_acquire) &&
             atomic_load_explicit(&S[i].val_len, memory_order_acquire) > 0) {
@@ -521,7 +526,8 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
     struct splinter_slot *slot = NULL;
 
     // Find the slot corresponding to the key
-    for (size_t i = 0; i < H->slots; ++i) {
+    size_t i;
+    for (i = 0; i < H->slots; ++i) {
         struct splinter_slot *s = &S[(idx + i) % H->slots];
         if (atomic_load_explicit(&s->hash, memory_order_acquire) == h &&
             strncmp(s->key, key, KEY_MAX) == 0) {
