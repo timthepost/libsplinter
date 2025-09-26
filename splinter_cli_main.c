@@ -56,9 +56,9 @@ enum mode select_mode(const char *argv0) {
     tmp[sizeof(tmp) - 1] = '\0';
     prog = basename(tmp);
 
-    if (strcmp(prog, "splinterctl") == 0) {
+    if (strncmp(prog, "splinterctl", 11) == 0) {
         return MODE_NO_REPL;
-    } else if (strcmp(prog, "splinter_cli") == 0) {
+    } else if (strncmp(prog, "splinter_cli", 13) == 0) {
         return MODE_REPL;
     }
 
@@ -102,7 +102,7 @@ int main (int argc, char *argv[]) {
         fprintf(stderr, "Warning: SPLINTER_HISTORY_LEN env variable value (%ld) exceeds INT_MAX; ignoring.",
             historyenv);
     }
-
+    if (historylen >= 0) linenoiseHistorySetMaxLen(historylen);
 
     // If you absolutely need to disable the implicit mode check based on invocation, 
     // comment out m = select_mode() and allow arguments to decide it exclusively.
@@ -143,21 +143,24 @@ int main (int argc, char *argv[]) {
             // ctrl-c or ctrl-d
             if (mod_args == NULL) break;
             // user just pressed enter alone
-            if (_argc == 0) continue;
+            if (_argc == 0) {
+                cli_free_argv(mod_args);
+                continue;
+            }
 
+            // Here we should match input and launch commands
             for (i = 0; i < _argc; i++) printf("[%d/%d]: %s\n", i, _argc, mod_args[i]);
+
+            // Put everything away for the next turn
             cli_free_argv(mod_args);
             mod_args = NULL;
             _argc = 0;
         } while (1);
     } else {
-        
-        // non-interactive mode is processed from command line args, not the line editor
-        // I need to figure out how I'm going to do that, exactly. 
-        // Either way, it also needs to get added to history.
-
-        fprintf(stderr, "non-interactive mode not yet implemented.\n");
-        rc = 254;
+        // getopt_long will shift the processed stuff, can copy what's left into
+        // an argv[] array to pass to modules once that's in place.
+        for (i = 1; argv[i]; i++) printf("[%d/%d]: %s\n", i, argc, argv[i]);
+        rc = 0;
     }
 
     // we've at least tried to process something at this point, so save history.
