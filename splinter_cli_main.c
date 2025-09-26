@@ -79,6 +79,7 @@ void  print_usage(char *progname) {
 }
 
 int main (int argc, char *argv[]) {
+    const char *historyfile = "/home/dev/.splinter_history";
     enum mode m = MODE_REPL;
     int rc = 0, _argc = 0, i;
     char *progname = basename(argv[0]);
@@ -110,29 +111,42 @@ int main (int argc, char *argv[]) {
         }
     }
 
+    // TODO: get this location from the environment as well as argument
+    // Also, we load and save the history file here, the argument unroller
+    // 
+    linenoiseHistoryLoad(historyfile);
+    
     snprintf(prompt, 3, "# ");
     print_version_info(progname);
-
-    // read the line
-    // if it asks for async mode deal with it
-    // otherwise just run the command
-
 
     if (m == MODE_REPL) {        
         fprintf(stderr,"To quit, press ctrl-c or ctrl-d.\n");
         do {
+            // unpack the arguments into an argv[] style array
             mod_args = cli_input_args(prompt, &_argc);
-            if (mod_args == NULL || _argc == 0) break;
+            
+            // ctrl-c or ctrl-d
+            if (mod_args == NULL) break;
+            // user just pressed enter alone
+            if (_argc == 0) continue;
+
             for (i = 0; i < _argc; i++) printf("[%d/%d]: %s\n", i, _argc, mod_args[i]);
             cli_free_argv(mod_args);
             mod_args = NULL;
             _argc = 0;
         } while (1);
     } else {
+        
         // non-interactive mode is processed from command line args, not the line editor
+        // I need to figure out how I'm going to do that, exactly. 
+        // Either way, it also needs to get added to history.
+
         fprintf(stderr, "non-interactive mode not yet implemented.\n");
         rc = 254;
     }
 
+    // we've at least tried to process something at this point, so save history.
+    linenoiseHistorySave(historyfile);
+    
     return rc;
 }
