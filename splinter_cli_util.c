@@ -63,6 +63,9 @@ void cli_show_module_help(int idx, unsigned int level) {
     return;
 }
 
+/**
+ * A simple way to list modules
+ */
 #define LIST_BAR "----------------------------------"
 void cli_show_modules(void) {
     int i;
@@ -73,7 +76,7 @@ void cli_show_modules(void) {
             "Description",
             LIST_BAR,
             LIST_BAR);
-        fprintf(stdout, "%-33s | %-25s\n",
+        fprintf(stdout, "%-33s | %-33s\n",
             command_modules[i].name,
             command_modules[i].description);
     }
