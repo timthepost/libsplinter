@@ -145,10 +145,6 @@ char *cli_rejoin_args(char *const src[]) {
 
     size_t total = 0, count = 0, i;
 
-    // Now, a best-guess effort to re-construct quotes that shells stripped
-    // from argument stacks (as they should), but this is what adds non-interactive
-    // command journaling to history, so we have to do it (at least try hard).
-
     // First pass: count items and calculate total size needed
     for (i = 0; src[i] != NULL; ++i) {
         size_t item_len = strlen(src[i]);
