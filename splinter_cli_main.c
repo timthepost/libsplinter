@@ -206,16 +206,18 @@ int main (int argc, char *argv[]) {
             // twiddle from getopt (todo)
             _argc = argc - 1;
             mod_args = cli_slice_args(argv, _argc);
-            for (i = 0; mod_args[i]; i++) printf("mod:  [%d/%d]: %s\n", i, argc, mod_args[i]);
-            idx = cli_find_module(mod_args[0]);
-            if (idx >= 0) {
-                buff = cli_rejoin_args(mod_args);
-                linenoiseHistoryAdd(buff);
-                free(buff);
-                buff = NULL;
-                rc = cli_run_module(idx, _argc, mod_args);
-            } else {
-                fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
+            if (mod_args[0]) {
+                for (i = 0; mod_args[i]; i++) printf("mod:  [%d/%d]: %s\n", i, argc, mod_args[i]);
+                idx = cli_find_module(mod_args[0]);
+                if (idx >= 0) {
+                    buff = cli_rejoin_args(mod_args);
+                    linenoiseHistoryAdd(buff);
+                    free(buff);
+                    buff = NULL;
+                    rc = cli_run_module(idx, _argc, mod_args);
+                } else {
+                    fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
+                }
             }
             free(mod_args);
             mod_args = NULL;
