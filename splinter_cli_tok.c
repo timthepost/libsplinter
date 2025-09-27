@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "splinter_cli.h"
 
@@ -126,45 +127,87 @@ char **cli_slice_args(char *const src[], size_t n) {
 }
 
 /**
- * re-assemble args back into a single space-delimited string
- * does not deal with quotes yet. Used for history in non-interactive
- * mode.
+ * This is a helper that tries to re-construct a command line as it was before
+ * the calling shell stripped quotes as it broke down arguments into the argument
+ * array. It's not a perfect exact science, but it lets us (usually) keep interactive
+ * and non-interactive history the same.
  */
 char *cli_rejoin_args(char *const src[]) {
-    if (!src) {
-        char *empty = malloc(1);
-        if (empty) empty[0] = '\0';
-        return empty;
-    }
+    char *empty = malloc(1);
 
-    size_t total = 0;
-    size_t count = 0;
-    size_t i;
-    
+    if (empty == NULL) {
+        errno = ENOMEM;
+        return NULL;
+    }
+    empty[0] = '\0';
+
+    if (!src) return empty;
+
+    size_t total = 0, count = 0, i;
+
+    // Now, a best-guess effort to re-construct quotes that shells stripped
+    // from argument stacks (as they should), but this is what adds non-interactive
+    // command journaling to history, so we have to do it (at least try hard).
+
+    // First pass: count items and calculate total size needed
     for (i = 0; src[i] != NULL; ++i) {
-        total += strlen(src[i]);
+        size_t item_len = strlen(src[i]);
+        int has_spaces = (strchr(src[i], ' ') != NULL);
+        int quote_count = 0;
+        
+        // Count existing quotes that need escaping
+        const char *p_scan = src[i];
+        while ((p_scan = strchr(p_scan, '"')) != NULL) {
+            quote_count++;
+            p_scan++;
+        }
+        
+        // Add base item length plus escapes for existing quotes
+        total += item_len + quote_count;
+        
+        // If item has spaces, add 2 for wrapping quotes
+        if (has_spaces) {
+            total += 2;
+        }
+        
         ++count;
     }
 
-    /* return empty string */
-    if (count == 0) {
-        char *empty = malloc(1);
-        if (empty) empty[0] = '\0';
-        return empty;
-    }
+    if (count == 0) return empty;
 
-    /* spaces between items = count - 1 */
+    free(empty);
+
+    // spaces between items = count - 1 
     total += (count > 1) ? (count - 1) : 0;
-    total += 1; /* terminating NULL */
+    total += 1; // terminating NULL
 
     char *out = malloc(total);
     if (!out) return NULL;
 
     char *p = out;
     for (i = 0; i < count; ++i) {
-        size_t len = strlen(src[i]);
-        memcpy(p, src[i], len);
-        p += len;
+        const char *item = src[i];
+        int has_spaces = (strchr(item, ' ') != NULL);
+        
+        // Add opening quote if item has spaces
+        if (has_spaces) {
+            *p++ = '"';
+        }
+        
+        // Copy item character by character, escaping quotes
+        while (*item) {
+            if (*item == '"') {
+                *p++ = '\\';  // Add escape character
+            }
+            *p++ = *item++;
+        }
+        
+        // Add closing quote if item has spaces
+        if (has_spaces) {
+            *p++ = '"';
+        }
+        
+        // Add space separator if not the last item
         if (i + 1 < count) {
             *p++ = ' ';
         }
