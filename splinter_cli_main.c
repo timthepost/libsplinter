@@ -31,7 +31,6 @@ extern void freeHistory(void);
 
 /**
  * TODO:
- *  - Implement getopt_long() arguments
  *  - Implement commands and command help displays
  *     - first the structural ones (help, config, etc)
  *     - then the rest of the splinter ones (get, set, etc)
@@ -56,7 +55,7 @@ cli_module_t command_modules[] = {
         0,
         "help",
         4,
-        "Help with this program, and commands it offers",
+        "Help with commands and features",
         -1,
         &cmd_help,
 	    &help_cmd_help,
@@ -106,7 +105,7 @@ void print_usage(char *progname) {
     fprintf(stderr, "  --help / -h                  Show this help display.\n");
     fprintf(stderr, "  --history-file / -H <path>   Set the CLI history file to <path>\n");
     fprintf(stderr, "  --history-len / -l  <len>    Set the CLI history length to <len>\n");
-    fprintf(stderr, "  --list / -L                  List available internal commands available via --no-repl\n");
+    fprintf(stderr, "  --list-modules / -L          List available internal commands available via --no-repl\n");
     fprintf(stderr, "  --no-repl / -n               Don't enter interactive mode; run splinter command and exit.\n");
     fprintf(stderr, "  --version / -v               Print splinter version information and exit.\n");
     fprintf(stderr, "\n%s will look for SPLINTER_HISTORY_FILE and SPLINTER_HISTORY_LEN in the\n", progname);
@@ -156,6 +155,7 @@ static const struct option long_options[] = {
     { "help", optional_argument, NULL, 'h' },
     { "history-file", required_argument, NULL, 'H' },
     { "history-len", required_argument, NULL, 'l' },
+    { "list-modules", no_argument, NULL, 'L' },
     { "no-repl", no_argument, NULL, 'n' },
     { "version", no_argument, NULL, 'v' },
     {NULL, 0, NULL, 0}
@@ -214,6 +214,11 @@ int main (int argc, char *argv[]) {
             case 'l':
                 linenoiseHistorySetMaxLen(safer_atoi(optarg));
                 break;
+            // --list-modules / -L
+            case 'L':
+                print_version_info(progname);
+                cli_show_modules();
+                exit(EXIT_SUCCESS);
             // --no-repl / -n
             case 'n':
                 m = MODE_NO_REPL;

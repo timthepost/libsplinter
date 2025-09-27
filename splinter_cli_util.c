@@ -59,7 +59,23 @@ void cli_show_module_help(int idx, unsigned int level) {
         errno = EINVAL;
         return;
     }
-
     command_modules[idx].help(level);
+    return;
+}
+
+#define LIST_BAR "----------------------------------"
+void cli_show_modules(void) {
+    int i;
+
+    for (i = 0; command_modules[i].name; i++) {
+        fprintf(stdout, "%-33s | %-33s\n%s+%s\n",
+            "Module", 
+            "Description",
+            LIST_BAR,
+            LIST_BAR);
+        fprintf(stdout, "%-33s | %-25s\n",
+            command_modules[i].name,
+            command_modules[i].description);
+    }
     return;
 }

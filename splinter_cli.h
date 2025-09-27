@@ -43,6 +43,7 @@ int cli_run_module(int idx, int argc, char *argv[]);
 void cli_show_module_help(int idx, unsigned int level);
 char **cli_slice_args(char *const src[], size_t n);
 char *cli_rejoin_args(char *const src[]);
+void cli_show_modules(void);
 
 // Prototypes for individual command entry points
 int cmd_help(int argc, char *argv[]);
@@ -51,6 +52,6 @@ void help_cmd_help(unsigned int level);
 // And finally an array of modules to hold them all
 extern cli_module_t command_modules[];
 
-#define NUM_MODULES (sizeof(command_modules)/sizeof(command_modules[0]) - 1)
+#define NUM_MODULES (int)(sizeof(command_modules)/sizeof(command_modules[0]) - 1)
 
 #endif // SPLINTER_CLI_H

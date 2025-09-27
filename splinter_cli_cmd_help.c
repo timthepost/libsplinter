@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "splinter_cli.h"
 
@@ -17,8 +18,24 @@ void help_cmd_help(unsigned int level) {
 }
 
 int cmd_help(int argc, char *argv[]) {
-    printf("This is cmd_help's entry point. argc: %d, argv[0]: %s\n",
-        argc,
-        argv[0] == NULL ? "null" : argv[0]);
-    return 0;
+    int idx;
+
+    if (argc == 1 ) {
+        cli_show_modules();
+        puts("\nFor help on a particular module, type 'help <module>'");
+        return 0;
+    }
+
+    // something else was given
+    idx = cli_find_module(argv[1]);
+
+    // 0 is a valid index (the 'help' command by default)
+    if (idx >= 0) {
+        cli_show_module_help(idx, 1);
+        return 0;
+    } else {
+        fprintf(stderr, "Could not find help for '%s'\n", argv[1]);
+        errno = EINVAL;
+        return 1;
+    }
 }
