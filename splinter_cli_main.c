@@ -95,7 +95,7 @@ void print_version_info(char *progname) {
     return;
 }
 
-void  print_usage(char *progname) {
+void print_usage(char *progname) {
     fprintf(stderr, "%s provides a command line interface for Splinter bus interaction.\n", progname);
     fprintf(stderr, "Usage:  %s [options] [aguments] *or*\n\t%s --no-repl <built in command> [arguments] *or*\n\t%s {no args for REPL}\n",
         progname, 
