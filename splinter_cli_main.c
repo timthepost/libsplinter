@@ -5,10 +5,15 @@
  * @file splinter_cli_main.c
  * @brief Splinter CLI main entry / completion & hint setup / parsing / executing
  */
+#ifndef _GNU_SOURCE
+// for getopt extensions
+#define _GNU_SOURCE 
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <getopt.h>
 
 #include "splinter_cli.h"
 #include "config.h"
@@ -42,6 +47,10 @@ enum mode {
     MODE_NO_REPL
 };
 
+// whether we run one-shot or in REPL
+static enum mode m = MODE_REPL;
+
+// holds all of the commands
 cli_module_t command_modules[] = {
     {
         0,
@@ -87,11 +96,25 @@ void print_version_info(char *progname) {
 }
 
 void  print_usage(char *progname) {
-    fprintf(stderr, "Usage: %s\n       %s  [--no-repl] [--help] [bus_name] [command1 command2 ...]\n",
+    fprintf(stderr, "%s provides a command line interface for Splinter bus interaction.\n", progname);
+    fprintf(stderr, "Usage:  %s [options] [aguments] *or*\n\t%s --no-repl <built in command> [arguments] *or*\n\t%s {no args for REPL}\n",
         progname, 
-        progname);
+        progname,
+        progname
+    );
+    fprintf(stderr, "Where [options] are:\n");
+    fprintf(stderr, "  --help / -h                  Show this help display.\n");
+    fprintf(stderr, "  --history-file / -H <path>   Set the CLI history file to <path>\n");
+    fprintf(stderr, "  --history-len / -l  <len>    Set the CLI history length to <len>\n");
+    fprintf(stderr, "  --list / -L                  List available internal commands available via --no-repl\n");
+    fprintf(stderr, "  --no-repl / -n               Don't enter interactive mode; run splinter command and exit.\n");
+    fprintf(stderr, "  --version / -v               Print splinter version information and exit.\n");
+    fprintf(stderr, "\n%s will look for SPLINTER_HISTORY_FILE and SPLINTER_HISTORY_LEN in the\n", progname);
+    fprintf(stderr, "environment and use them; however argument values will always take precedence.\n");
+    fprintf(stderr, "\nIf invoked as \"splinterctl\", %s automatically turns on --no-repl.\n", progname);
+    fprintf(stderr, "\nPlease report bugs to https://github.com/timthepost/libsplinter");
     return;
-}
+} 
 
 // fires whenever the user presses tab for tab / auto completion
 static void completion(const char *buf, linenoiseCompletions *lc) {
@@ -129,44 +152,97 @@ static char *hints(const char *buf, int *color, int *bold) {
     return NULL;
 }
 
+static const struct option long_options[] = {
+    { "help", optional_argument, NULL, 'h' },
+    { "history-file", required_argument, NULL, 'H' },
+    { "history-len", required_argument, NULL, 'l' },
+    { "no-repl", no_argument, NULL, 'n' },
+    { "version", no_argument, NULL, 'v' },
+    {NULL, 0, NULL, 0}
+};
+
+static const char *optstring = "h::H:l:nv";
+
+// halts execution if strtol would overflow an integer.
+static int safer_atoi(const char *string) {
+
+    char *buff;
+    long l;
+
+    l = strtol(string, &buff, 10);
+    if (l <= INT_MAX) {
+        return (int) l;
+    } else {
+        fprintf(stderr, "Value or argument would overflow an integer. Exiting.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
 int main (int argc, char *argv[]) {
-    enum mode m = MODE_REPL;
-    int rc = 0, _argc = 0, idx = -1;
-    char *progname = basename(argv[0]), *buff;
+    int rc = 0, _argc = 0, idx = -1, opt, historylen = -1;
+    char *progname = basename(argv[0]), *buff = NULL;
     char prompt[64] = { 0 };
     char **mod_args = { 0 };
 
-    // Malicious code can mess with numeric env values and try to make you overflow
-    // other things. So we extract a long safely from the env, then an int safely from
-    // the long. 
-    long int historyenv = 0;
-    int historylen = -1;
-
     // These can also be set via command line. 
-    const char *historyfile = getenv("SPLINTER_HISTORY_FILE");
+    char *historyfile = getenv("SPLINTER_HISTORY_FILE");
     const char *tmp = getenv("SPLINTER_HISTORY_LEN");
     
     // We set history length initially from env if appropriate
-    if (tmp != NULL) historyenv = strtol(tmp, &buff, 10);
-    if (historyenv <= INT_MAX) {
-        historylen = historyenv;
-    } else {
-        fprintf(stderr, "Warning: SPLINTER_HISTORY_LEN env variable value (%ld) exceeds INT_MAX; ignoring.",
-            historyenv);
-    }
+    if (tmp != NULL) historylen = safer_atoi(tmp);
+
     if (historylen >= 0) linenoiseHistorySetMaxLen(historylen);
+    if (historyfile != NULL && historylen > 0) linenoiseHistoryLoad(historyfile);
 
     // If you absolutely need to disable the implicit mode check based on invocation, 
     // comment out m = select_mode() and allow arguments to decide it exclusively.
     m = select_mode(progname);
-
-    // input processors add to history, we have to manage the rest.
-    if (historyfile != NULL && historylen > 0) linenoiseHistoryLoad(historyfile);
     
-    snprintf(prompt, 3, "# ");
-    print_version_info(progname);
+    // parse arguments here
+    opterr = 0;
+    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL)) != -1) {
+        switch (opt) {
+            // --help / -h
+            case 'h':
+                print_usage(progname);
+                exit(EXIT_SUCCESS);
+            // --history-file / -H
+            case 'H':
+                linenoiseHistoryLoad(optarg);
+                break;
+            // --history-len / -l
+            case 'l':
+                linenoiseHistorySetMaxLen(safer_atoi(optarg));
+                break;
+            // --no-repl / -n
+            case 'n':
+                m = MODE_NO_REPL;
+                break;
+            // --version / -v
+            case 'v':
+                print_version_info(progname);
+                exit(EXIT_SUCCESS);
+            // argument requires option
+            case ':':
+                fprintf(stderr, "Option '-%c' requires an argument. Try --help for help.\n", optopt);
+                exit(EXIT_FAILURE);
+            // unknown or missing argument
+            case '?':
+                fprintf(stderr, "Unexpected return from argument parsing: %d\nTry --help for help.\n", opt);
+                exit(EXIT_FAILURE);
+            // they're heeeeeere!
+            default:
+                break;
+        }
+    }
 
-    if (m == MODE_REPL) {        
+    // if optind > argc here, there are additional args, which we can unpack
+    // later in NO_REPL mode. We don't consider them if we're in REPL mode,
+    // so address that first.
+
+    if (m == MODE_REPL) {
+        snprintf(prompt, 3, "# ");
+        print_version_info(progname);        
         fprintf(stderr,"To quit, press ctrl-c or ctrl-d.\n");
         linenoiseSetCompletionCallback(completion);
         linenoiseSetHintsCallback(hints);
@@ -200,14 +276,10 @@ int main (int argc, char *argv[]) {
 
         } while (1);
     } else {
-        int i;
-        for (i = 0; argv[i]; i++) printf("main: [%d/%d]: %s\n", i, argc, argv[i]);
-        if (argc > 0) { 
-            // twiddle from getopt (todo)
-            _argc = argc - 1;
+        if (argc > 1) { 
+            _argc = argc - optind;
             mod_args = cli_slice_args(argv, _argc);
             if (mod_args[0]) {
-                for (i = 0; mod_args[i]; i++) printf("mod:  [%d/%d]: %s\n", i, argc, mod_args[i]);
                 idx = cli_find_module(mod_args[0]);
                 if (idx >= 0) {
                     buff = cli_rejoin_args(mod_args);
@@ -223,8 +295,7 @@ int main (int argc, char *argv[]) {
             mod_args = NULL;
             _argc = 0;
         } else {
-            // temporary (help display coming)
-            fprintf(stderr, "Usage: %s [args] <command>\n", progname);
+            print_usage(progname);
             rc = 1;
         }
     }
