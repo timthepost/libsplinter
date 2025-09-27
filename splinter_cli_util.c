@@ -24,6 +24,8 @@ int cli_find_module(const char *name) {
             return command_modules[i].id;
     }
 
+    errno = EINVAL;
+
     return -1;
 }
 
@@ -80,5 +82,6 @@ void cli_show_modules(void) {
             command_modules[i].name,
             command_modules[i].description);
     }
+    
     return;
 }

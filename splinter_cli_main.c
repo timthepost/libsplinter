@@ -31,10 +31,8 @@ extern void freeHistory(void);
 
 /**
  * TODO:
- *  - Implement commands and command help displays
- *     - first the structural ones (help, config, etc)
- *     - then the rest of the splinter ones (get, set, etc)
- *     - then access them non-interactively successfully as appropriate
+ *  - Implement all commands but "watch" (need to add clear & hist)
+ *  - Implement ctrl - ] SIGUSR1 handler for exiting watches without exiting CLI
  *  - Implement "watch"
  *  - Test async input with watch
  *  - (Maybe) implement code for editor with "edit" command just to access for now?
