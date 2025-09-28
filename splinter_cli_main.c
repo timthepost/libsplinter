@@ -50,14 +50,33 @@ static enum mode m = MODE_REPL;
 cli_module_t command_modules[] = {
     {
         0,
+        "clear",
+        5,
+        "Clears the screen",
+        -1,
+        &cmd_clear,
+        &help_cmd_clear
+    },
+    {
+        1,
+        "cls",
+        3,
+        "Alias of 'clear'",
+        0,
+        &cmd_clear,
+        &help_cmd_clear
+    },    
+    {
+        2,
         "help",
         4,
         "Help with commands and features",
         -1,
         &cmd_help,
-	    &help_cmd_help,
+	    &help_cmd_help
     },
-    { 0, NULL, 0, NULL, -1,  NULL , NULL }
+    // Make sure this remains your last-indexed element.
+    { 3, NULL, 0, NULL, -1,  NULL , NULL }
 };
 
 // Safely set mode from invoked name
@@ -118,8 +137,11 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
 
     switch (buf[0]) {
         case 'h':
-            linenoiseAddCompletion(lc,"help");
+            linenoiseAddCompletion(lc, "help");
             break;
+        case 'c':
+            linenoiseAddCompletion(lc, "clear");
+            linenoiseAddCompletion(lc, "cls");
         default:
             break;
     }
@@ -139,8 +161,20 @@ static char *hints(const char *buf, int *color, int *bold) {
      * white = 37;
      */
 
-    if (!strncasecmp(buf,"h", 4)) {
+    if (!strncasecmp(buf, "cl", 3)) {
         *color = 32;
+        *bold = 1;
+        return "s";
+    }
+
+    if (!strncasecmp(buf, "cle", 5)) {
+        *color = 36;
+        *bold = 1;
+        return "ar";
+    }
+
+    if (!strncasecmp(buf,"h", 4)) {
+        *color = 36;
         *bold = 1;
         return "elp ";
     }

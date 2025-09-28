@@ -48,6 +48,8 @@ void cli_show_modules(void);
 // Prototypes for individual command entry points
 int cmd_help(int argc, char *argv[]);
 void help_cmd_help(unsigned int level);
+int cmd_clear(int argc, char *argv[]);
+void help_cmd_clear(unsigned int level);
 
 // And finally an array of modules to hold them all
 extern cli_module_t command_modules[];
