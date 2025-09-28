@@ -1,0 +1,115 @@
+---
+title: Quick Start
+url: /quickstart/
+metas:
+  description: A quickstart to getting going quickly with Cushy Text.
+---
+
+# {title}
+
+Here's how to get up and running quickly!
+
+## Local Configuration
+
+Make sure you modify the `_config.ts` file and define the `location`
+option, so that things work correctly. Here's what it looks like 
+after being set to `example.com`:
+
+```ts
+
+// after imports 
+
+const site = lume({
+  src: "./src",
+  location: new URL('https://example.com'),
+  server: {
+    middlewares: [
+      router.middleware(),
+      cacheBusting(),
+    ],
+  },
+});
+
+site.use(plugins());
+
+export default site;
+```
+
+You should also check the `_data.yml` files in `docs/`, `blog/` and `pages`, as well
+as the site strings in `src/_data/*.yml`. This includes the tag wiki excerpts, locale 
+strings as well as home page content.
+
+## Deploy On Deno Deploy (Supported)
+
+If you have not yet done so, [sign up for Deno Deploy](https://deno.com/deploy). It's 
+completely free, and currently the only way you can use the included
+anonymous content feedback & rating system. For now, if you want to use the
+theme, it's your best bet.
+
+### Create And Save An Access Token To .env-local
+
+You'll need an access token in order to be able to connect to DenoKV locally, 
+when running under `lume -s`. If you don't plan to do that (you won't be using
+the feedback plugin) then you can skip this part.
+
+Save your access token as `DENO_KV_ACCESS_TOKEN` in your `.env-local` file.
+
+### Copy And Save The Database Connection String To .env-local
+
+Navigate to the KV tab in your Deno Deploy dashboard. You'll see your database
+information there along with information on how to connect. 
+
+On Deno Deploy, no arguments are necessary. However, locally, you need to
+specify the URL. Copy the URL part of the connection string 
+(minus the `await Deno.kvOpen()`). It should look something like:
+
+```url
+# sample only, get the real one from Deno Deploy KV tab
+https://api.deno.com/databases/UUID-of-database/connect
+```
+
+Save your connection URL as `DENO_KV_URL` in your `.env-local`
+
+On production, there's nothing to configure. Locally, just make sure you load
+your `.env-local` file before running `deno task dev` or `deno task serve` and 
+you'll be fine. 
+
+## Deploy On Deno VPS (Supported)
+
+Follow the same instructions as Deno Deploy (above) if you want to use the 
+database. You can use the Deno Deploy URL as a free dev tier if you want.
+
+You'll need the following (minimum) to start the server:
+
+```bash
+> deno run --allow-read --allow-env --allow-net src/_serve.ts
+```
+
+Assuming you run this from the repository root, where `deno.json` can be 
+found. Otherwise, you'll have to also enable Deno's unstable flags (using
+[whichever of these methods suits you best](https://docs.deno.com/runtime/reference/cli/unstable_flags/))
+in order to enable support for the temporal API and Deno KV (as shown in 
+`deno.json`):
+
+```json
+  "unstable": [
+    "kv",
+    "temporal"
+  ]
+```
+
+Or, set the repo root as your working directory prior to serving (preferred),
+which automatically loads `deno.json` and turns them on.
+
+## Deploy On Host With Deno Edge Functions (Possible, But Currently Unsupported)
+
+Netlify edge functions are _technically_ capable of running Lume's Router
+middleware, but you'll have to figure out how to move `src/_serve.ts` and
+`src/_server_routes.ts` into an edge function that remains responsive for
+requests. And, you'll need to upgrade to paid, since you'll have to set 
+environmental variables for Deno (or even Discord, Slack or whatever else
+you used) even if DenoKV wasn't used.
+
+If you can think of a stable way to make things work there, I'd love to 
+hear about your setup and try to support it better on my side. I just think
+it's a bigger lift than what Netlify meant for edge functions.
