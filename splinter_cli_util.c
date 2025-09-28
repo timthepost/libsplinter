@@ -72,12 +72,13 @@ void cli_show_module_help(int idx, unsigned int level) {
 void cli_show_modules(void) {
     int i;
 
+    fprintf(stdout, "%-33s | %-33s\n%s+%s\n",
+        "Module", 
+        "Description",
+        LIST_BAR,
+        LIST_BAR);
+        
     for (i = 0; command_modules[i].name; i++) {
-        fprintf(stdout, "%-33s | %-33s\n%s+%s\n",
-            "Module", 
-            "Description",
-            LIST_BAR,
-            LIST_BAR);
         fprintf(stdout, "%-33s | %-33s\n",
             command_modules[i].name,
             command_modules[i].description);
