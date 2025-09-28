@@ -1,8 +1,0 @@
-_site
-_cache
-.DS_Store
-node_modules
-.env*
-deno.lock
-_broken_links.json
-_seo_report.json
