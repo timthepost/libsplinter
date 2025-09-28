@@ -227,15 +227,19 @@ int main (int argc, char *argv[]) {
                 exit(EXIT_SUCCESS);
             // argument requires option
             case ':':
-                fprintf(stderr, "Option '-%c' requires an argument. Try --help for help.\n", optopt);
-                exit(EXIT_FAILURE);
-            // unknown or missing argument
             case '?':
-                fprintf(stderr, "Option missing required argument. Try %s --help for help.\n", progname);
+                fprintf(stderr, "%s: option '-%c' requires an argument. Try %s --help for help.\n", 
+                    progname, 
+                    optopt, 
+                    progname);
                 exit(EXIT_FAILURE);
-            // they're heeeeeere!
+            // If this case is entered, it means getopt_long() is likely broken.
             default:
-                break;
+                fprintf(stderr, "%s: unknown error parsing argument '%c'. Try %s --help for help.\n", 
+                    progname,
+                    optopt, 
+                    progname);
+                exit(EXIT_FAILURE);
         }
     }
 
