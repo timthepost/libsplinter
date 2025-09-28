@@ -103,8 +103,8 @@ void print_usage(char *progname) {
     fprintf(stderr, "  --help / -h                  Show this help display.\n");
     fprintf(stderr, "  --history-file / -H <path>   Set the CLI history file to <path>\n");
     fprintf(stderr, "  --history-len / -l  <len>    Set the CLI history length to <len>\n");
-    fprintf(stderr, "  --list-modules / -L          List available internal commands available via --no-repl\n");
-    fprintf(stderr, "  --no-repl / -n               Don't enter interactive mode; run splinter command and exit.\n");
+    fprintf(stderr, "  --list-modules / -L          List available commands.\n");
+    fprintf(stderr, "  --no-repl / -n               Don't enter interactive mode.\n");
     fprintf(stderr, "  --version / -v               Print splinter version information and exit.\n");
     fprintf(stderr, "\n%s will look for SPLINTER_HISTORY_FILE and SPLINTER_HISTORY_LEN in the\n", progname);
     fprintf(stderr, "environment and use them; however argument values will always take precedence.\n");
@@ -159,7 +159,7 @@ static const struct option long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
-static const char *optstring = "h::H:l:nv";
+static const char *optstring = "h::H:l:Lnv";
 
 // halts execution if strtol would overflow an integer.
 static int safer_atoi(const char *string) {
@@ -231,7 +231,7 @@ int main (int argc, char *argv[]) {
                 exit(EXIT_FAILURE);
             // unknown or missing argument
             case '?':
-                fprintf(stderr, "Unexpected return from argument parsing: %d\nTry --help for help.\n", opt);
+                fprintf(stderr, "Option missing required argument - exiting.\n");
                 exit(EXIT_FAILURE);
             // they're heeeeeere!
             default:
