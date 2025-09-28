@@ -231,7 +231,7 @@ int main (int argc, char *argv[]) {
                 exit(EXIT_FAILURE);
             // unknown or missing argument
             case '?':
-                fprintf(stderr, "Option missing required argument - exiting.\n");
+                fprintf(stderr, "Option missing required argument. Try %s --help for help.\n", progname);
                 exit(EXIT_FAILURE);
             // they're heeeeeere!
             default:
