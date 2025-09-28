@@ -39,6 +39,14 @@ export const Libsplinter = Deno.dlopen("../../libsplinter.so", {
     parameters: ["buffer", "u64"], 
     result: "i32" 
   },
+  "splinter_set_av": {
+    parameters: ["u32"],
+    result: "i32"
+  },
+  "splinter_get_av": {
+    parameters: [],
+    result: "i32"
+  },
   "splinter_close": { 
     parameters: [], 
     result: "void" 
