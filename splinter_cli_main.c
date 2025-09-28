@@ -19,7 +19,6 @@
 #include "config.h"
 #include "linenoise.h"
 
-
 /**
  * We deviate from linenoise default here (which hides these)
  * but we need direct access to the history array for non-repl
