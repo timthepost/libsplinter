@@ -89,7 +89,8 @@ cli_module_t command_modules[] = {
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
 
-// Initialize session structure
+// Initialize a shared session structure
+// (declared as extern in splinter_cli.h)
 cli_user_t thisuser = {
     false,
     0,
@@ -330,7 +331,7 @@ int main (int argc, char *argv[]) {
                     optopt, 
                     progname);
                 exit(EXIT_FAILURE);
-            // If this case is entered, it means getopt_long() is likely broken.
+            // If this case is entered, it means getopt_long() is likely broken?
             default:
                 fprintf(stderr, "%s: unknown error parsing argument '%c'. Try %s --help for help.\n", 
                     progname,
@@ -340,32 +341,37 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    // if optind > argc here, there are additional args, which we can unpack
-    // later in NO_REPL mode. We don't consider them if we're in REPL mode,
-    // so address that first.
-
     if (m == MODE_REPL) {
         if (cli_set_signal_handlers() < 0) {
-            fprintf(stderr, "%s: failed to register signal handlers. Certain interactive features may malfunction.\n",
+            fprintf(stderr, 
+                "%s: failed to register signal handlers. Certain interactive features may malfunction.\n",
                 progname);
         }
-        snprintf(prompt, 3, "# ");
+        
         print_version_info(progname);        
         fprintf(stderr,"To quit, press ctrl-c or ctrl-d.\n");
+        
         linenoiseSetCompletionCallback(completion);
         linenoiseSetHintsCallback(hints);
+
+        // we could conceivably store prompt in cli_user_t and let 
+        // modules write to it; hmmmmm .... for now - just this:
+        snprintf(prompt, 3, "# ");
+        
         do {
             // unpack the arguments into an argv[] style array
             mod_args = cli_input_args(prompt, &_argc);
             
             // ctrl-c or ctrl-d
             if (mod_args == NULL) break;
+
             // user just pressed enter alone
             if (_argc == 0) {
                 cli_free_argv(mod_args);
                 continue;
             }
 
+            // there actually might be something to do
             idx = cli_find_module(mod_args[0]);
             if (idx >= 0) {
                 rc = cli_run_module(idx, _argc, mod_args);
@@ -374,14 +380,12 @@ int main (int argc, char *argv[]) {
                 rc = 1;
             }
 
-            // Put everything away for the next turn
+            // re-set for next turn
             cli_free_argv(mod_args);
             mod_args = NULL;
             _argc = 0;
 
-            // Here is where any janitorial things like refreshing
-            // atomic views could happen. The kaboose on the input train.
-
+            // End of REPL loop
         } while (1);
     } else {
         if (argc > 1) { 
@@ -408,12 +412,11 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    // we've at least tried to process something at this point, so save history.
-    // history is logged from both interactive and non-interactive modes.
     if (historyfile != NULL && historylen > 0) linenoiseHistorySave(historyfile);
     
-    // linenoise's atexit doesn't get entered at normal termination, so explicitly
-    // free history prior to exiting if in non-repl mode (just a nit)
+    // Since we didn't invoke linenoise in non-repl mode, we won't benefit from its 
+    // atexit function. So, we have to call it explicitly in non-repl mode. (this is
+    // also a change I made to line noise, history was static (opaque))
     if (m == MODE_NO_REPL) {
         if (history) freeHistory();
     }
