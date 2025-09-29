@@ -291,8 +291,9 @@ static int safer_atoi(const char *string) {
 static void cli_at_exit(void) {
     if (thisuser.store_conn)
         splinter_close();
-    // restore from possibly being set in non-blocking mode
-    tcsetattr(STDIN_FILENO, TCSANOW, &thisuser.term);
+    if (m == MODE_REPL)
+        // restore from possibly being set in non-blocking mode
+        tcsetattr(STDIN_FILENO, TCSANOW, &thisuser.term);
 }
 
 int main (int argc, char *argv[]) {

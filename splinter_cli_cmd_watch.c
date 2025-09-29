@@ -7,6 +7,8 @@
 #include "splinter_cli.h"
 #include "splinter.h"
 
+static const char *modname = "watch";
+
 // make terminal non-blocking
 void setup_terminal(void) {
     struct termios temp_tio;
@@ -39,20 +41,31 @@ void restore_terminal(void) {
 }
 
 void help_cmd_watch(unsigned int level) {
-    (void) level;
+    printf("%s watches a key in the current store for changes.\n", modname);
+    printf("Usage: %s <key_name_to_watch>\n", modname);
+    if (level) {
+        puts("\nYou can also use the 'splinter_recv' program to poll in scripts.");
+    }
     return;
 }
 
 int cmd_watch(int argc, char *argv[]) {
-    (void) argv;
-    (void) argc;
+    char msg[4096];
+    size_t msg_sz = 0;
+    char c, *key;
+    int rc = -1;
 
-    char c;
-    int counter = 0;
+    if (argc == 2) {
+        key = argv[1];
+    } else {
+        fprintf(stderr, "Usage: %s <key>\nTry 'help ext watch' for help.\n", modname);
+        return -1;
+    }
 
-    setup_terminal();
+    // TODO: validate key prior to starting
     
-    printf("Press Ctrl-] (ASCII 29) to stop...\n");
+    setup_terminal();
+    printf("Press Ctrl-] To Stop ...\n");
     
     while (! thisuser.abort) {
         if (read(STDIN_FILENO, &c, 1) == 1) {
@@ -62,12 +75,28 @@ int cmd_watch(int argc, char *argv[]) {
                 break;
             }
         }
-        printf("Iteration %d\n", counter++);
-        usleep(1000000);
+        
+        rc = splinter_poll(key, 100);
+        if (rc == -1) {
+            fprintf(stderr, "%s: invalid key: '%s'\n", modname, key);
+            restore_terminal();
+            return -1;
+        }
+
+        if (rc == 0) {
+            if (splinter_get(key, msg, sizeof(msg), &msg_sz) != 0) {
+                fprintf(stderr,
+                        "splinter_logtee: failed to read key %s after update.\n",
+                        key);
+                return -1;
+            }
+            fwrite(msg, 1, msg_sz, stdout);
+            fputc('\n', stdout);
+            fflush(stdout);
+        }
     }
-    
+
     thisuser.abort = 0;
-    
     restore_terminal();
     
     return 0;
