@@ -97,6 +97,36 @@ cli_user_t thisuser = {
     0
 };
 
+// We raise thisuser.abort on SIGUSER1 (so far)
+static void cli_handle_signal(int signum) {
+    switch (signum) {
+        // This arrangement allows using them as either an emergency stop, 
+        // or stop / start button. Useful for handling "more"-like output.
+        case SIGUSR1:
+            thisuser.abort = 1;
+            break;
+        case SIGUSR2:
+            thisuser.abort = 0;
+            break;
+        // don't interfere with linenoise
+        default:
+            break;
+    }
+}
+
+static int cli_set_signal_handlers(void) {
+    struct sigaction sa = {0};
+    sa.sa_handler = cli_handle_signal;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    int rc = 0;
+
+    rc += sigaction(SIGUSR1, &sa, NULL);
+    rc += sigaction(SIGUSR2, &sa, NULL);
+
+    return rc;
+}
+
 // Safely set mode from invoked name
 // See POSIX exec family standards regarding argv[0] not being guaranteed,
 // so we're extremely defensive about allowing the 'splinterctl' shortcut 
@@ -315,6 +345,10 @@ int main (int argc, char *argv[]) {
     // so address that first.
 
     if (m == MODE_REPL) {
+        if (cli_set_signal_handlers() < 0) {
+            fprintf(stderr, "%s: failed to register signal handlers. Certain interactive features may malfunction.\n",
+                progname);
+        }
         snprintf(prompt, 3, "# ");
         print_version_info(progname);        
         fprintf(stderr,"To quit, press ctrl-c or ctrl-d.\n");

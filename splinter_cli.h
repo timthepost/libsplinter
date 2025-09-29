@@ -10,6 +10,7 @@
 
 #include "splinter.h"
 #include <stdbool.h>
+#include <signal.h>
 
 // Types for module command entry and help 
 typedef int (*mod_entry_t)(int, char *[]);
@@ -37,7 +38,7 @@ typedef struct cli_user {
     // is the user connected to a store?
     bool store_conn;
     // does the user want to abort whatever we're doing?
-    volatile unsigned int abort;
+    volatile sig_atomic_t abort;
     // exit status of the last run command
     int lastexit;
     // errno after last run command
