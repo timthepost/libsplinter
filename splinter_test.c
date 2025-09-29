@@ -60,36 +60,31 @@ int main(void) {
   const char *new_value = "updated value";
   TEST("update existing key", splinter_set(test_key, new_value, strlen(new_value)) == 0);
 
-  // Test 9: Verify updated value
+  // Test 9 - 10: Verify updated value
   TEST("get updated value", splinter_get(test_key, buf, sizeof(buf), &out_sz) == 0);
   buf[out_sz] = '\0';
   TEST("updated value is correct", strcmp(buf, new_value) == 0);
 
-  // Test 10: Set multiple keys
+  // Test 11 - 12: Set multiple keys
   TEST("set second key", splinter_set("key2", "value2", 6) == 0);
   TEST("set third key", splinter_set("key3", "value3", 6) == 0);
 
-  // Test 11: List keys
+  // Test 13: List keys
   char *key_list[10];
   size_t key_count;
   TEST("list keys", splinter_list(key_list, 10, &key_count) == 0);
 
-  // Test 12: Verify key count
+  // Test 14: Verify key count
   TEST("correct number of keys", key_count == 3);
 
-  // Test 13: Unset a key
+  // Test 15: Unset a key
   TEST("unset key", splinter_unset("key2") >= 0);
 
-  // Test 14: Auto vacuum functions
+  // Test 16 - 17: Auto vacuum functions
   int original_av = splinter_get_av();
   TEST("set auto vacuum mode", splinter_set_av(0) == 0);
   TEST("get auto vacuum mode", splinter_get_av() == 0);
   splinter_set_av((uint32_t) original_av);
-
-  // TODO: Need to test flipping auto vacuum on / off during 
-  // between / after / again after read write ops. Not urgent
-  // at all, trivial really, maybe even unnecessary? Noting it
-  // for diligence and completeness.
 
   // Cleanup
   splinter_close();
