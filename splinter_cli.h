@@ -11,6 +11,7 @@
 #include "splinter.h"
 #include <stdbool.h>
 #include <signal.h>
+#include <termios.h>
 
 // Types for module command entry and help 
 typedef int (*mod_entry_t)(int, char *[]);
@@ -39,6 +40,8 @@ typedef struct cli_user {
     bool store_conn;
     // does the user want to abort whatever we're doing?
     volatile sig_atomic_t abort;
+    // user's terminal
+    struct termios term;
     // exit status of the last run command
     int lastexit;
     // errno after last run command
@@ -70,6 +73,9 @@ void help_cmd_clear(unsigned int level);
 
 int cmd_use(int argc, char *argv[]);
 void help_cmd_use(unsigned int level);
+
+int cmd_watch(int argc, char *argv[]);
+void help_cmd_watch(unsigned int level);
 
 // And finally an array of modules to hold them all
 extern cli_module_t command_modules[];

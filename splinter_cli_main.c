@@ -85,6 +85,15 @@ cli_module_t command_modules[] = {
         &cmd_use,
         &help_cmd_use
     },
+    {
+        4,
+        "watch",
+        5,
+        "Observes a key for changes and prints updated contents.",
+        -1,
+        &cmd_watch,
+        &help_cmd_watch
+    },
     // The last null-filled element 
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
@@ -94,9 +103,11 @@ cli_module_t command_modules[] = {
 cli_user_t thisuser = {
     false,
     0,
+    {0},
     0,
     0
 };
+
 
 // We raise thisuser.abort on SIGUSER1 (so far)
 static void cli_handle_signal(int signum) {
@@ -195,6 +206,9 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
         case 'u':
             linenoiseAddCompletion(lc, "use");
             break;
+        case 'w':
+            linenoiseAddCompletion(lc, "watch");
+            break;
         default:
             break;
     }
@@ -238,6 +252,12 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "se ";
     }
 
+    if (!strncasecmp(buf,"w",5)) {
+        *color = 36;
+        *bold = 1;
+        return "atch ";
+    }
+
     return NULL;
 }
 
@@ -271,6 +291,8 @@ static int safer_atoi(const char *string) {
 static void cli_at_exit(void) {
     if (thisuser.store_conn)
         splinter_close();
+    // restore from possibly being set in non-blocking mode
+    tcsetattr(STDIN_FILENO, TCSANOW, &thisuser.term);
 }
 
 int main (int argc, char *argv[]) {
@@ -294,6 +316,9 @@ int main (int argc, char *argv[]) {
     m = select_mode(progname);
     atexit(cli_at_exit);
     
+    // Modules must know what this is in order to be able to restore it
+    tcgetattr(STDIN_FILENO, &thisuser.term);
+
     // parse arguments here
     opterr = 0;
     while ((opt = getopt_long(argc, argv, optstring, long_options, NULL)) != -1) {
