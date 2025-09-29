@@ -198,7 +198,7 @@ int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz)
         atomic_store_explicit(&S[i].epoch, 0, memory_order_relaxed);
         S[i].val_off = (uint32_t)(i * max_value_sz);
         atomic_store_explicit(&S[i].val_len, 0, memory_order_relaxed);
-        memset(S[i].key, 0, KEY_MAX);
+        S[i].key[0] = '\0';      
     }
     return 0;
 }
@@ -326,8 +326,11 @@ int splinter_unset(const char *key) {
 
             if (atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed) == 1) {
                 memset(VALUES + slot->val_off, 0, H->max_val_sz);
+                memset(slot->key, 0, KEY_MAX);
+            } else {
+                slot->key[0] = '\0';
             }
-            memset(slot->key, 0, KEY_MAX);
+            
             atomic_store_explicit(&slot->val_len, 0, memory_order_release);
 
             // Increment slot epoch to mark the change (leave even)
@@ -401,7 +404,11 @@ int splinter_set(const char *key, const void *val, size_t len) {
             atomic_store_explicit(&slot->val_len, (uint32_t)len, memory_order_release);
 
             // Update key (write full key buffer so readers can't see a partial key)
-            memset(slot->key, 0, KEY_MAX);
+            if (atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed) == 1) {
+                memset(slot->key, 0, KEY_MAX);
+            } else {
+                slot->key[0] = '\0';
+            }
             strncpy(slot->key, key, KEY_MAX - 1);
             slot->key[KEY_MAX - 1] = '\0';
 
