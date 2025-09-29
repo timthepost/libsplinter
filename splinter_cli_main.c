@@ -53,7 +53,7 @@ cli_module_t command_modules[] = {
         0,
         "clear",
         5,
-        "Clears the screen",
+        "Clears the screen.",
         -1,
         &cmd_clear,
         &help_cmd_clear
@@ -71,7 +71,7 @@ cli_module_t command_modules[] = {
         2,
         "help",
         4,
-        "Help with commands and features",
+        "Help with commands and features.",
         -1,
         &cmd_help,
 	    &help_cmd_help
@@ -80,13 +80,13 @@ cli_module_t command_modules[] = {
         3,
         "use",
         3,
-        "Use <splinter_store> (name or path)",
+        "Opens a Splinter store by name or path.",
         -1,
         &cmd_use,
         &help_cmd_use
     },
-    // Make sure this remains your last-indexed element.
-    { 4, NULL, 0, NULL, -1,  NULL , NULL }
+    // The last null-filled element 
+    { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
 
 // Initialize session structure
