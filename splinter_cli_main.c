@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <getopt.h>
+#include <errno.h>
 
 #include "splinter_cli.h"
 #include "config.h"
@@ -75,8 +76,25 @@ cli_module_t command_modules[] = {
         &cmd_help,
 	    &help_cmd_help
     },
+    {
+        3,
+        "use",
+        3,
+        "Use <splinter_store> (name or path)",
+        -1,
+        &cmd_use,
+        &help_cmd_use
+    },
     // Make sure this remains your last-indexed element.
-    { 3, NULL, 0, NULL, -1,  NULL , NULL }
+    { 4, NULL, 0, NULL, -1,  NULL , NULL }
+};
+
+// Initialize session structure
+cli_user_t thisuser = {
+    false,
+    0,
+    0,
+    0
 };
 
 // Safely set mode from invoked name
@@ -136,12 +154,16 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
     if (buf[0] == '\0') return;
 
     switch (buf[0]) {
-        case 'h':
-            linenoiseAddCompletion(lc, "help");
-            break;
         case 'c':
             linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "cls");
+            break;
+        case 'h':
+            linenoiseAddCompletion(lc, "help");
+            break;
+        case 'u':
+            linenoiseAddCompletion(lc, "use");
+            break;
         default:
             break;
     }
@@ -179,6 +201,12 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "elp ";
     }
 
+    if (!strncasecmp(buf,"u", 3)) {
+        *color = 36;
+        *bold = 1;
+        return "se ";
+    }
+
     return NULL;
 }
 
@@ -209,6 +237,11 @@ static int safer_atoi(const char *string) {
     }
 }
 
+static void cli_at_exit(void) {
+    if (thisuser.store_conn)
+        splinter_close();
+}
+
 int main (int argc, char *argv[]) {
     int rc = 0, _argc = 0, idx = -1, opt, historylen = -1;
     char *progname = basename(argv[0]), *buff = NULL;
@@ -228,6 +261,7 @@ int main (int argc, char *argv[]) {
     // If you absolutely need to disable the implicit mode check based on invocation, 
     // comment out m = select_mode() and allow arguments to decide it exclusively.
     m = select_mode(progname);
+    atexit(cli_at_exit);
     
     // parse arguments here
     opterr = 0;
