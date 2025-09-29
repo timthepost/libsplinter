@@ -548,7 +548,7 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
     if (start_epoch & 1) {
         // Writer in progress
         errno = EAGAIN;
-        return -1;
+        return -2;
     }
 
     struct timespec deadline;
@@ -560,7 +560,7 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
         uint64_t cur_epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
         if (cur_epoch & 1) {
             errno = EAGAIN;
-            return -1; // Writer still in progress
+            return -2; // Writer still in progress
         }
         if (cur_epoch != start_epoch) {
             return 0; // Value changed
@@ -571,7 +571,7 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
         if ((now.tv_sec > deadline.tv_sec) ||
             (now.tv_sec == deadline.tv_sec && now.tv_nsec >= deadline.tv_nsec)) {
             errno = ETIMEDOUT;
-            return -1;
+            return -2;
         }
         nanosleep(&sleep_ts, NULL);
     }
