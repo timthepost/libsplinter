@@ -68,18 +68,20 @@ void cli_show_module_help(int idx, unsigned int level) {
 /**
  * A simple way to list modules
  */
-#define LIST_BAR "------------------------------"
+#define LIST_BAR "--------------------"
 void cli_show_modules(void) {
     int i;
 
-    fprintf(stdout, "%-15s | %-60s\n----------------+%s%s\n",
+    fprintf(stdout, "\n %-10s | %-60s\n%s%s%s%s\n",
         "Module", 
         "Description",
+        LIST_BAR,
+        LIST_BAR,
         LIST_BAR,
         LIST_BAR);
 
     for (i = 0; command_modules[i].name; i++) {
-        fprintf(stdout, "%-15s | %-60s\n",
+        fprintf(stdout, " %-10s | %-60s\n",
             command_modules[i].name,
             command_modules[i].description);
     }
