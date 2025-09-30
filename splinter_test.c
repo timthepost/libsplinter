@@ -16,6 +16,8 @@
 static int total = 0;
 static int passed = 0;
 
+static pid_t pid = 0;
+
 #define TEST(name, expr) do { \
   total++; \
   if (expr) { \
@@ -26,11 +28,20 @@ static int passed = 0;
   } \
 } while (0)
 
-int main(void) {
-  printf("1..17\n");
 
-  // Test 1: Create new splinter store
-  TEST("create splinter store", splinter_create_or_open("splinter_stress", 1000, 4096) == 0);
+int main(void) {
+  char bus[16] = { 0 };
+  char buspath[32] = { 0 };
+  printf("1..26\n");
+  pid = getpid();
+
+  snprintf(bus, 16, "%d-tap-test", pid);
+  if (RUNNING_ON_VALGRIND) {
+    VALGRIND_ENABLE_ERROR_REPORTING;
+  }
+
+  // Test 1: Create new unique splinter store
+  TEST("create splinter store", splinter_create_or_open(bus, 1000, 4096) == 0);
 
   // Test 2: Basic set operation
   const char *test_key = "test_key";
@@ -86,12 +97,37 @@ int main(void) {
   TEST("get auto vacuum mode", splinter_get_av() == 0);
   splinter_set_av((uint32_t) original_av);
 
+  // Test 18 -22: Header Snapshot & Consistency
+  splinter_header_snapshot_t snap = { 0 };
+  TEST("get header snapshot", splinter_get_header_snapshot(&snap) == 0);
+  TEST("magic number greater than zero", snap.magic > 0);
+  TEST("epoch greater than zero", snap.epoch > 0);
+  TEST("auto_vacuum is really on", snap.auto_vacuum == 1);
+  TEST("slots are non-zero", snap.slots > 0);
+  
+  // Test 23 - 26: Slot Header Snapshot & Consistency
+  splinter_slot_snapshot_t snap1 = { 0 };
+  TEST("create header snapshot key", splinter_set("header_snap", "hello", 5) == 0);
+  TEST("take snapshot of header_snap slot metadata", splinter_get_slot_snapshot("header_snap", &snap1) == 0);
+  TEST("snap1 epoch is nonzero", snap1.epoch > 0);
+  TEST("length of header_snap is 5: h e l l o", snap1.val_len == 5);
+  splinter_unset("header_snap");
+
   // Cleanup
   splinter_close();
+
+  // TODO: kinda sloppy
+  snprintf(buspath, 32, "/dev/shm/%s", bus);
+  unlink(buspath);
 
 #ifdef HAVE_VALGRIND_H
   if (RUNNING_ON_VALGRIND) {
     printf("\n** Valgrind Detected. Thank you for your diligence! **\n\n");
+    if (VALGRIND_COUNT_ERRORS) {
+      fprintf(stderr,"\nValgrind detected errors in this run. Exiting abnormally.\n");
+      fprintf(stderr, "(sad trombone sound)\n");
+      return 1;
+    }
   }
 #endif // HAVE_VALGRIND_H
   
