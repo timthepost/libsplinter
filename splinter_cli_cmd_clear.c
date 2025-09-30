@@ -15,9 +15,9 @@ void help_cmd_clear(unsigned int level) {
 }
 
 int cmd_clear(int argc, char *argv[]) {
-    if (argc > 1 && ! strncmp(argv[1], "history", 6)) {
-        // clear history here?
-    }
+    (void) argc;
+    (void) argv;
+    
     linenoiseClearScreen();
     return 0;
 }
