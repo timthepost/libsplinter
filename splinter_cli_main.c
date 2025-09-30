@@ -31,7 +31,7 @@ extern void freeHistory(void);
 
 /**
  * TODO:
- *  - Implement all remaining commands (need to add hist, export, head)
+ *  - Implement all remaining commands (need to add hist, export, list, head)
  *  - (Maybe) implement code for editor with "edit" command (for full screen editing of keys)
  */
 
@@ -104,12 +104,11 @@ cli_user_t thisuser = {
     0
 };
 
-
 // We raise thisuser.abort on SIGUSER1 (so far)
 static void cli_handle_signal(int signum) {
     switch (signum) {
         // This arrangement allows using them as either an emergency stop, 
-        // or stop / start button. Useful for handling "more"-like output.
+        // or stop / start button. 
         case SIGUSR1:
             thisuser.abort = 1;
             break;
@@ -378,9 +377,14 @@ int main (int argc, char *argv[]) {
 
         // we could conceivably store prompt in cli_user_t and let 
         // modules write to it; hmmmmm .... for now - just this:
-        snprintf(prompt, 3, "# ");
+        
         
         do {
+            if (thisuser.lasterrno != 0) {
+                snprintf(prompt, 6, "%d # ", thisuser.lasterrno);
+            } else {
+                snprintf(prompt, 3, "# ");
+            }
             // unpack the arguments into an argv[] style array
             mod_args = cli_input_args(prompt, &_argc);
             
@@ -401,6 +405,8 @@ int main (int argc, char *argv[]) {
                 fprintf(stderr, "Unknown command: %s\n", mod_args[0]);
                 rc = 1;
             }
+
+            thisuser.lasterrno = rc;
 
             // re-set for next turn
             cli_free_argv(mod_args);
