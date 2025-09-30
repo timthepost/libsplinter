@@ -33,14 +33,6 @@
 #include <stdint.h>
 #include "config.h"
 
-/** @brief Magic number to identify a splinter memory region. */
-#define SPLINTER_MAGIC 0x534C4E54
-/** @brief Version of the splinter data format (not the library version). */
-#define SPLINTER_VER   1
-/** @brief Maximum length of a key string, including null terminator. */
-#define KEY_MAX        64
-/** @brief Nanoseconds per millisecond for time calculations. */
-#define NS_PER_MS      1000000ULL
 
 /**
  * @struct splinter_header
@@ -275,7 +267,7 @@ int splinter_set_av(unsigned int mode) {
  */
 int splinter_get_av(void) {
     if (!H) return -2;
-    return (int) atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed);
+    return (int) atomic_load_explicit(&H->auto_vacuum, memory_order_acquire);
 }
 
 /**
@@ -575,4 +567,59 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
         }
         nanosleep(&sleep_ts, NULL);
     }
+}
+
+/**
+ * @brief Copy the current atomic Splinter header structure into a corresponding
+ * non-atomic client version.
+ * @param snapshot A splinter_header_snaphshot_t structure to receive the values.
+ * @return void
+ */
+int splinter_get_header_snapshot(splinter_header_snapshot_t *snapshot) {
+    snapshot->magic = H->magic;
+    snapshot->version = H->version;
+    snapshot->slots = H->slots;
+    snapshot->max_val_sz = H->max_val_sz;
+    snapshot->epoch = atomic_load_explicit(&H->epoch, memory_order_acquire);
+    snapshot->auto_vacuum = atomic_load_explicit(&H->auto_vacuum, memory_order_acquire);
+    snapshot->parse_failures = atomic_load_explicit(&H->parse_failures, memory_order_relaxed);
+    snapshot->last_failure_epoch = atomic_load_explicit(&H->last_failure_epoch, memory_order_relaxed);
+    return 0;
+}
+
+
+/**
+ * @brief Copy the current atomic Splinter slot header to a corresponding client
+ * structure.
+ * @param snapshot A splinter_slot_snaphshot_t structure to receive the values.
+ * @return -1 on failure, 0 on success.
+ */
+int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapshot) {
+    if (!H || !key) return -1;
+    uint64_t h = fnv1a(key);
+    size_t idx = slot_idx(h, H->slots);
+    struct splinter_slot *slot = NULL;
+    size_t i;
+
+    for (i = 0; i < H->slots; ++i) {
+        struct splinter_slot *s = &S[(idx + i) % H->slots];
+        if (atomic_load_explicit(&s->hash, memory_order_acquire) == h &&
+            strncmp(s->key, key, KEY_MAX) == 0) {
+            slot = s;
+            break;
+        }
+    }
+
+    if (!slot) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    strncpy(slot->key, snapshot->key, KEY_MAX);
+    snapshot->val_off = slot->val_off;
+    snapshot->hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
+    snapshot->epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
+    snapshot->val_len = atomic_load_explicit(&slot->val_len, memory_order_acquire);
+
+    return 0;
 }

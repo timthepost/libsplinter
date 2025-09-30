@@ -13,9 +13,72 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/** @brief Magic number to identify a splinter memory region. */
+#define SPLINTER_MAGIC 0x534C4E54
+/** @brief Version of the splinter data format (not the library version). */
+#define SPLINTER_VER   1
+/** @brief Maximum length of a key string, including null terminator. */
+#define KEY_MAX        64
+/** @brief Nanoseconds per millisecond for time calculations. */
+#define NS_PER_MS      1000000ULL
+
+
+
+/**
+ * @brief structure to hold splinter bus snapshots
+ */
+typedef struct splinter_header_snapshot {
+    /** @brief Magic number (SPLINTER_MAGIC) to verify integrity. */
+    uint32_t magic;
+    /** @brief Data layout version (SPLINTER_VER). */
+    uint32_t version;
+    /** @brief Total number of available key-value slots. */
+    uint32_t slots;
+    /** @brief Maximum size for any single value. */
+    uint32_t max_val_sz;
+    /** @brief Global epoch, incremented on any write. Used for change detection. */
+    uint64_t epoch;
+    /** @brief toggle for zeroing out the value region prior to writing there. */
+    uint32_t auto_vacuum;
+
+    /* Diagnostics: counts of parse failures reported by clients / harnesses */
+    uint64_t parse_failures;
+    uint64_t last_failure_epoch;
+} splinter_header_snapshot_t;
+
+/**
+ * @brief Copy the current atomic Splinter header structure into a corresponding
+ * non-atomic client version.
+ * @param snapshot A splinter_header_snaphshot_t structure to receive the values.
+ * @return -1 on failure, 0 on success.
+ */
+int splinter_get_header_snapshot(splinter_header_snapshot_t *snapshot);
+
+typedef struct splinter_slot_snapshot {
+    /** @brief The FNV-1a hash of the key. 0 indicates an empty slot. */
+    uint64_t hash;
+    /** @brief Per-slot epoch, incremented on write to this slot. Used for polling. */
+    uint64_t epoch;
+    /** @brief Offset into the VALUES region where the value data is stored. */
+    uint32_t val_off;
+    /** @brief The actual length of the stored value data (atomic). */
+    uint32_t val_len;
+    /** @brief The null-terminated key string. */
+    char key[KEY_MAX];
+} splinter_slot_snapshot_t;
+
+/**
+ * @brief Copy the current atomic Splinter slot header to a corresponding client
+ * structure.
+ * @param snapshot A splinter_slot_snaphshot_t structure to receive the values.
+ * @return -1 on failure, 0 on success.
+ */
+int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapshot);
 
 /**
  * @brief Creates and initializes a new splinter store.
