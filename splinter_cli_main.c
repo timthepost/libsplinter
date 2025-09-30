@@ -31,12 +31,8 @@ extern void freeHistory(void);
 
 /**
  * TODO:
- *  - Implement all commands but "watch" (need to add clear & hist)
- *  - Implement ctrl - ] SIGUSR1 handler for exiting watches without exiting CLI
- *  - Implement "watch"
- *  - Test async input with watch
- *  - (Maybe) implement code for editor with "edit" command just to access for now?
- *  - (Maybe) implement some kind of test harness to test the commands?
+ *  - Implement all remaining commands (need to add hist, export, head)
+ *  - (Maybe) implement code for editor with "edit" command (for full screen editing of keys)
  */
 
 enum mode {
