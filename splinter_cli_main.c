@@ -374,10 +374,6 @@ int main (int argc, char *argv[]) {
         
         linenoiseSetCompletionCallback(completion);
         linenoiseSetHintsCallback(hints);
-
-        // we could conceivably store prompt in cli_user_t and let 
-        // modules write to it; hmmmmm .... for now - just this:
-        
         
         do {
             if (thisuser.lasterrno != 0) {
