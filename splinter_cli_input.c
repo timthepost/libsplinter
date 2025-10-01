@@ -28,11 +28,3 @@ char **cli_input_args(const char *prompt, int *argc) {
     return(argv);
 }
 
-// coming shortly (to implement 'watch')
-int cli_input_args_async(const char *prompt) {
-    // what will likely happen here is we have a thread funneling multiple watches into a single "console"
-    // key to watch, so the console only has to poll one key. But I'm still deciding on how to hoist it.
-    printf("%s Async not yet working.\n", prompt);
-    return -1;
-}
-
