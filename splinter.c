@@ -576,6 +576,7 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
  * @return void
  */
 int splinter_get_header_snapshot(splinter_header_snapshot_t *snapshot) {
+    if (!H) return -1;
     snapshot->magic = H->magic;
     snapshot->version = H->version;
     snapshot->slots = H->slots;
