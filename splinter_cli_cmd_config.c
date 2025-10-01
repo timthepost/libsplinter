@@ -27,12 +27,6 @@ static void show_bus_config(void) {
     return;
 }
 
-/*
-config (shows bus config)
-config <keyname> (shows slot config value of keyname)
-config set <bus_config_key> <value> (sets bus config <key> to <value>, if RW)
-*/
-
 int cmd_config(int argc, char *argv[]) {
     (void) argv;
     
