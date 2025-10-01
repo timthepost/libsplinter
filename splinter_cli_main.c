@@ -62,9 +62,18 @@ cli_module_t command_modules[] = {
         0,
         &cmd_clear,
         &help_cmd_clear
-    },    
+    },
     {
         2,
+        "config",
+        6,
+        "Access Splinter bus and slot metadata.",
+        -1,
+        &cmd_config,
+        &help_cmd_config
+    },    
+    {
+        3,
         "help",
         4,
         "Help with commands and features.",
@@ -73,7 +82,7 @@ cli_module_t command_modules[] = {
 	    &help_cmd_help
     },
     {
-        3,
+        4,
         "use",
         3,
         "Opens a Splinter store by name or path.",
@@ -82,7 +91,7 @@ cli_module_t command_modules[] = {
         &help_cmd_use
     },
     {
-        4,
+        5,
         "watch",
         5,
         "Observes a key for changes and prints updated contents.",
@@ -167,7 +176,8 @@ void print_version_info(char *progname) {
 
 void print_usage(char *progname) {
     fprintf(stderr, "%s provides a command line interface for Splinter bus interaction.\n", progname);
-    fprintf(stderr, "Usage:  %s [options] [aguments] *or*\n\t%s --no-repl <built in command> [arguments] *or*\n\t%s {no args for REPL}\n",
+    fprintf(stderr, 
+        "Usage:  %s [options] [aguments] *or*\n\t%s --no-repl <built in command> [arguments] *or*\n\t%s {no args for REPL}\n",
         progname, 
         progname,
         progname
@@ -194,6 +204,7 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
         case 'c':
             linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "cls");
+            linenoiseAddCompletion(lc, "config");
             break;
         case 'h':
             linenoiseAddCompletion(lc, "help");
@@ -235,6 +246,11 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "ar";
     }
 
+    if (!strncmp(buf, "co", 6)) {
+        *color = 36;
+        *bold = 1;
+        return "nfig ";
+    }
     if (!strncasecmp(buf,"h", 4)) {
         *color = 36;
         *bold = 1;
@@ -256,6 +272,7 @@ static char *hints(const char *buf, int *color, int *bold) {
     return NULL;
 }
 
+// TODO: Implement --use for --no-repl commands
 static const struct option long_options[] = {
     { "help", optional_argument, NULL, 'h' },
     { "history-file", required_argument, NULL, 'H' },

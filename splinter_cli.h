@@ -53,7 +53,6 @@ extern cli_user_t thisuser;
 
 // Prototypes for runtime functions
 char **cli_input_args(const char *prompt, int *argc);
-int cli_input_args_async(const char *prompt);
 char **cli_unroll_argv(const char *input, int *out_argc);
 void cli_free_argv(char *argv[]);
 int cli_find_module(const char *name);
@@ -70,6 +69,9 @@ void help_cmd_help(unsigned int level);
 
 int cmd_clear(int argc, char *argv[]);
 void help_cmd_clear(unsigned int level);
+
+int cmd_config(int argc, char *argv[]);
+void help_cmd_config(unsigned int level);
 
 int cmd_use(int argc, char *argv[]);
 void help_cmd_use(unsigned int level);
