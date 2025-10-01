@@ -9,7 +9,7 @@ STATIC_LIBS = libsplinter.a libsplinter_p.a
 SHARED_HEADERS = splinter.h
 
 # Good enough for now (if the CLI gets appreciably large, it needs a directory)
-CLI_SOURCES := $(shell echo splinter_cli_*.c) 3rdparty/linenoise.c
+CLI_SOURCES := $(shell echo splinter_cli_*.c) 3rdparty/linenoise.c 3rdparty/libgrawk.c
 CLI_HEADERS := splinter_cli.h 3rdparty/linenoise.h
 
 # Helpers & tests
