@@ -36,9 +36,6 @@ int main(void) {
   pid = getpid();
 
   snprintf(bus, 16, "%d-tap-test", pid);
-  if (RUNNING_ON_VALGRIND) {
-    VALGRIND_ENABLE_ERROR_REPORTING;
-  }
 
   // Test 1: Create new unique splinter store
   TEST("create splinter store", splinter_create_or_open(bus, 1000, 4096) == 0);

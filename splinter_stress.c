@@ -61,6 +61,7 @@ static inline long now_ms(void) {
 }
 
 static void *writer_main(void *arg) {
+    int i;
     shared_t *sh = (shared_t*)arg;
     cfg_t *cfg = sh->cfg;
     char *buf = malloc(cfg->max_value_size);
@@ -71,7 +72,7 @@ static void *writer_main(void *arg) {
     if (payload_len < 64) payload_len = 64;
 
     while (*sh->running) {
-        for (int i = 0; i < sh->num_keys && *sh->running; i++) {
+        for (i = 0; i < sh->num_keys && *sh->running; i++) {
             unsigned long nonce = (unsigned long)now_ms();
             int n = snprintf(buf, cfg->max_value_size,
                              "ver:%u|nonce:%lu|data:", ver, nonce);
@@ -121,6 +122,7 @@ static bool parse_ver(const char *val, size_t len, unsigned *out_ver) {
 }
 
 static void *reader_main(void *arg) {
+    int t;
     shared_t *sh = (shared_t*)arg;
     cfg_t *cfg = sh->cfg;
 
@@ -131,7 +133,7 @@ static void *reader_main(void *arg) {
 
     size_t got_size = 0;
     while (*sh->running) {
-        for (int t = 0; t < 256 && *sh->running; t++) {
+        for (t = 0; t < 256 && *sh->running; t++) {
             int idx = rand() % sh->num_keys;
             for (;;) {
                 if (!*sh->running) break;
@@ -215,7 +217,8 @@ static void print_stats(cfg_t *cfg, counters_t *c, long ms) {
 
 static void prepopulate(shared_t *sh) {
     char v[128];
-    for (int i = 0; i < sh->num_keys; i++) {
+    int i;
+    for (i = 0; i < sh->num_keys; i++) {
         int n = snprintf(v, sizeof(v), "ver:%u|nonce:%lu|data:SEED",
                          1u, (unsigned long)now_ms());
         if (n < 0) n = 0;
@@ -240,7 +243,9 @@ int main(int argc, char **argv) {
         .writer_period_us = 0,
     };
 
-    for (int i = 1; i < argc; i++) {
+    int i;
+
+    for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--threads") && i+1 < argc) cfg.num_threads = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--duration-ms") && i+1 < argc) cfg.test_duration_ms = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--keys") && i+1 < argc) cfg.num_keys = atoi(argv[++i]);
@@ -258,7 +263,7 @@ int main(int argc, char **argv) {
     }
     splinter_set_av(0);
 
-    printf("This is going to take a little while ...\n");
+    printf("This is going to take a little while (2 - 4 minutes or more)...\n");
 #ifdef HAVE_VALGRIND_H
     if (RUNNING_ON_VALGRIND) {
         printf("Valgrind Detected! This will likely quadruple the test length (or more)\n");
@@ -268,7 +273,7 @@ int main(int argc, char **argv) {
     char **keys = calloc((size_t)cfg.num_keys, sizeof(char*));
     if (!keys) { perror("calloc"); return 1; }
 
-    for (int i = 0; i < cfg.num_keys; i++) {
+    for (i = 0; i < cfg.num_keys; i++) {
         keys[i] = malloc(32);
         if (!keys[i]) { perror("malloc"); return 1; }
         snprintf(keys[i], 32, "k%08d", i);
@@ -293,7 +298,7 @@ int main(int argc, char **argv) {
         perror("pthread_create writer");
         return 1;
     }
-    for (int i = 1; i < cfg.num_threads; i++) {
+    for (i = 1; i < cfg.num_threads; i++) {
         if (pthread_create(&th[i], NULL, reader_main, &sh) != 0) {
             perror("pthread_create reader");
             running = 0;
@@ -307,15 +312,19 @@ int main(int argc, char **argv) {
     }
     running = 0;
 
-    for (int i = 0; i < cfg.num_threads; i++) pthread_join(th[i], NULL);
+    for (i = 0; i < cfg.num_threads; i++) pthread_join(th[i], NULL);
     long elapsed = now_ms() - start;
 
     print_stats(&cfg, &ctr, elapsed);
 
-    for (int i = 0; i < cfg.num_keys; i++) free(keys[i]);
+    for (i = 0; i < cfg.num_keys; i++) free(keys[i]);
     free(keys);
     free(th);
 
     splinter_close();
+#ifdef HAVE_VALGRIND_H
+    return VALGRIND_COUNT_ERRORS;
+#else
     return 0;
+#endif
 }
