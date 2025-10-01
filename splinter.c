@@ -616,7 +616,7 @@ int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapsh
         return -1;
     }
 
-    strncpy(slot->key, snapshot->key, KEY_MAX);
+    strncpy(snapshot->key, slot->key, KEY_MAX);
     snapshot->val_off = slot->val_off;
     snapshot->hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
     snapshot->epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
