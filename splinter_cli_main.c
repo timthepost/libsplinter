@@ -122,6 +122,15 @@ cli_module_t command_modules[] = {
     },
     {
         9,
+        "set",
+        3,
+        "Set a key in the store to a specified value.",
+        -1,
+        &cmd_set,
+        &help_cmd_set
+    },
+    {
+        10,
         "unset",
         5,
         "Unset a key in the store (deletes the key).",
@@ -130,7 +139,7 @@ cli_module_t command_modules[] = {
         &help_cmd_unset
     },
     {
-        10,
+        11,
         "use",
         3,
         "Opens a Splinter store by name or path.",
@@ -139,7 +148,7 @@ cli_module_t command_modules[] = {
         &help_cmd_use
     },
     {
-        11,
+        12,
         "watch",
         5,
         "Observes a key for changes and prints updated contents.",
@@ -257,8 +266,12 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
         case 'h':
             linenoiseAddCompletion(lc, "help");
             break;
+        case 's':
+            linenoiseAddCompletion(lc, "set");
+            break;
         case 'u':
             linenoiseAddCompletion(lc, "use");
+            linenoiseAddCompletion(lc, "unset");
             break;
         case 'w':
             linenoiseAddCompletion(lc, "watch");
@@ -299,16 +312,35 @@ static char *hints(const char *buf, int *color, int *bold) {
         *bold = 1;
         return "nfig ";
     }
+
     if (!strncasecmp(buf,"h", 4)) {
         *color = 36;
         *bold = 1;
         return "elp ";
     }
 
-    if (!strncasecmp(buf,"u", 3)) {
+    if (!strncasecmp(buf, "s", 3)) {
         *color = 36;
         *bold = 1;
-        return "se ";
+        return "set ";
+    }
+
+    if (!strncasecmp(buf, "se", 3)) {
+        *color = 36;
+        *bold = 1;
+        return "t ";
+    }
+
+    if (!strncasecmp(buf,"u", 5)) {
+        *color = 36;
+        *bold = 1;
+        return "nset ";
+    }
+
+    if (!strncasecmp(buf,"un", 5)) {
+        *color = 36;
+        *bold = 1;
+        return "nset ";
     }
 
     if (!strncasecmp(buf,"w",5)) {

@@ -5,6 +5,11 @@
 
 static const char *modname = "set";
 
+// we need to get this dynamically from the bus
+// also have this issue in get. I'm just using a 4k
+// ceiling for now.
+#define SET_CMD_MAX_LEN 4096
+
 void help_cmd_set(unsigned int level) {
    
     printf("%s sets the value of a key in the store\n", modname);
@@ -15,8 +20,10 @@ void help_cmd_set(unsigned int level) {
 }
 
 int cmd_set(int argc, char *argv[]) {
-    (void) argc;
-    (void) argv;
-    
-    return 0;
+    if (argc < 3) {
+        help_cmd_set(1);
+        return 1;
+    }
+
+    return splinter_set(argv[1], argv[2], strnlen(argv[2], 4096));
 }
