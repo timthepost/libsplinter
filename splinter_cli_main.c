@@ -21,6 +21,15 @@
 #include "linenoise.h"
 
 /**
+ * todo for release:
+ *  - list command
+ *  - hist command
+ *  - export command
+ *  - go through the commands and make sure output is uniform
+ *  - remove construction cruft and comment debris
+ */
+
+/**
  * We deviate from linenoise default here (which hides these)
  * but we need direct access to the history array for non-repl
  * cleanup on exit (non-repl gets logged in history, too, but 
