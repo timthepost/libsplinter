@@ -270,8 +270,8 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
             linenoiseAddCompletion(lc, "set");
             break;
         case 'u':
-            linenoiseAddCompletion(lc, "use");
             linenoiseAddCompletion(lc, "unset");
+            linenoiseAddCompletion(lc, "use");
             break;
         case 'w':
             linenoiseAddCompletion(lc, "watch");
@@ -284,6 +284,8 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
 }
 
 // callback that provides completion hints while typing
+// TODO re-think how this works; it's onerous to maintain and 
+// kinda clunky.
 static char *hints(const char *buf, int *color, int *bold) { 
     /* foreground colors you can use:
      * red = 31
@@ -295,16 +297,16 @@ static char *hints(const char *buf, int *color, int *bold) {
      * white = 37;
      */
 
-    if (!strncasecmp(buf, "cl", 3)) {
-        *color = 32;
-        *bold = 1;
-        return "s";
-    }
-
     if (!strncasecmp(buf, "cle", 5)) {
         *color = 36;
         *bold = 1;
         return "ar";
+    }
+
+    if (!strncasecmp(buf, "cl", 3)) {
+        *color = 32;
+        *bold = 1;
+        return "s";
     }
 
     if (!strncmp(buf, "co", 6)) {
@@ -319,25 +321,25 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "elp ";
     }
 
-    if (!strncasecmp(buf, "s", 3)) {
-        *color = 36;
-        *bold = 1;
-        return "set ";
-    }
-
     if (!strncasecmp(buf, "se", 3)) {
         *color = 36;
         *bold = 1;
         return "t ";
     }
 
-    if (!strncasecmp(buf,"u", 5)) {
+    if (!strncasecmp(buf, "s", 3)) {
+        *color = 36;
+        *bold = 1;
+        return "set ";
+    }
+
+    if (!strncasecmp(buf,"un", 5)) {
         *color = 36;
         *bold = 1;
         return "nset ";
     }
 
-    if (!strncasecmp(buf,"un", 5)) {
+    if (!strncasecmp(buf,"u", 5)) {
         *color = 36;
         *bold = 1;
         return "nset ";
