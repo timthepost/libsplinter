@@ -88,3 +88,22 @@ void cli_show_modules(void) {
     
     return;
 }
+
+void cli_show_key_config(const char *key, const char *caller) {
+    splinter_slot_snapshot_t snap = { 0 };
+
+    splinter_get_slot_snapshot(key, &snap);
+    if (snap.epoch == 0) {
+        fprintf(stderr, "%s: invalid key: %s\n", caller == NULL ? "Splinter; " : caller, key);
+        return;
+    }
+
+    printf("hash:     %lu\n", snap.hash);
+    printf("epoch:    %lu\n", snap.epoch);
+    printf("val_off:  %u\n", snap.val_off);
+    printf("val_len:  %u\n", snap.val_len);
+    printf("key:      %s\n", snap.key);
+    puts("");
+
+    return;
+}

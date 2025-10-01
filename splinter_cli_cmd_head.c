@@ -13,8 +13,12 @@ void help_cmd_head(unsigned int level) {
 }
 
 int cmd_head(int argc, char *argv[]) {
-    (void) argc;
-    (void) argv;
+    if (argc != 2) {
+        help_cmd_head(1);
+        return -1;
+    }
+
+    cli_show_key_config(argv[1], modname);
     
     return 0;
 }

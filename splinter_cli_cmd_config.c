@@ -27,25 +27,6 @@ static void show_bus_config(void) {
     return;
 }
 
-static void show_key_config(const char *key) {
-    splinter_slot_snapshot_t snap = { 0 };
-
-    splinter_get_slot_snapshot(key, &snap);
-    if (snap.epoch == 0) {
-        fprintf(stderr, "%s: invalid key: %s\n", modname, key);
-        return;
-    }
-
-    printf("hash:     %lu\n", snap.hash);
-    printf("epoch:    %lu\n", snap.epoch);
-    printf("val_off:  %u\n", snap.val_off);
-    printf("val_len:  %u\n", snap.val_len);
-    printf("key:      %s\n", snap.key);
-    puts("");
-
-    return;
-}
-
 /*
 config (shows bus config)
 config <keyname> (shows slot config value of keyname)
@@ -61,7 +42,7 @@ int cmd_config(int argc, char *argv[]) {
     }
 
     if (argc == 2) {
-        show_key_config(argv[1]);
+        cli_show_key_config(argv[1], modname);
         return 0;
     }
 
