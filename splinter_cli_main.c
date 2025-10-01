@@ -29,12 +29,6 @@
 extern char **history;
 extern void freeHistory(void);
 
-/**
- * TODO:
- *  - Implement all remaining commands (need to add hist, export, list, head)
- *  - (Maybe) implement code for editor with "edit" command (for full screen editing of keys)
- */
-
 enum mode {
     MODE_REPL,
     MODE_NO_REPL
@@ -71,9 +65,36 @@ cli_module_t command_modules[] = {
         -1,
         &cmd_config,
         &help_cmd_config
-    },    
+    },
     {
         3,
+        "export",
+        6,
+        "Export store contents and metadata to JSON.",
+        -1,
+        &cmd_export,
+        &help_cmd_export
+    },
+    {
+        4,
+        "get",
+        3,
+        "Retrieve the value of a key in the store.",
+        -1,
+        &cmd_get,
+        &help_cmd_get
+    },
+    {
+        5,
+        "head",
+        4,
+        "Retrieve just the metadata of a key in the store.",
+        -1,
+        &cmd_head,
+        &help_cmd_head
+    },
+    {
+        6,
         "help",
         4,
         "Help with commands and features.",
@@ -82,7 +103,34 @@ cli_module_t command_modules[] = {
 	    &help_cmd_help
     },
     {
+        7,
+        "hist",
         4,
+        "View and clear command history.",
+        -1,
+        &cmd_hist,
+        &help_cmd_hist
+    },
+    {
+        8,
+        "list",
+        4,
+        "List keys in the current store.",
+        -1,
+        &cmd_list, 
+        &help_cmd_list
+    },
+    {
+        9,
+        "unset",
+        5,
+        "Unset a key in the store (deletes the key).",
+        -1,
+        &cmd_unset,
+        &help_cmd_unset
+    },
+    {
+        10,
         "use",
         3,
         "Opens a Splinter store by name or path.",
@@ -91,7 +139,7 @@ cli_module_t command_modules[] = {
         &help_cmd_use
     },
     {
-        5,
+        11,
         "watch",
         5,
         "Observes a key for changes and prints updated contents.",

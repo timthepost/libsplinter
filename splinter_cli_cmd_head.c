@@ -3,16 +3,16 @@
 #include <string.h>
 #include "splinter_cli.h"
 
-static const char *modname = "get";
+static const char *modname = "head";
 
-void help_cmd_get(unsigned int level) {
+void help_cmd_head(unsigned int level) {
     (void) level;
-    printf("%s gets the value of a key in the store.\n", modname);
+    printf("%s displays the metadata of a key in the store\n", modname);
     printf("Usage: %s <key_name>\n", modname);
     return;
 }
 
-int cmd_get(int argc, char *argv[]) {
+int cmd_head(int argc, char *argv[]) {
     (void) argc;
     (void) argv;
     

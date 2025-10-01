@@ -4,10 +4,10 @@
 
 static const char *modname = "config";
 
-void help_cmd_config(unsigned int level) { 
+void help_cmd_config(unsigned int level) {
     printf("Usage: %s\n       %s <key_name>\n", modname, modname);
     if (level)
-        printf("%s is under construction.\n", modname);
+        printf("%s is currently a read-only tool.\n", modname);
     return;
 }
 
@@ -22,6 +22,7 @@ static void show_bus_config(void) {
     printf("max_val_sz:  %u\n", snap.max_val_sz);
     printf("epoch:       %lu\n", snap.epoch);
     printf("auto_vacuum: %u\n", snap.auto_vacuum);
+    puts("");
     
     return;
 }
@@ -39,7 +40,9 @@ static void show_key_config(const char *key) {
     printf("epoch:    %lu\n", snap.epoch);
     printf("val_off:  %u\n", snap.val_off);
     printf("val_len:  %u\n", snap.val_len);
-    printf("act_len:  %lu\n", strlen(snap.key));
+    printf("key:      %s\n", snap.key);
+    puts("");
+
     return;
 }
 

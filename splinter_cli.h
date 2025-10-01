@@ -79,6 +79,27 @@ void help_cmd_use(unsigned int level);
 int cmd_watch(int argc, char *argv[]);
 void help_cmd_watch(unsigned int level);
 
+int cmd_unset(int argc, char *argv[]);
+void help_cmd_unset(unsigned int level);
+
+int cmd_set(int argc, char *argv[]);
+void help_cmd_set(unsigned int level);
+
+int cmd_get(int argc, char *argv[]);
+void help_cmd_get(unsigned int level);
+
+int cmd_list(int argc, char *argv[]);
+void help_cmd_list(unsigned int level);
+
+int cmd_hist(int argc, char *argv[]);
+void help_cmd_hist(unsigned int level);
+
+int cmd_head(int argc, char *argv[]);
+void help_cmd_head(unsigned int level);
+
+int cmd_export(int argc, char *argv[]);
+void help_cmd_export(unsigned int level);
+
 // And finally an array of modules to hold them all
 extern cli_module_t command_modules[];
 
