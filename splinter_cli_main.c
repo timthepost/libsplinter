@@ -246,7 +246,7 @@ void print_usage(char *progname) {
     fprintf(stderr, "  --use / -u <store>           Connect to <store> after starting.\n");
     fprintf(stderr, "  --version / -v               Print splinter version information and exit.\n");
     fprintf(stderr, "\n%s will look for SPLINTER_HISTORY_FILE and SPLINTER_HISTORY_LEN in the\n", progname);
-    fprintf(stderr, "environment and use them; however argument values will always take precedence.\n");
+    fprintf(stderr, "environment and use them. However, argument values will always take precedence.\n");
     fprintf(stderr, "\nIf invoked as \"splinterctl\", %s automatically turns on --no-repl.\n", progname);
     fprintf(stderr, "\nPlease report bugs to https://github.com/timthepost/libsplinter");
     return;
@@ -317,10 +317,10 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "ar ";
     }
 
-    if (!strncasecmp(buf, "co", 6)) {
+    if (!strncasecmp(buf, "con", 6)) {
         *color = 36;
         *bold = 1;
-        return "nfig ";
+        return "fig ";
     }
 
     if (!strncasecmp(buf, "g", 3)) {
