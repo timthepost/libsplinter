@@ -177,6 +177,7 @@ cli_module_t command_modules[] = {
 // Initialize a shared session structure
 // (declared as extern in splinter_cli.h)
 cli_user_t thisuser = {
+    { 0 },
     false,
     0,
     {0},
@@ -259,6 +260,7 @@ void print_usage(char *progname) {
     fprintf(stderr, "  --history-len / -l  <len>    Set the CLI history length to <len>\n");
     fprintf(stderr, "  --list-modules / -L          List available commands.\n");
     fprintf(stderr, "  --no-repl / -n               Don't enter interactive mode.\n");
+    fprintf(stderr, "  --use / -u <store>           Connect to <store> after starting.\n");
     fprintf(stderr, "  --version / -v               Print splinter version information and exit.\n");
     fprintf(stderr, "\n%s will look for SPLINTER_HISTORY_FILE and SPLINTER_HISTORY_LEN in the\n", progname);
     fprintf(stderr, "environment and use them; however argument values will always take precedence.\n");
@@ -375,6 +377,7 @@ static const struct option long_options[] = {
     { "history-len", required_argument, NULL, 'l' },
     { "list-modules", no_argument, NULL, 'L' },
     { "no-repl", no_argument, NULL, 'n' },
+    { "use", required_argument, NULL, 'u' },
     { "version", no_argument, NULL, 'v' },
     {NULL, 0, NULL, 0}
 };
@@ -407,7 +410,7 @@ static void cli_at_exit(void) {
 int main (int argc, char *argv[]) {
     int rc = 0, _argc = 0, idx = -1, opt, historylen = -1;
     char *progname = basename(argv[0]), *buff = NULL;
-    char prompt[64] = { 0 };
+    char prompt[128] = { 0 };
     char **mod_args = { 0 };
 
     // These can also be set via command line. 
@@ -453,6 +456,16 @@ int main (int argc, char *argv[]) {
             case 'n':
                 m = MODE_NO_REPL;
                 break;
+            // --use / -u
+            case 'u':
+                if (splinter_open(optarg) == 0) {
+                    thisuser.store_conn = 1;
+                    strncpy(thisuser.store, optarg, sizeof(thisuser.store) -1);
+                } else {
+                    fprintf(stderr, "%s: could not connect to '%s'; will start disconnected.\n",
+                    progname, optarg);
+                }
+                break;
             // --version / -v
             case 'v':
                 print_version_info(progname);
@@ -490,9 +503,14 @@ int main (int argc, char *argv[]) {
         
         do {
             if (thisuser.lasterrno != 0) {
-                snprintf(prompt, 6, "%d # ", thisuser.lasterrno);
+                snprintf(prompt, 128, "%d : %s # ",
+                    thisuser.lasterrno,
+                    thisuser.store[0] == '\0' ? "no-conn" : thisuser.store
+                );
             } else {
-                snprintf(prompt, 3, "# ");
+                snprintf(prompt, 128, "%s # ",
+                    thisuser.store[0] == '\0' ? "no-conn" : thisuser.store
+                );
             }
             // unpack the arguments into an argv[] style array
             mod_args = cli_input_args(prompt, &_argc);

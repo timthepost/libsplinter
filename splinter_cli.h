@@ -36,6 +36,8 @@ typedef struct cli_module {
 
 // A utility class to store user session quirks
 typedef struct cli_user {
+    // name of the store connected to
+    char store[64];
     // is the user connected to a store?
     bool store_conn;
     // does the user want to abort whatever we're doing?

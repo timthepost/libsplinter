@@ -15,7 +15,10 @@
 static const char *modname = "use";
 
 void help_cmd_use(unsigned int level) {
-    printf("%s help level %u\n", modname, level);
+    (void) level;
+
+    printf("%s selects a store to be the current store.\n", modname);
+    printf("Usage: %s <store_name_or_path>\n", modname);
     return;
 }
 
@@ -26,10 +29,12 @@ int cmd_use(int argc, char *argv[]) {
     }
     splinter_close();
     if (splinter_open(argv[1]) == 0) {
+        strncpy(thisuser.store, argv[1], sizeof(thisuser.store) -1);
         thisuser.store_conn = true;
-        fprintf(stderr, "%s: now connected to %s\n", modname, argv[1]);
+        fprintf(stderr, "%s: now connected to %s\n", modname, thisuser.store);
         return 0;
     } else {
+        thisuser.store[0] = '\0';
         thisuser.store_conn = false;
         fprintf(stderr, "%s: failed to connect to %s\n", modname, argv[1]);
         fprintf(stderr, "%s: now disconnected.\n", modname);
