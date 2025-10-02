@@ -1,3 +1,11 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_cmd_set.c
+ * @brief Implements the CLI 'set' command.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +19,6 @@ static const char *modname = "set";
 #define SET_CMD_MAX_LEN 4096
 
 void help_cmd_set(unsigned int level) {
-   
     printf("%s sets the value of a key in the store\n", modname);
     printf("Usage: %s <key_name> \"<value>\"\n", modname);
     if (level)

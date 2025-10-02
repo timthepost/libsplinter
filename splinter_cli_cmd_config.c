@@ -1,3 +1,11 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_cmd_config.c
+ * @brief Implements the CLI 'config' command.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include "splinter_cli.h"
@@ -6,8 +14,10 @@ static const char *modname = "config";
 
 void help_cmd_config(unsigned int level) {
     printf("Usage: %s\n       %s <key_name>\n", modname, modname);
-    if (level)
+    if (level) {
         printf("%s is currently a read-only tool.\n", modname);
+        puts("Soon, it will support setting fields like auto_vacuum");
+    }
     return;
 }
 

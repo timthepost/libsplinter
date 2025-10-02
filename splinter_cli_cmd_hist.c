@@ -1,3 +1,11 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_cmd_hist.c
+ * @brief Implements the CLI 'hist' command.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

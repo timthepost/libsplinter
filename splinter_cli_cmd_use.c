@@ -1,3 +1,11 @@
+/**
+ * Copyright 2025 Tim Post
+ * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
+ *
+ * @file splinter_cli_cmd_use.c
+ * @brief Implements the CLI 'use' command.
+ */
+
 #include <stdio.h>
 #include <string.h>
 

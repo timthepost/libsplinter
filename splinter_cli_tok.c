@@ -3,7 +3,7 @@
  * License: Apache 2 (MIT available upon request to timthepost@protonmail.com)
  *
  * @file splinter_cli_tok.c
- * @brief Splinter CLI input tokenizer
+ * @brief Splinter CLI input tokenizers
  */
 #include <stdio.h>
 #include <stdlib.h>
