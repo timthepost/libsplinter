@@ -29,7 +29,6 @@
  *  - create command (currently missing)
  *  - --use option to pre-select and open store
  *  - make prompt more dynamic
- *  - go through the commands and make sure output is uniform
  *  - remove construction cruft and comment debris
  *  - maybe include something fun? 
  */
