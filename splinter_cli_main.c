@@ -275,19 +275,30 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
 
     switch (buf[0]) {
         case 'c':
-            linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "cls");
+            linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "config");
+            break;
+        case 'e':
+            linenoiseAddCompletion(lc, "export");
+            break;
+        case 'g':
+            linenoiseAddCompletion(lc, "get");
             break;
         case 'h':
             linenoiseAddCompletion(lc, "help");
+            linenoiseAddCompletion(lc, "head");
+            linenoiseAddCompletion(lc, "hist");
+            break;
+        case 'l':
+            linenoiseAddCompletion(lc, "list");
             break;
         case 's':
             linenoiseAddCompletion(lc, "set");
             break;
         case 'u':
-            linenoiseAddCompletion(lc, "unset");
             linenoiseAddCompletion(lc, "use");
+            linenoiseAddCompletion(lc, "unset");
             break;
         case 'w':
             linenoiseAddCompletion(lc, "watch");
@@ -313,55 +324,83 @@ static char *hints(const char *buf, int *color, int *bold) {
      * white = 37;
      */
 
+    if (!strncasecmp(buf, "cl", 3)) {
+        // I made aliases magenta. You can make them whatever you want.
+        *color = 35;
+        *bold = 1;
+        return "s ";
+    }
+
     if (!strncasecmp(buf, "cle", 5)) {
         *color = 36;
         *bold = 1;
-        return "ar";
+        return "ar ";
     }
 
-    if (!strncasecmp(buf, "cl", 3)) {
-        *color = 32;
-        *bold = 1;
-        return "s";
-    }
-
-    if (!strncmp(buf, "co", 6)) {
+    if (!strncasecmp(buf, "co", 6)) {
         *color = 36;
         *bold = 1;
         return "nfig ";
     }
 
-    if (!strncasecmp(buf,"h", 4)) {
+    if (!strncasecmp(buf, "e", 6)) {
         *color = 36;
         *bold = 1;
-        return "elp ";
+        return "xport ";
     }
 
-    if (!strncasecmp(buf, "se", 3)) {
+    if (!strncasecmp(buf, "g", 3)) {
         *color = 36;
         *bold = 1;
-        return "t ";
+        return "et ";
+    }
+
+    if (!strncasecmp(buf, "l", 4)) {
+        *color = 36;
+        *bold = 1;
+        return "ist ";
+    }
+
+    if (!strncasecmp(buf, "hi", 4)) {
+        *color = 36;
+        *bold = 1;
+        return "st ";
+    }
+
+    if (!strncasecmp(buf, "hea", 4)) {
+        *color = 36;
+        *bold = 1;
+        return "d ";
+    }
+
+    if (!strncasecmp(buf, "hel", 4)) {
+        *color = 36;
+        *bold = 1;
+        return "p ";
     }
 
     if (!strncasecmp(buf, "s", 3)) {
         *color = 36;
         *bold = 1;
+        return "et ";
+    }
+
+    // BUG
+    // No idea why, but use and unset get swapped in autocomplete
+    
+    if (!strncasecmp(buf, "u", 3) && strncasecmp(buf, "n", 3)) {
+        *color = 36;
+        *bold = 1;
+        return "se ";
+    }
+
+    if (!strncasecmp(buf, "un", 5)) {
+        *color = 36;
+        *bold = 1;
         return "set ";
     }
 
-    if (!strncasecmp(buf,"un", 5)) {
-        *color = 36;
-        *bold = 1;
-        return "nset ";
-    }
-
-    if (!strncasecmp(buf,"u", 5)) {
-        *color = 36;
-        *bold = 1;
-        return "nset ";
-    }
-
-    if (!strncasecmp(buf,"w",5)) {
+    if (!strncasecmp(buf, "w", 5)) {
         *color = 36;
         *bold = 1;
         return "atch ";
