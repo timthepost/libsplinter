@@ -5,7 +5,8 @@
  * @file splinter_cli_main.c
  * @brief Splinter CLI main entry / completion & hint setup / parsing / executing
  */
-#ifndef _GNU_SOURCE
+
+ #ifndef _GNU_SOURCE
 // for getopt extensions
 #define _GNU_SOURCE 
 #endif
@@ -19,12 +20,6 @@
 #include "splinter_cli.h"
 #include "config.h"
 #include "linenoise.h"
-
-/**
- * todo for release:
- *  - create command (currently missing)
- *  - maybe include something fun? 
- */
 
 /**
  * We deviate from linenoise default here (which hides these)
@@ -258,7 +253,6 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
 
     switch (buf[0]) {
         case 'c':
-            linenoiseAddCompletion(lc, "cls");
             linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "config");
             break;
@@ -303,13 +297,6 @@ static char *hints(const char *buf, int *color, int *bold) {
      * cyan = 36
      * white = 37;
      */
-
-    if (!strncasecmp(buf, "cl", 3)) {
-        // I made aliases magenta. You can make them whatever you want.
-        *color = 35;
-        *bold = 1;
-        return "s ";
-    }
 
     if (!strncasecmp(buf, "cle", 5)) {
         *color = 36;
@@ -357,15 +344,6 @@ static char *hints(const char *buf, int *color, int *bold) {
         *color = 36;
         *bold = 1;
         return "et ";
-    }
-
-    // BUG
-    // No idea why, but use and unset get swapped in autocomplete
-
-    if (!strncasecmp(buf, "u", 3) && strncasecmp(buf, "n", 3)) {
-        *color = 36;
-        *bold = 1;
-        return "se ";
     }
 
     if (!strncasecmp(buf, "un", 5)) {
