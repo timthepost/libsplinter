@@ -9,3 +9,6 @@ splinter_stress
 splinter_cli
 splinterctl
 docs/auto
+bindings/rust/Cargo.lock
+bindings/rust/src/bindings.rs
+bindings/rust/target

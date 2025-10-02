@@ -27,6 +27,7 @@
  *  - hist command
  *  - export command
  *  - create command (currently missing)
+ *  - let unset command use basic wildcards
  *  - --use option to pre-select and open store
  *  - make prompt more dynamic
  *  - remove construction cruft and comment debris

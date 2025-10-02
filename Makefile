@@ -119,7 +119,7 @@ distclean: clean
 	rm -f  bindings/rust/src/bindings.rs
 
 # Tests
-.PHONY: tests test
+.PHONY: tests test valtest
 
 tests: splinter_test splinter_stress
 	./splinter_test
@@ -131,3 +131,11 @@ tests: splinter_test splinter_stress
 	@echo "Enable via HAVE_VALGRIND_H in config.h if you haven't already."
 
 test: tests
+
+valtest: splinter_test
+	valgrind -s --leak-check=full ./splinter_test || false
+
+# Everything
+.PHONY: world
+
+world: all valtest rust_bindings
