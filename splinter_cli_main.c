@@ -22,8 +22,6 @@
 
 /**
  * todo for release:
- *  - hist command
- *  - export command
  *  - create command (currently missing)
  *  - maybe include something fun? 
  */
@@ -76,15 +74,6 @@ cli_module_t command_modules[] = {
     },
     {
         3,
-        "export",
-        6,
-        "Export store contents and metadata to JSON.",
-        -1,
-        &cmd_export,
-        &help_cmd_export
-    },
-    {
-        4,
         "get",
         3,
         "Retrieve the value of a key in the store.",
@@ -93,7 +82,7 @@ cli_module_t command_modules[] = {
         &help_cmd_get
     },
     {
-        5,
+        4,
         "head",
         4,
         "Retrieve just the metadata of a key in the store.",
@@ -102,7 +91,7 @@ cli_module_t command_modules[] = {
         &help_cmd_head
     },
     {
-        6,
+        5,
         "help",
         4,
         "Help with commands and features.",
@@ -111,7 +100,7 @@ cli_module_t command_modules[] = {
 	    &help_cmd_help
     },
     {
-        7,
+        6,
         "hist",
         4,
         "View and clear command history.",
@@ -120,7 +109,7 @@ cli_module_t command_modules[] = {
         &help_cmd_hist
     },
     {
-        8,
+        7,
         "list",
         4,
         "List keys in the current store.",
@@ -129,7 +118,7 @@ cli_module_t command_modules[] = {
         &help_cmd_list
     },
     {
-        9,
+        8,
         "set",
         3,
         "Set a key in the store to a specified value.",
@@ -138,7 +127,7 @@ cli_module_t command_modules[] = {
         &help_cmd_set
     },
     {
-        10,
+        9,
         "unset",
         5,
         "Unset a key in the store (deletes the key).",
@@ -147,7 +136,7 @@ cli_module_t command_modules[] = {
         &help_cmd_unset
     },
     {
-        11,
+        10,
         "use",
         3,
         "Opens a Splinter store by name or path.",
@@ -156,7 +145,7 @@ cli_module_t command_modules[] = {
         &help_cmd_use
     },
     {
-        12,
+        11,
         "watch",
         5,
         "Observes a key for changes and prints updated contents.",
@@ -174,7 +163,7 @@ cli_user_t thisuser = {
     { 0 },
     false,
     0,
-    {0},
+    { 0 },
     0,
     0
 };
@@ -273,9 +262,6 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
             linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "config");
             break;
-        case 'e':
-            linenoiseAddCompletion(lc, "export");
-            break;
         case 'g':
             linenoiseAddCompletion(lc, "get");
             break;
@@ -335,12 +321,6 @@ static char *hints(const char *buf, int *color, int *bold) {
         *color = 36;
         *bold = 1;
         return "nfig ";
-    }
-
-    if (!strncasecmp(buf, "e", 6)) {
-        *color = 36;
-        *bold = 1;
-        return "xport ";
     }
 
     if (!strncasecmp(buf, "g", 3)) {
