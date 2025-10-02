@@ -22,15 +22,9 @@
 
 /**
  * todo for release:
- *  - list command
- *      - integrate grawk
  *  - hist command
  *  - export command
  *  - create command (currently missing)
- *  - let unset command use basic wildcards
- *  - --use option to pre-select and open store
- *  - make prompt more dynamic
- *  - remove construction cruft and comment debris
  *  - maybe include something fun? 
  */
 
@@ -387,7 +381,7 @@ static char *hints(const char *buf, int *color, int *bold) {
 
     // BUG
     // No idea why, but use and unset get swapped in autocomplete
-    
+
     if (!strncasecmp(buf, "u", 3) && strncasecmp(buf, "n", 3)) {
         *color = 36;
         *bold = 1;

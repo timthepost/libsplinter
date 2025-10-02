@@ -13,6 +13,9 @@
 #include <signal.h>
 #include <termios.h>
 
+// Hard cap on viewable history length
+#define CLI_HISTORY_MAX_LEN 1024
+
 // Types for module command entry and help 
 typedef int (*mod_entry_t)(int, char *[]);
 typedef void (*mod_help_t)(unsigned int);
