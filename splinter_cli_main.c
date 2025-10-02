@@ -23,10 +23,14 @@
 /**
  * todo for release:
  *  - list command
+ *      - integrate grawk
  *  - hist command
  *  - export command
+ *  - create command (currently missing)
+ *  - make prompt more dynamic
  *  - go through the commands and make sure output is uniform
  *  - remove construction cruft and comment debris
+ *  - maybe include something fun? 
  */
 
 /**
