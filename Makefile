@@ -13,7 +13,7 @@ CLI_SOURCES := $(shell echo splinter_cli_*.c) 3rdparty/linenoise.c 3rdparty/libg
 CLI_HEADERS := splinter_cli.h 3rdparty/linenoise.h
 
 # Helpers & tests
-BIN_PROGS = splinter_recv splinter_send splinter_logtee splinter_stress splinter_cli
+BIN_PROGS = splinter_recv splinter_send splinter_stress splinter_cli
 TESTS = splinter_test
 
 # Default target
@@ -54,10 +54,6 @@ splinter_recv: splinter_recv.c splinter.o
 splinter_send: splinter_send.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_send.c splinter.o
 
-# A bus-to-file tap (WIP)
-splinter_logtee: splinter_logtee.c splinter.o
-	$(CC) $(CFLAGS) -o $@ splinter_logtee.c splinter.o
-
 # Useful for actually testing libsplinter performance
 splinter_stress: splinter_stress.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_stress.c splinter.o
@@ -84,7 +80,7 @@ be_root:
 # Install artifacts
 .PHONY: install
 
-install: be_root
+install: $(SHARED_LIBS) $(STATIC_LIBS) $(BIN_PROGS) be_root
 	install -m 0755 $(SHARED_LIBS) $(PREFIX)/lib/
 	install -m 0644 $(STATIC_LIBS) $(PREFIX)/lib/
 	install -m 0755 $(BIN_PROGS) $(PREFIX)/bin/
