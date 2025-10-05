@@ -51,7 +51,10 @@ Deno bindings are kept up-to-date with any public header updates through a manua
 process I hope to automate at some point. PRs welcome to sort that out (and add 
 more proper tests).
 
-There is a `make install` option you can use in a chroot or container.
+To generate and build everything, including all bindings, type `make world`.
+
+There is a `make install` option you can use locally, in a chroot or in a
+container.
 
 ---
 
@@ -192,18 +195,32 @@ int main() {
 }
 ```
 
----
+***All of the public API functions are tested rigorously in `splinter_test.c`; see this
+simple procedural file for working code using any/all of the implemented methods.***
 
-## Advanced Usage - Auto Vacuum (Auto-scrubbing)
 
-Libsplinter uses a single value region and stores offsets for recalling specific values by key. Value slots can be up to a configurable length, typically 4k. By default, splinter zeros out the entire 4k prior to every update, so that writes that are smaller than the current occupied size don't leave fragments old values behind, becaus they aren't large enough to overwrite them completely. 
+## Auto Vacuum (Auto-scrubbing) And Lock-Free Methodology
 
-This is the default because, for LLM workloads, even a slight nonzero chance of stale data leaking back into active keys and corrupting training or context is unnacceptable. Those piping LLM workflows are also using serializiation and protocols _that are easy to test for tearing_ but _extremely difficult to test for staleness or leakage_ In most cases, LLM workflows _want_ torn reads because they're easier to spot.
+Libsplinter uses a single value region and stores offsets for recalling specific values 
+by key. Value slots can be up to a configurable length, typically 4k. By default, splinter 
+zeros out the entire 4k prior to every update, so that writes that are smaller than the 
+current occupied size don't leave fragments old values behind, becaus they aren't large 
+enough to overwrite them completely. 
 
-The circumstances under which torn reads can happen aren't even a supported use case, but if you have any kind of synchronization issues where threads flip from being readers to writers erroneously, it becomes likely enough to happen accidentally that I coded defensively against it.
+This is the default because, for LLM workloads, even a slight nonzero chance of stale data 
+leaking back into active keys and corrupting training or context is unnacceptable. Those 
+piping LLM workflows are also using serializiation and protocols _that are easy to test 
+for tearing_ but _extremely difficult to test for staleness or leakage_ In most cases, 
+LLM workflows _want_ torn reads because they're easier to spot.
 
-So, in "Facebook / Anthropic" scale levels (which we're not even designed to serve), you can turn
-off the extra `memset()` call and get zero torn read guarantee instead of no leak guarantee:
+The circumstances under which torn reads can happen aren't even a supported use case, 
+but if you have any kind of synchronization issues where threads flip from being readers 
+to writers erroneously, it becomes likely enough to happen accidentally that I coded 
+defensively against it.
+
+So, in "Facebook / Anthropic" scale levels (which we're not even designed to serve), 
+you can turn off the extra `memset()` call and get insignificant torn reads instead 
+of no leak guarantee:
 
 `splinter_set_av(0);`
 
@@ -237,7 +254,12 @@ See `splinter_stress.c` for more.
 ### Bus Management
  - `int splinter_set_av(unsigned int mode)` Sets the auto vacuum mode of the current
    bus to `mode` (0 = off, 1 = on, default = 1). See the docs prior to changing this.
- - `int splinter_get_av(void)` Gets the (atomic) value of the auto vacuum toggle. 
+ - `int splinter_get_av(void)` Gets the (atomic) value of the auto vacuum toggle.
+ - `int splinter_get_header_snapshot(splinter_header_snapshot_t *snapshot)` gets a
+   snapshot of the state of the global atomic bus operation and configuration bus.
+ - `int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapshot)`
+   gets a snapshot of any given _slot_ by its key name relatively cheaply (half to
+   two-thirds the cost of a `splinter_get` operation, roughly). 
 
 ### Pub/Sub
 
@@ -245,9 +267,12 @@ See `splinter_stress.c` for more.
   specified key is updated by a `splinter_set` call, or until the timeout is
   reached.
 
-#### Adding Additional Feature Flags:
 
-Right now we only have one feature, so there's no reason to build up around having many, but if the need arises there is a plan (which you can implement yourself if you need it right now):
+### Adding Additional Bus Feature Flags:
+
+Right now we only have one feature (`auto_vacuum`), so there's no reason to build support for 
+having many, but if the need arises there is a plan (which you can implement yourself if you 
+need more flags *right now* without breaking bus compatibility):
 
 Currently, Splinter's global bus data structure looks like this:
 
@@ -274,11 +299,15 @@ struct splinter_header {
 
 This is later type-defined as `splinter_header_t` opqauely in the library.
 
-The only _current_ feature flag is `auto_vacuum`, which consumes the entire `atomic_uint_least32_t`. This isn't wasteful because we have no other features; there's no other 
-purpose it can currently serve. 
+The only _current_ feature flag is `auto_vacuum`, which consumes the entire 
+`atomic_uint_least32_t`. This isn't wasteful because we have no other features; 
+there's no other purpose it can currently serve but holding this one simple bit.
 
-Should that change, we can easily just break that down into 32 individual flags, with the first few being reserved for system use and the rest being available as `USR_FLAG_NN`.  The bus structure itself doesn't change (well, the variable name changes from `auto_vacuum` to `flags`), and 
-then instead of treating it like a Boolean value, we do something like:
+Should that change, we can easily just break that down into 32 individual flags, 
+with the first few being reserved for system use and the rest being available as 
+`USR_FLAG_NN`.  The bus structure itself doesn't change (well, the variable name 
+changes from `auto_vacuum` to `flags`), and then instead of treating it like a 
+Boolean value, we do something like:
 
 ```c
 /* System flags (0–15) */
@@ -318,11 +347,18 @@ uint32_t splinter_flag_snapshot(const splinter_bus_header_t *hdr) {
 }
 ```
 
-Finally, we will need to update `splinter_set_av()` and `splinter_get_av()` to set the first flag instead, and also clear flags / flip the auto vacuum flag to on by default in `splinter_create()`.
+Finally, we will need to update `splinter_set_av()` and `splinter_get_av()` to set 
+the first flag instead, and also clear flags / flip the auto vacuum flag to on by 
+default in `splinter_create()`.
 
-This plan just splits use of them down the middle which isn't strictly necessary; I cant' imagine ever needing more than a few flags ever for internal housekeeping use, so the majority (28 - 30) of the rest of them could be implementation-defined pretty safely. It would depend on what the additional need was. 
+This plan just splits use of them down the middle which isn't strictly necessary; I 
+can't imagine ever needing more than a few flags ever for internal housekeeping use, 
+so the majority (28 - 30) of the rest of them could be implementation-defined pretty 
+safely. It would depend on what the additional need was. 
 
-Either way, you don't need to do anything other than set it to 0 before changing the header over, if you're currently using persistent mode. 
+Either way, you don't need to do anything other than set it to 0 before changing the 
+header over, if you're currently using persistent mode. 
 
-***If it looks like Splinter needs more than one feature flag***, this is definitely how I'll implement it. I'm just not doing it yet as it adds weight to the public header without more than one consumer of the field. 
-
+***If it looks like Splinter needs more than one feature flag***, this is definitely 
+how I'll implement it. I'm just not doing it yet as it adds weight to the public 
+header without more than one consumer of the field. 
