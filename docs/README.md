@@ -60,9 +60,44 @@ container.
 
 ## Basic Usage: Key-Value Store
 
-Here's how two processes can share data.
+This is the most fundamental use of Splinter: sharing data between two processes.
 
-### `writer.c` - Creates a store and writes a value
+If you already feel strongly that you need neither serialization nor encapsulation,
+feel free to skip the following at your peril:
+
+### First - Encapsulation Or Serialization?
+
+Regarding encapsulation or serialization or (just writing naked streams) - that's 
+entirely up to you. What I can tell you is this:
+
+`{this is my data}`
+
+Can be spot-checked for corruption by just testing the first and last bytes. However, 
+this:
+
+`this is my data`
+
+Can not be spot-checked, it has to be hashed and verified. Remember that lock-free 
+MRSW schemas are incredibly resilient, but they do have their limits. On an i3, you'll
+start seeing torn reads north of 12 million concurrent operations/sec. On an i7, it's
+more like 18 - 21 million.
+
+So unless you're serving all of Facebook from `/dev/shm`, you might not even notice
+this. But if you run `splinter_stress` you might (like me) start having thoughts about
+lock-free design in the shower and want to reduce that to zero all the time just out 
+of spite for mutexes.
+
+Just remember: _torn reads_ happen when the library says _this is 117 bytes_ and 
+sends you fewer, or sends you exactly 117 but it's truncated somehow. It happens
+in the rare moments when a read lands between atomic updates due to severe system
+strain or lag (that would also choke a relational database server).
+
+As a rule, you generally ***should*** use some kind of encapsulation of your data. 
+
+Serialization may or may not be necessary, but adding one byte to each end just to 
+check is cheap and sensible. 
+
+### Basic IPC: `writer.c` - Creates a store and writes a value
 
 ```c
 #include <stdio.h>
@@ -93,7 +128,7 @@ int main() {
 }
 ```
 
-### `reader.c` - Opens the store and reads the value
+### Basic IPC: `reader.c` - Opens the store and reads the value
 
 ```c
 #include <stdio.h>
@@ -130,7 +165,7 @@ int main() {
 The real power for building responsive systems comes from `splinter_poll`. One
 process can wait for a notification that data has changed.
 
-### `subscriber.c` - Waits for an update
+### Advanced Pub/Sub: `subscriber.c` - Waits for an update
 
 ```c
 #include <stdio.h>
@@ -165,7 +200,7 @@ int main() {
 }
 ```
 
-### `publisher.c` - Publishes the update
+### Advanced Pub/Sub: `publisher.c` - Publishes the update
 
 ```c
 #include <stdio.h>
@@ -222,7 +257,7 @@ So, in "Facebook / Anthropic" scale levels (which we're not even designed to ser
 you can turn off the extra `memset()` call and get insignificant torn reads instead 
 of no leak guarantee:
 
-`splinter_set_av(0);`
+`splinter_set_av(0);` (set it to 1 to turn it back on again; toggle all you want)
 
 See `splinter_stress.c` for more. 
 
