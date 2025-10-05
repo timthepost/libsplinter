@@ -6,8 +6,8 @@ function cstr(str: string): [Uint8Array, Deno.PointerValue] {
 }
 
 export function testSplinterFFI() {
-  const [nameBuf] = cstr("/splinter_debug");
-  if (Libsplinter.symbols.splinter_open_or_create(nameBuf, BigInt(32), BigInt(1024)) !== 0) {
+  const [busName] = cstr("splinter_debug");
+  if (Libsplinter.symbols.splinter_open_or_create(<BufferSource> busName, BigInt(32), BigInt(1024)) !== 0) {
     console.error("❌ Failed to create splinter instance");
     Deno.exit(1);
   }
@@ -16,7 +16,7 @@ export function testSplinterFFI() {
   const valBuf = new Uint8Array(new TextEncoder().encode("from Deno!"));
   const valPtr = Deno.UnsafePointer.of(valBuf);
 
-  if (Libsplinter.symbols.splinter_set(keyBuf, valPtr, BigInt(valBuf.byteLength)) !== 0) {
+  if (Libsplinter.symbols.splinter_set(<BufferSource> keyBuf, valPtr, BigInt(valBuf.byteLength)) !== 0) {
     console.error("❌ splinter_set failed");
     Deno.exit(1);
   }
@@ -27,7 +27,7 @@ export function testSplinterFFI() {
   const outLenPtr = Deno.UnsafePointer.of(outLen);
 
   if (
-    Libsplinter.symbols.splinter_get(keyBuf, outPtr, BigInt(out.byteLength), outLenPtr) !== 0
+    Libsplinter.symbols.splinter_get(<BufferSource> keyBuf, outPtr, BigInt(out.byteLength), outLenPtr) !== 0
   ) {
     console.error("❌ splinter_get failed");
     Deno.exit(1);

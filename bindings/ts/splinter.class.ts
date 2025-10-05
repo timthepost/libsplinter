@@ -116,7 +116,7 @@ export class Splinter {
     
     const result = Libsplinter.symbols.splinter_set(
       keyBuffer,
-      Deno.UnsafePointer.of(valueData),
+      Deno.UnsafePointer.of(<BufferSource> valueData),
       BigInt(valueData.length)
     );
     
