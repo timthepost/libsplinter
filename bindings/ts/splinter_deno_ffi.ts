@@ -2,6 +2,9 @@
 // manually updated when public header changes
 // PRs to automate this are welcome!
 
+// This needs to be updated to reflect the system path if installed
+// system-wide.
+
 export const Libsplinter = Deno.dlopen("../../libsplinter.so", {
   "splinter_create": {
     parameters: ["buffer", "usize", "usize"],
@@ -45,6 +48,14 @@ export const Libsplinter = Deno.dlopen("../../libsplinter.so", {
   },
   "splinter_get_av": {
     parameters: [],
+    result: "i32"
+  },
+  "splinter_get_header_snapshot": {
+    parameters: ["pointer"],
+    result: "i32"
+  },
+  "splinter_get_slot_snapshot": {
+    parameters: ["buffer", "pointer"],
     result: "i32"
   },
   "splinter_close": { 
