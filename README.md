@@ -158,7 +158,7 @@ documenting in that `help` is online.
 
 #### Typical `splinter_cli` Interactive Use:
 
-```txt
+```cli
 splinter_cli version 0.5.0 build 40e3633
 To quit, press ctrl-c or ctrl-d.
 no-conn # use splinter_debug
@@ -192,18 +192,59 @@ splinter_debug #
 #### Typical `splinterctl` Non-Interactive Use:
 
 The `splinterctl` command is a symbolic link to the installed `splinter_cli`. It 
-(safely) changes behavior slightly to accommodate script requests:
+(safely) changes behavior slightly to accommodate script requests. A common way 
+to use it is with `alias`, so that you can automatically use the same store 
+through a succession of commands.
 
-```txt
-$ splinter_cli --use splinter_debug set keyspace::keyname "{some arbitrary value}"
+You can also define functions in `.zshrc` / `.bashrc` / etc.
 
-$ splinter_cli --use splinter_deug list
+```bash
+
+user@host:$ alias splinterctl="splinterctl --use splinter_debug"
+user@host:$ splinterctl list
 Key Name                          | Epoch           | Value Length   
 ------------------------------------------------------------------
-__debug                           | 2               | 4           
+__debug                           | 2               | 3  
 
-$ splinter_cli --use splinter_debug watch keyspace::keyname
+user@host:$ splinterctl head __debug
+hash:     1273363460105448522
+epoch:    2
+val_off:  75776
+val_len:  3
+key:      __debug
+
+user@host:$ splinterctl set keyspace::keyname "{Value One}"
+user@host:$ splinterctl set otherspace::keyname "{Value Two}" 
+user@host:$ splinterctl list
+Key Name                          | Epoch           | Value Length   
+------------------------------------------------------------------
+otherspace::keyname               | 2               | 11             
+keyspace::keyname                 | 2               | 11             
+__debug
+
+user@host:$ splinterctl list ^keyspace::
+Key Name                          | Epoch           | Value Length   
+------------------------------------------------------------------
+keyspace::keyname                 | 2               | 11
+
+user@host:$ splinterctl get keyspace::keyname
+11 : {Value One}
+
+user@host:$ splinterctl get otherspace::keyname
+11 : {Value Two}
+
+user@host:$ splinterctl watch __debug
 Press Ctrl-] To Stop ...
+Hello from another terminal!
+
+user@host:$ splinterctl config
+magic:       1397509716
+version:     1
+slots:       128
+max_val_sz:  1024
+epoch:       5
+auto_vacuum: 1
+
 ```
 
 ### TypeScript Bindings
