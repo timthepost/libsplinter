@@ -284,9 +284,7 @@ export class Splinter {
    * @throws on Splinter error or if disconnected
    */
   getSlotSnapshot(key: string): SplinterSlotSnapshot {
-    if (! this.isOpen) {
-      throw new Error("Store lost connection while snapshotting.");
-    }
+    this.checkOpen();
     // Must mirror whatever is in splinter.h
     const KEY_MAX = 64;
     
@@ -352,9 +350,7 @@ export class Splinter {
    * @throws on Splinter error or if disconnected
    */
   getBusHeaderSnapshot(): SplinterHeaderSnapshot {
-    if (! this.isOpen) {
-      throw new Error("Store lost connection while snapshotting.");
-    }
+    this.checkOpen();
     // Calculate the size of the C struct
     // uint32_t (4 bytes) * 4 + uint64_t (8 bytes) * 3 + uint32_t (4 bytes) * 1
     // = 16 + 24 + 4 = 44 bytes
