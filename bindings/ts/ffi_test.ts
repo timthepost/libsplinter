@@ -39,5 +39,6 @@ export function testSplinterFFI() {
   Libsplinter.symbols.splinter_close();
 }
 
-// Auto-run for local smoke test
+// TODO: Also test the class here.
+
 testSplinterFFI();

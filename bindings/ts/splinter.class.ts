@@ -3,6 +3,7 @@
  * License: MIT
  */
 import { Libsplinter } from "./splinter_deno_ffi.ts";
+import { SplinterHeaderSnapshot, SplinterSlotSnapshot } from "./ffi_types.ts";
 
 export class Splinter {
   private isOpen = false;
@@ -91,6 +92,35 @@ export class Splinter {
     if (!this.isOpen) {
       throw new Error("Splinter store is not open");
     }
+  }
+
+  /**
+   * Toggle auto-vacuum mode on or off
+   * @param mode integer value (0 or 1) of what it should be
+   * @retuns void
+   */
+  setAV(mode: number) : void {
+    if (! this.isOpen) {
+      throw new Error("You must be connected to set AV mode");
+    }
+    Libsplinter.symbols.splinter_set_av(mode);
+    return;
+  }
+
+  /**
+   * Get the current auto-vacuum mode of the connected bus
+   * @returns number
+   * @throws if not connected
+   */
+  getAV() : number {
+    if (! this.isOpen) {
+      throw  new Error("You must be connected to get AV status");
+    }
+    const ret = Libsplinter.symbols.splinter_get_av();
+    if (ret < 0) {
+      throw new Error("Error getting AV status");
+    } 
+    return ret;
   }
 
   /**
@@ -216,7 +246,7 @@ export class Splinter {
    * @returns Array of key strings
    * @throws Error if operation fails
    */
- list(maxKeys = 1000): string[] {
+  list(maxKeys = 1000): string[] {
     this.checkOpen();
     
     const outKeysPtr = new BigUint64Array(maxKeys);
@@ -245,6 +275,130 @@ export class Splinter {
     }
     
     return keys;
+  }
+
+  /**
+   * Get a snapshot of a key-slot header by key name
+   * @param key Name of the key owning the slot to snapshot
+   * @returns SplinterSlotSnapshot<>
+   * @throws on Splinter error or if disconnected
+   */
+  getSlotSnapshot(key: string): SplinterSlotSnapshot {
+    if (! this.isOpen) {
+      throw new Error("Store lost connection while snapshotting.");
+    }
+    // Must mirror whatever is in splinter.h
+    const KEY_MAX = 64;
+    
+    // Calculate struct size:
+    // uint64_t (8) + uint64_t (8) + uint32_t (4) + uint32_t (4) + char[KEY_MAX]
+    const STRUCT_SIZE = 8 + 8 + 4 + 4 + KEY_MAX;
+    
+    const snapshotBuffer = new Uint8Array(STRUCT_SIZE);
+    const snapshotPtr = Deno.UnsafePointer.of(snapshotBuffer);
+    
+    // Convert the key string to a null-terminated C string buffer
+    const encoder = new TextEncoder();
+    const keyBytes = encoder.encode(key + '\0'); // Add null terminator
+    const keyBuffer = new Uint8Array(keyBytes);
+    
+    const result = Libsplinter.symbols.splinter_get_slot_snapshot(
+      keyBuffer,
+      snapshotPtr
+    );
+    
+    if (result !== 0) {
+      throw new Error(`splinter_get_slot_snapshot failed with code: ${result}`);
+    }
+    
+    // Create a DataView to read the numeric fields
+    const view = new DataView(snapshotBuffer.buffer);
+    
+    // Read each field according to the C struct layout
+    let offset = 0;
+    const hash = view.getBigUint64(offset, true);
+    offset += 8;
+    const epoch = view.getBigUint64(offset, true);
+    offset += 8;
+    const val_off = view.getUint32(offset, true);
+    offset += 4;
+    const val_len = view.getUint32(offset, true);
+    offset += 4;
+    
+    // Read the key string from the char array
+    // Find the null terminator to get the actual string length
+    let keyEndIndex = offset;
+    while (keyEndIndex < snapshotBuffer.length && snapshotBuffer[keyEndIndex] !== 0) {
+      keyEndIndex++;
+    }
+    
+    // Decode the key string (excluding the null terminator)
+    const decoder = new TextDecoder();
+    const keyString = decoder.decode(snapshotBuffer.slice(offset, keyEndIndex));
+    
+    // Return the snapshot as a typed object
+    return {
+      hash,
+      epoch,
+      val_off,
+      val_len,
+      key: keyString
+    };
+  }
+
+  /**
+   * Get a snapshot of the atomic bus status and configuration structire
+   * @returns SplinterHeaderSnapshot<>
+   * @throws on Splinter error or if disconnected
+   */
+  getBusHeaderSnapshot(): SplinterHeaderSnapshot {
+    if (! this.isOpen) {
+      throw new Error("Store lost connection while snapshotting.");
+    }
+    // Calculate the size of the C struct
+    // uint32_t (4 bytes) * 4 + uint64_t (8 bytes) * 3 + uint32_t (4 bytes) * 1
+    // = 16 + 24 + 4 = 44 bytes
+    const STRUCT_SIZE = 44;
+    const buffer = new Uint8Array(STRUCT_SIZE);
+    const ptr = Deno.UnsafePointer.of(buffer);
+    const result = Libsplinter.symbols.splinter_get_header_snapshot(ptr);
+    
+    if (result !== 0) {
+      throw new Error(`splinter_get_header_snapshot failed with code: ${result}`);
+    }
+    
+    // Create a DataView to read the struct fields
+    const view = new DataView(buffer.buffer);
+    
+    // Read each field according to the C struct layout
+    let offset = 0;
+    const magic = view.getUint32(offset, true);
+    offset += 4;
+    const version = view.getUint32(offset, true);
+    offset += 4;
+    const slots = view.getUint32(offset, true);
+    offset += 4;
+    const max_val_sz = view.getUint32(offset, true);
+    offset += 4;
+    const epoch = view.getBigUint64(offset, true);
+    offset += 8;
+    const auto_vacuum = view.getUint32(offset, true);
+    offset += 4;
+    const parse_failures = view.getBigUint64(offset, true);
+    offset += 8;
+    const last_failure_epoch = view.getBigUint64(offset, true);
+    
+    // Return the snapshot as a typed object
+    return {
+      magic,
+      version,
+      slots,
+      max_val_sz,
+      epoch,
+      auto_vacuum,
+      parse_failures,
+      last_failure_epoch
+    };
   }
 
   /**
