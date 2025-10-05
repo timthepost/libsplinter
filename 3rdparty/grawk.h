@@ -1,3 +1,10 @@
+/*
+ * Grawk (grep + awk fundamentals)
+ * Stripped down mini-lib
+ * Copyright 2005 - 2025 Tim Post
+ * License: MIT
+ */
+
 #ifndef GRAWK_H
 #define GRAWK_H
 

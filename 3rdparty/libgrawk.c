@@ -1,4 +1,9 @@
-// libgrawk.c
+/*
+ * Grawk (grep + awk fundamentals)
+ * Stripped-down Mini-Lib
+ * Copyright 2005 - 2025 Tim Post
+ * License: MIT
+ */
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
