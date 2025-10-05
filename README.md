@@ -57,11 +57,12 @@ and `btrfs` to be able to share memory together and synchronize work.
 It was created when the author was thinking 
 
 > "_I need something like `/proc` but that I can do in userspace, preferably without mounting 
-anything new. Something like XenStore but no hypervisor_"
+anything new. Something like XenStore but no hypervisor ..._"
 
 There are limits to what a very creative GNU/Linux hacker can do with core utilities and access 
-to `/dev/shm`; Splinter is there to pick up where those tools aren't specialized enough, and to 
-accommodate "hyper scale" lock-free design constraints.
+to `/dev/shm`; Splinter is there to pick up where those tools leave off, and aren't specialized 
+enough to accommodate "hyper scale" lock-free design constraints. Splinter is just enough code
+to make a high-volume / high-traffic sanitized store safe and practical.
 
 And, because it was developed specifically ***for LLM workloads***, like:
 
@@ -69,13 +70,18 @@ And, because it was developed specifically ***for LLM workloads***, like:
  - Providing short-term, manageable, auditable and persistent memory capabilities to serverless 
    MCP servers (see [Tieto][3] for a companion project)
  - Providing real-time auditable and replay-able feedback mechanisms for NLP training in assistive-use 
-   (cognitive assist for brain cancer survivors)
+   (cognitive assist for brain cancer survivors),
+ - Ephemeral caching of multiple linear vector states (RWKV) as well as namespaced for multi-head
+   transformer-based attention schemes.
 
 It is designed to not ever allow old information to leak into new, which is something very innovative 
-for a store that (by primary design) operates in shared memory without persistence.
+for a store that (by primary design) operates in shared memory without persistence. Splinter also has
+no build dependencies outside of glibc (including parsers, etc) and this is very intentional, because
+it makes splinter much easier to include in larger applications that must undergo rigorous requirements
+testing and certifications.
 
-But: ***not everyone needs "hyperscale LLM levels" of paranoia in their engineering, so Splinter gives 
-you a choice:  
+But: ***not everyone needs "hyperscale LLM levels" of paranoia in their engineering***, so Splinter gives 
+you a choice: 
 
 - **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before reuse. Perfect for LLM 
   scratchpads and training contexts where stale data must never leak back. It's like boiling a hotel 
