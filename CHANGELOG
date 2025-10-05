@@ -1,0 +1,11 @@
+v0.5.1 "Take Zero Dot Five One"
+ - Maintenance / Cooling Release
+ - New CHANGELOG
+ - Dropped `splinter_logtee` from the build as `splinter_recv` now duplicates it.
+ - Fixed dependency checks for `make install`
+ - Updated documentation
+ - Dropped Doxyfile (not needed, if someone else wants to maintain, it can be restored)
+ - Updated TS Bindings & Splinter Class To Match Current Public C API
+ - Created ffi_types.ts definition for TS bindings (for header / slot snapshots)
+ - Dropped 'base protocol' definition since it was being mistaken for mandatory and not broadly useful.
+
