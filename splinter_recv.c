@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "splinter-recv: will exit after 1 event (--oneshot specified)\n");
     }
 
-    if (splinter_create_or_open(DEFAULT_BUS, 128, 1024) != 0) {
+    if (splinter_open_or_create(DEFAULT_BUS, 128, 1024) != 0) {
         fprintf(stderr, "splinter-recv: failed to open bus %s\n", DEFAULT_BUS);
         return 1;
     }
