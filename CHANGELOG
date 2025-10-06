@@ -1,3 +1,9 @@
+v0.5.2 "Test ... ALL THE THINGS"
+ - Now have unit tests for bindings/ts/splinter.class.ts
+ - Additional documentation updates, tweaks and fixes
+ - MRSW stress test harness now outputs progress (--quiet suppresses it)
+ 
+
 v0.5.1 "Take Zero Dot Five One"
  - Maintenance / Cooling Release
  - New CHANGELOG

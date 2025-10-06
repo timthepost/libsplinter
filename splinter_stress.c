@@ -243,7 +243,8 @@ int main(int argc, char **argv) {
         .writer_period_us = 0,
     };
 
-    int i;
+    int i, quiet = 0;
+
 
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--threads") && i+1 < argc) cfg.num_threads = atoi(argv[++i]);
@@ -253,6 +254,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--slots") && i+1 < argc) cfg.slots = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--max-value") && i+1 < argc) cfg.max_value_size = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--writer-us") && i+1 < argc) cfg.writer_period_us = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--quiet")) quiet = 1;
         else { usage(argv[0]); return 2; }
     }
     if (cfg.num_threads < 2) cfg.num_threads = 2;
@@ -261,9 +263,10 @@ int main(int argc, char **argv) {
         perror("splinter_create_or_open");
         return 1;
     }
+
     splinter_set_av(0);
 
-    printf("This is going to take a little while (2 - 4 minutes or more)...\n");
+    printf("This is going to take a little while (several minutes) ...\n");
 #ifdef HAVE_VALGRIND_H
     if (RUNNING_ON_VALGRIND) {
         printf("Valgrind Detected! This will likely quadruple the test length (or more)\n");
@@ -305,12 +308,17 @@ int main(int argc, char **argv) {
             break;
         }
     }
-
+    printf("\n");
     long start = now_ms();
     while (now_ms() - start < cfg.test_duration_ms) {
         usleep(10000);
+        if (! quiet) {
+            fputc('.', stdout);
+            fflush(stdout);
+        }
     }
     running = 0;
+    printf("\n");
 
     for (i = 0; i < cfg.num_threads; i++) pthread_join(th[i], NULL);
     long elapsed = now_ms() - start;
