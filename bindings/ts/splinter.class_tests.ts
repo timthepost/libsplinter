@@ -1,11 +1,12 @@
 /**
  * Test suite for Splinter class (not yet comprehensive, but getting there!)
+ * Could use more comprehensive (assertThrows style) tests, too.
  * Run with: deno test --allow-ffi
  */
-import { assertEquals, assertThrows, assert } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assert } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { Splinter } from "./splinter.class.ts";
 
-const TEST_STORE = "splinter_unit_tests";
+const TEST_STORE = "splinter_debug";
 const TEST_SLOTS = 100;
 const TEST_MAX_VALUE_SIZE = 1024;
 
@@ -74,10 +75,25 @@ Deno.test({
   },
 });
 
-// set up a watch and let it timeout
+Deno.test({
+  name: "Let a watch expire - returns false on timeout (2 operations, 1 test)",
+  fn: () => {
+    cleanup();
+    const splinter = Splinter.createOrOpen(TEST_STORE, TEST_SLOTS, TEST_MAX_VALUE_SIZE);
+    
+    splinter.set("__test", "Stage:3");
+    const changed = splinter.poll("__test", 100); // 100ms standard
+    assertEquals(changed, false);
+    
+    splinter.close();
+    cleanup();
+  },
+});
+
+// set av off , set a key , set av on, get the key
 
 // list keys, unset a key, list keys again
 
-// set av off , set a key , set av on, get the key
+
 
 
