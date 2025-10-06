@@ -3,8 +3,9 @@
  * Could use more comprehensive (assertThrows style) tests, too.
  * Run with: deno test --allow-ffi
  */
-import { assertEquals, assert } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assert, assertLessOrEqual } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { Splinter } from "./splinter.class.ts";
+import { assertGreaterOrEqual } from "https://deno.land/std@0.208.0/assert/assert_greater_or_equal.ts";
 
 const TEST_STORE = "splinter_debug";
 const TEST_SLOTS = 100;
@@ -90,10 +91,49 @@ Deno.test({
   },
 });
 
-// set av off , set a key , set av on, get the key
+Deno.test({
+  name: "List keys in a store (4 operations, 1 test)",
+  fn: () => {
+    cleanup();
+    const splinter = Splinter.createOrOpen(TEST_STORE, TEST_SLOTS, TEST_MAX_VALUE_SIZE);
+    
+    splinter.set("__test", "Stage:4");
+    splinter.set("foo", "Stage:4");
+    const keys = splinter.list(1024);
+    assertEquals(keys.length, 2);
 
-// list keys, unset a key, list keys again
+    splinter.close();
+    cleanup();
+  }
+});
 
+// Monkeying around with auto_vacuum while doing stuff
+Deno.test({
+  name: "Flip AV/Scrub Mode (9 Operations / 7 Tests)",
+  fn: () => {
+    cleanup();
+    const splinter = Splinter.createOrOpen(TEST_STORE, TEST_SLOTS, TEST_MAX_VALUE_SIZE);
+    const oldav = splinter.getAV();
+    assertLessOrEqual(oldav, 1);
+    assertGreaterOrEqual(oldav, 0);
 
+    splinter.set("__test", "stage:5");
+    const stageFive = splinter.getString("__test");
+    assertEquals(stageFive, "stage:5");
+    
+    splinter.setAV(0);
+    assertEquals(splinter.getAV(), 0);
+    splinter.set("__test", "stage:6");
+    const stageSix = splinter.getString("__test");
+    assertEquals(stageSix, "stage:6");
+    splinter.setAV(oldav);
+    assertEquals(splinter.getAV(), oldav);
 
+    const removed = splinter.unset("__test");
+    assertEquals(removed, 7);
+    
+    splinter.close();
 
+    cleanup();  
+  },
+});
