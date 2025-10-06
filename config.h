@@ -14,7 +14,7 @@
 
 // do we have the valgrind development headers?
 // comment out (undefine) if not.
-#define HAVE_VALGRIND_H 1
+//#define HAVE_VALGRIND_H 1
 
 // more can go here as needed.
 
