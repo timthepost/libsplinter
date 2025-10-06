@@ -1,13 +1,15 @@
 v0.5.2 "Test ... ALL THE THINGS!"
- - Now have unit tests for bindings/ts/splinter.class.ts!!
+ - Now have unit tests for bindings/ts/splinter.class.ts! While not yet
+   at 100% coverage, `splinter.class.ts` is pretty well-tested. Run 
+   `deno --allow-ffi test splinter.class_tests.ts` to see / use.
  - Additional documentation updates, tweaks and fixes
- - MRSW stress test harness now outputs progress (--quiet suppresses it)
+ - MRSW stress test harness now outputs progress (`--quiet` suppresses it)
  - MRSW stress test harness now creates unique store based on PID, and 
-   garbage collects it (--keep-test-store to preserve it).
+   garbage collects it (`--keep-test-store` preserves it).
  - Make create/open behavior across tools symmetrical 
  - Valgrind inclusion is off by default (so it's not a build dependency)
    You can still use Valgrind to run the tests; this just affects the tighter
-   integration.
+   integration. Re-enable if you have `valgrind/valgrind.h (valgrind-devel)`.
 
 v0.5.1 "Take Zero Dot Five One"
  - Maintenance / Cooling Release
