@@ -2,7 +2,12 @@ v0.5.2 "Test ... ALL THE THINGS!"
  - Now have unit tests for bindings/ts/splinter.class.ts!!
  - Additional documentation updates, tweaks and fixes
  - MRSW stress test harness now outputs progress (--quiet suppresses it)
+ - MRSW stress test harness now creates unique store based on PID, and 
+   garbage collects it (--keep-test-store to preserve it).
  - Make create/open behavior across tools symmetrical 
+ - Valgrind inclusion is off by default (so it's not a build dependency)
+   You can still use Valgrind to run the tests; this just affects the tighter
+   integration.
 
 v0.5.1 "Take Zero Dot Five One"
  - Maintenance / Cooling Release
@@ -13,5 +18,6 @@ v0.5.1 "Take Zero Dot Five One"
  - Dropped Doxyfile (not needed, if someone else wants to maintain, it can be restored)
  - Updated TS Bindings & Splinter Class To Match Current Public C API
  - Created ffi_types.ts definition for TS bindings (for header / slot snapshots)
- - Dropped 'base protocol' definition since it was being mistaken for mandatory and not broadly useful.
+ - Dropped 'base protocol' definition since it was being mistaken for mandatory and not broadly   
+   useful.
 

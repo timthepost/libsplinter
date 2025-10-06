@@ -229,12 +229,23 @@ static void prepopulate(shared_t *sh) {
 static void usage(const char *prog) {
     fprintf(stderr,
         "usage: %s [--threads N] [--duration-ms D] [--keys K] [--store NAME]\n"
-        "          [--slots S] [--max-value B] [--writer-us U]\n", prog);
+        "          [--slots S] [--max-value B] [--writer-us U]\n"
+        "          [--quiet] [--keep-test-store]\n", prog);
 }
 
 int main(int argc, char **argv) {
+    pid_t pid;
+    unsigned int keep_store = 0;
+    char store[64] = { 0 }, store_path[128] = { 0 };
+
+    pid = getpid();
+    if (!pid) {
+        // exited before starting.
+        return 1;
+    }
+    snprintf(store, sizeof(store) -1, "mrsw_test_%u", pid);
     cfg_t cfg = {
-        .store_name = "mrsw_store",
+        .store_name = store,
         .slots = 50000,
         .max_value_size = 4096,
         .num_threads = 32,         // 31 readers + 1 writer
@@ -243,8 +254,9 @@ int main(int argc, char **argv) {
         .writer_period_us = 0,
     };
 
-    int i, quiet = 0;
+    fprintf(stderr, "Store name: %s\n", cfg.store_name);
 
+    int i, quiet = 0;
 
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--threads") && i+1 < argc) cfg.num_threads = atoi(argv[++i]);
@@ -255,6 +267,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--max-value") && i+1 < argc) cfg.max_value_size = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--writer-us") && i+1 < argc) cfg.writer_period_us = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--quiet")) quiet = 1;
+        else if (!strcmp(argv[i], "--keep-test-store")) keep_store = 1;
         else { usage(argv[0]); return 2; }
     }
     if (cfg.num_threads < 2) cfg.num_threads = 2;
@@ -266,13 +279,13 @@ int main(int argc, char **argv) {
 
     splinter_set_av(0);
 
-    printf("This is going to take a little while (several minutes) ...\n");
+    printf("This is going to take a little while (60000 ms | 60 seconds)\n");
+    printf("On cpu-busy systems, it could take a little longer; please be patient.\n");
 #ifdef HAVE_VALGRIND_H
     if (RUNNING_ON_VALGRIND) {
-        printf("Valgrind Detected! This will likely quadruple the test length (or more)\n");
+        printf("Valgrind Detected! This will likely quadruple (or more) the test duration.\n");
     }
 #endif
-    printf("Please be patient ...\n");
     char **keys = calloc((size_t)cfg.num_keys, sizeof(char*));
     if (!keys) { perror("calloc"); return 1; }
 
@@ -328,14 +341,20 @@ int main(int argc, char **argv) {
     for (i = 0; i < cfg.num_threads; i++) pthread_join(th[i], NULL);
     long elapsed = now_ms() - start;
 
-    print_stats(&cfg, &ctr, elapsed);
-
+    puts("Cleaning up.");
+    splinter_close();
+    if (! keep_store) {
+        snprintf(store_path, sizeof(store_path) -1, "/dev/shm/%s", cfg.store_name);
+        unlink(store_path);
+    }
     for (i = 0; i < cfg.num_keys; i++) free(keys[i]);
     free(keys);
     free(th);
 
-    splinter_close();
+    print_stats(&cfg, &ctr, elapsed);
+
 #ifdef HAVE_VALGRIND_H
+    // always exit on error if valgrind detects access errors
     return VALGRIND_COUNT_ERRORS;
 #else
     return 0;
