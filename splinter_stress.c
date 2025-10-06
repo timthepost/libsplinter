@@ -308,11 +308,16 @@ int main(int argc, char **argv) {
             break;
         }
     }
-    printf("\n");
+
     long start = now_ms();
+    int seq = 0;
     while (now_ms() - start < cfg.test_duration_ms) {
+        seq++;       
         usleep(10000);
-        if (! quiet) {
+        // every 15 cycles
+        // otherwise people might ctrl-c thinking nothing is happening
+        if (seq %3 == 0 && seq %5 == 0 && !quiet) {
+            seq = 0;
             fputc('.', stdout);
             fflush(stdout);
         }
