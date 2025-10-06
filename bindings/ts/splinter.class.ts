@@ -414,6 +414,8 @@ export class Splinter {
       return true; // Value changed
     } else if (result === -1) {
       return false; // Timeout or key doesn't exist
+    } else if (result === -2) {
+      return false; // EAGAIN (hot write)
     } else {
       throw new Error(`Poll failed for key: ${key}`);
     }
