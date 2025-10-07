@@ -18,16 +18,18 @@
 extern "C" {
 #endif
 
-/** @brief Magic number to identify a splinter memory region. */
+/** 
+ * @brief (SLNT) Magic number to identify a splinter memory region. 
+ * Spoiler: bytes 53 4C 4E 54 -> ASCII "S L N T" (never speaks unless spoken to)
+ */
 #define SPLINTER_MAGIC 0x534C4E54
+
 /** @brief Version of the splinter data format (not the library version). */
 #define SPLINTER_VER   1
 /** @brief Maximum length of a key string, including null terminator. */
 #define KEY_MAX        64
 /** @brief Nanoseconds per millisecond for time calculations. */
 #define NS_PER_MS      1000000ULL
-
-
 
 /**
  * @brief structure to hold splinter bus snapshots
