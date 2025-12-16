@@ -333,7 +333,7 @@ static char *hints(const char *buf, int *color, int *bold) {
         *bold = 1;
         return "nit ";
     }
-    
+
     if (!strncasecmp(buf, "l", 4)) {
         *color = 36;
         *bold = 1;
@@ -379,7 +379,6 @@ static char *hints(const char *buf, int *color, int *bold) {
     return NULL;
 }
 
-// TODO: Implement --use for --no-repl commands
 static const struct option long_options[] = {
     { "help", optional_argument, NULL, 'h' },
     { "history-file", required_argument, NULL, 'H' },
