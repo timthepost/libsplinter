@@ -161,6 +161,12 @@ static int map_fd(int fd, size_t size) {
  */
 int splinter_create(const char *name_or_path, size_t slots, size_t max_value_sz) {
     int fd;
+
+    if (slots <= 0 || max_value_sz <= 0) {
+        errno = ENOTSUP;
+        return -2;
+    }
+
 #ifdef SPLINTER_PERSISTENT
     fd = open(name_or_path, O_RDWR | O_CREAT, 0666);
 #else
