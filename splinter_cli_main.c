@@ -148,6 +148,15 @@ cli_module_t command_modules[] = {
         &cmd_watch,
         &help_cmd_watch
     },
+    {
+        12,
+        "init",
+        4,
+        "Initialize Splinter stores.",
+        -1,
+        &cmd_init,
+        &help_cmd_init
+    },
     // The last null-filled element 
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
@@ -264,6 +273,9 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
             linenoiseAddCompletion(lc, "head");
             linenoiseAddCompletion(lc, "hist");
             break;
+        case 'i':
+            linenoiseAddCompletion(lc, "init");
+            break;
         case 'l':
             linenoiseAddCompletion(lc, "list");
             break;
@@ -316,6 +328,12 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "et ";
     }
 
+    if (!strncasecmp(buf, "i", 4)) {
+        *color = 36;
+        *bold = 1;
+        return "nit ";
+    }
+    
     if (!strncasecmp(buf, "l", 4)) {
         *color = 36;
         *bold = 1;
