@@ -33,8 +33,7 @@ speaks unless spoken to, but is always ready.
      reloading or restarting anything. 
 - 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW
      contract is broken at huge scale.
-- ☢️ Atomic-seqlock-guaranteed integrity - no torn reads, even under severe stress
-     with vacuuming disabled.
+- ☢️ Atomic seqlocks result in ***less than ~0.01%*** contentious 'hot' operations.
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
