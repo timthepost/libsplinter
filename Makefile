@@ -13,7 +13,7 @@ CLI_SOURCES := $(shell echo splinter_cli_*.c) 3rdparty/linenoise.c 3rdparty/libg
 CLI_HEADERS := splinter_cli.h 3rdparty/linenoise.h
 
 # Helpers & tests
-BIN_PROGS = splinter_recv splinter_send splinter_stress splinter_cli
+BIN_PROGS = splinter_stress splinter_cli
 TESTS = splinter_test
 
 # Default target
@@ -45,14 +45,6 @@ libsplinter_p.a: splinter_p.o
 # Test binary (uses memory-backed .so by default)
 splinter_test: splinter_test.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_test.c splinter.o
-
-# A testing tool to block for exactly one message on the bus
-splinter_recv: splinter_recv.c splinter.o
-	$(CC) $(CFLAGS) -o $@ splinter_recv.c splinter.o
-
-# A testing tool to send a single message on [key] with [value] on the bus.
-splinter_send: splinter_send.c splinter.o
-	$(CC) $(CFLAGS) -o $@ splinter_send.c splinter.o
 
 # Useful for actually testing libsplinter performance
 splinter_stress: splinter_stress.c splinter.o
