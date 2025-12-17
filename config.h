@@ -6,7 +6,7 @@
 
 #include "build.h"
 
-#define SPLINTER_VERSION "0.5.2"
+#define SPLINTER_VERSION "0.5.3"
 
 // so tools can be used without many / any arguments
 #define DEFAULT_BUS "splinter_debug"

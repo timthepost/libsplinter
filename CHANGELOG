@@ -1,3 +1,14 @@
+v0.5.3 "One tool to rule them all"
+ - Clarified README claim about torn reads (used actual test numbers) and 
+   explained the significance of Splinter's magic number selection.
+ - Created 'init' command that allows creating stores with default
+   or custom geometry.
+ - Removed remaining individual tools: splinter_recv, splinter_send in 
+   favor of now maintaining the CLI.
+ - Normalized *not* silently creating databases prior to write calls
+   (if missing) now that "init" exists.
+ - splinter_create no longer creates zero-slot databases (sets errno)
+
 v0.5.2 "Test ... ALL THE THINGS!"
  - Now have unit tests for bindings/ts/splinter.class.ts! While not yet
    at 100% coverage, `splinter.class.ts` is pretty well-tested. Run 
@@ -23,3 +34,6 @@ v0.5.1 "Take Zero Dot Five One"
  - Dropped 'base protocol' definition since it was being mistaken for mandatory and not broadly   
    useful.
 
+Older entries are available at Github:
+
+https://github.com/timthepost/libsplinter/tags
