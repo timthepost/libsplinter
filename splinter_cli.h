@@ -103,9 +103,6 @@ void help_cmd_hist(unsigned int level);
 int cmd_head(int argc, char *argv[]);
 void help_cmd_head(unsigned int level);
 
-int cmd_export(int argc, char *argv[]);
-void help_cmd_export(unsigned int level);
-
 int cmd_init(int  argc, char *argv[]);
 void help_cmd_init(unsigned int level);
 
