@@ -136,10 +136,6 @@ illustrate how to use the C version of the library, as well as a comprehensive C
 splinter stores in debugging / production monitoring.
 
 ### Simple / Demonstration Programs:
-
-  - `splinter_send`: writes a value to a key on a given store. Creates a store if necessary.
-  - `splinter_recv`: watches a key for updates, then writes the new data to standard output 
-     (indefinitely, if wanted).
   - `splinter_test`: Unit tests (`make test` or `make valtest`) which also illustrate the C 
      library quite well.
   - `splinter_stress`: MRSW-contract stress test (many millions of ops / sec with random writes) 
@@ -154,7 +150,7 @@ tasks. If that's all you need, then you probably don't need the full-blown CLI/R
 plan to use Splinter for a large workload and need a way to keep an eye on things, this tool has you
 covered.
 
-`splinter_cli` is a pure C REPL which I wrote in a very simliar way that I wrote full-blown shells, 
+`splinter_cli` is a pure C REPL which I wrote in a very similar way that I write full-blown shells, 
 such as [BDSH][1] for [HelenOS][2]. 
 
 The biggest things to remember about the CLI are that invoking it via `splinterctl` will cause it to 
@@ -201,11 +197,24 @@ The `splinterctl` command is a symbolic link to the installed `splinter_cli`. It
 to use it is with `alias`, so that you can automatically use the same store 
 through a succession of commands.
 
-You can also define functions in `.zshrc` / `.bashrc` / etc.
+To create a default store, you can just type:
 
 ```bash
+splinterctl init
+```
 
-user@host:$ alias splinterctl="splinterctl --use splinter_debug"
+This creates `splinter_debug` with default geometry. See the online help for
+`init` to learn how to use custom geometry settings.
+
+Then you can use `alias` to automatically use it every time you invoke `splinterctl`:
+
+```bash
+alias splinterctl="splinterctl --use splinter_debug"
+```
+
+This lets you run the usual operations, like so:
+
+```bash
 user@host:$ splinterctl list
 Key Name                          | Epoch           | Value Length   
 ------------------------------------------------------------------
@@ -251,6 +260,9 @@ epoch:       5
 auto_vacuum: 1
 
 ```
+
+It's expected that you'll mostly interact with Splinter in _code_; the CLI is the 
+best way to use Splinter with Bash / ZSH with the REPL being handy for debugging;
 
 ### TypeScript Bindings
 
