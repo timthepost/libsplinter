@@ -134,7 +134,7 @@ tests: splinter_test splinter_stress splinterp_test splinterp_stress
 
 test: tests
 
-valtest: splinter_test
+valtest: splinter_test splinterp_test
 	valgrind -s --leak-check=full ./splinter_test || false
 	valgrind -s --leak-check=full ./splinterp_test || false
 
