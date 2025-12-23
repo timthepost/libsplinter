@@ -109,6 +109,7 @@ uninstall: be_root
 clean:
 	rm -f $(BIN_PROGS) $(SHARED_LIBS) $(STATIC_LIBS) $(TESTS)
 	rm -f *-tap-test
+	rm -f mrsw_test_*
 	rm -f *.o
 
 # Clean artifacts and bindings
