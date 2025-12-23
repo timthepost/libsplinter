@@ -13,11 +13,9 @@
 static const char *modname = "config";
 
 void help_cmd_config(unsigned int level) {
-    printf("Usage: %s\n       %s <key_name>\n", modname, modname);
-    if (level) {
-        printf("%s is currently a read-only tool.\n", modname);
-        puts("Soon, it will support setting fields like auto_vacuum");
-    }
+    (void) level;
+    printf("Usage: %s\n       %s [feature_flag] [flag_value]\n", modname, modname);
+    printf("If no other arguments are given, %s displays the current bus settings.\n", modname);
     return;
 }
 
@@ -39,14 +37,9 @@ static void show_bus_config(void) {
 
 int cmd_config(int argc, char *argv[]) {
     (void) argv;
-    
+
     if (argc == 1) {
         show_bus_config();
-        return 0;
-    }
-
-    if (argc == 2) {
-        cli_show_key_config(argv[1], modname);
         return 0;
     }
 

@@ -1,12 +1,11 @@
 v0.5.5 "Multi-Poll Multiple Multiplexers!" (* = in progress / not yet done)
- - Introduced `splinter_watchtopus()` to watch multiple keys mapped to 
+ - Introduced `splinter_multi_watch()` to watch multiple keys mapped to 
    callbacks. *
  - Main entry point now understands persistent invocation (splinterpctl,
    splinterp_cli).
  - cli no longer pads length and keyval with spaces between colon 
    (3 : Fun -> 3:Fun)
- - The `vacuum` command is an alias of `config`. When invoked, it 
-   expects only one boolean (numeric) argument. * 
+ - The `config` command now sets auto_vacuum. * 
  - Fixed bug that caused mrsw stress test results to not unlink 
    automatically (persistent) *
 

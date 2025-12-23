@@ -157,15 +157,6 @@ cli_module_t command_modules[] = {
         &cmd_init,
         &help_cmd_init
     },
-    {
-        13,
-        "vacuum",
-        6,
-        "Set vacuum mode on or off (1 or 0, respectively).",
-        2,
-        &cmd_config,
-        &help_cmd_config
-    },
     // The last null-filled element 
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
@@ -297,9 +288,6 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
             linenoiseAddCompletion(lc, "use");
             linenoiseAddCompletion(lc, "unset");
             break;
-        case 'v':
-            linenoiseAddCompletion(lc, "vacuum");
-            break;
         case 'w':
             linenoiseAddCompletion(lc, "watch");
             break;
@@ -384,12 +372,6 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "set ";
     }
 
-    if (!strncasecmp(buf, "va", 6)) {
-        *color = 35;
-        *bold = 1;
-        return "cuum";
-    }
-    
     if (!strncasecmp(buf, "w", 5)) {
         *color = 36;
         *bold = 1;
