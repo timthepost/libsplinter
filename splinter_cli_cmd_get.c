@@ -37,7 +37,7 @@ int cmd_get(int argc, char *argv[]) {
         return rc;
     }
 
-    printf("%lu : %s\n", received, buf);
+    printf("%lu:%s\n", received, buf);
     puts("");
 
     return 0;
