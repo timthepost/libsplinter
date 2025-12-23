@@ -1,3 +1,15 @@
+v0.5.5 "Multi-Poll Multiple Multiplexers!" (* = in progress / not yet done)
+ - Introduced `splinter_watchtopus()` to watch multiple keys mapped to 
+   callbacks. *
+ - Main entry point now understands persistent invocation (splinterpctl,
+   splinterp_cli).
+ - cli no longer pads length and keyval with spaces between colon 
+   (3 : Fun -> 3:Fun)
+ - The `vacuum` command is an alias of `config`. When invoked, it 
+   expects only one boolean (numeric) argument. * 
+ - Fixed bug that caused mrsw stress test results to not unlink 
+   automatically (persistent) *
+
 v0.5.4 "Persistence Pays Off"
  - Persistent mode is now a first-class feature / citizen. All binary
    targets now have tested persistent counterparts. The stress tool
