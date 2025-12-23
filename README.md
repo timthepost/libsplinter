@@ -1,7 +1,5 @@
 # Splinter 🐀
 
-> _“I am always here, my sons. Even when unseen.”_
-
 **Splinter** is a minimalist, high-speed message bus and subscribable KV store
 that operates in shared memory (`memfd`) or uses memory-mapped files for
 persistent backing.
