@@ -13,8 +13,8 @@ CLI_SOURCES := $(shell echo splinter_cli_*.c) 3rdparty/linenoise.c 3rdparty/libg
 CLI_HEADERS := splinter_cli.h 3rdparty/linenoise.h
 
 # Helpers & tests
-BIN_PROGS = splinter_stress splinter_cli
-TESTS = splinter_test
+BIN_PROGS = splinter_stress splinter_cli splinterp_stress splinterp_cli
+TESTS = splinter_test splinterp_test
 
 # Default target
 all: $(SHARED_LIBS) $(STATIC_LIBS) $(BIN_PROGS) $(TESTS)
@@ -46,13 +46,25 @@ libsplinter_p.a: splinter_p.o
 splinter_test: splinter_test.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_test.c splinter.o
 
+# Persistent version of the test binary
+splinterp_test: splinter_test.c splinter_p.o
+	$(CC) $(CFLAGS) -DSPLINTER_PERSISTENT -o $@ splinter_test.c splinter_p.o
+
 # Useful for actually testing libsplinter performance
 splinter_stress: splinter_stress.c splinter.o
 	$(CC) $(CFLAGS) -o $@ splinter_stress.c splinter.o
 
+# Persistent version of the performance test (here be dragons!)
+splinterp_stress: splinter_stress.c splinter_p.o
+	$(CC) $(CFLAGS) -DSPLINTER_PERSISTENT -o $@ splinter_stress.c splinter_p.o
+
 # A basic, but extensible CLI to navigate and manage stores
 splinter_cli: $(CLI_SOURCES) $(CLI_HEADERS) splinter.o splinter.h
 	$(CC) $(CFLAGS) -o $@ $(CLI_SOURCES) splinter.o
+
+# Persistent version of the CLI (soon I hope to have only one)
+splinterp_cli: $(CLI_SOURCES) $(CLI_HEADERS) splinter_p.o splinter.h
+	$(CC) $(CFLAGS) -DSPLINTER_PERSISTENT -o $@ $(CLI_SOURCES) splinter_p.o
 
 # Rust bindings; Deno bindings aren't quite automate-able yet.
 .PHONY: rust_bindings
@@ -96,6 +108,7 @@ uninstall: be_root
 
 clean:
 	rm -f $(BIN_PROGS) $(SHARED_LIBS) $(STATIC_LIBS) $(TESTS)
+	rm -f *-tap-test
 	rm -f *.o
 
 # Clean artifacts and bindings
@@ -109,10 +122,11 @@ distclean: clean
 # Tests
 .PHONY: tests test valtest
 
-tests: splinter_test splinter_stress
+tests: splinter_test splinter_stress splinterp_test splinterp_stress
 	./splinter_test
+	./splinterp_test
 	@echo ""
-	@echo "You can run ./splinter_stress to run stress tests."
+	@echo "You can run ./splinter_stress / splinterp_stress to run stress tests."
 	@echo "See ./splinter_stress --help for more."
 	@echo ""
 	@echo "You can/should also run tests under valgrind if you have it installed."
@@ -122,6 +136,7 @@ test: tests
 
 valtest: splinter_test
 	valgrind -s --leak-check=full ./splinter_test || false
+	valgrind -s --leak-check=full ./splinterp_test || false
 
 # Everything
 .PHONY: world
