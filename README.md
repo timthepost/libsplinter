@@ -35,18 +35,13 @@ speaks unless spoken to, but is always ready.
   EAGAIN for non-block operation)
 - 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly
   without reloading or restarting anything.
-- 🧵 Thread-safe single-writer, multi-reader semantics, resilient even when MRSW
-  contract is broken at huge scale.
-- ☢️ Atomic seqlocks result in _**less than ~0.01%**_ contentious 'hot'
-  operations.
+- 🧵 Thread-safe single-writer, multi-reader semantics.
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
 - 🦕 Deno and Rust bindings included!
-- ⚙️ Embeddable and extendable; easy to build upon! Apache 2 license by default,
-  dual-MIT license available at low-cost / free (reach out to
-  `timthepost@protonmail.com`)
+- ⚙️ Embeddable and extendable; easy to build upon! Dual-license on request.
 
 ---
 
