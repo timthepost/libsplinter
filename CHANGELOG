@@ -1,3 +1,10 @@
+v0.5.4 "Persistence Pays Off"
+ - Persistent mode is now a first-class feature / citizen. All binary
+   targets now have tested persistent counterparts. The stress tool
+   is a little too harsh by default for file-backed stores, suggest
+   fewer threads (perhaps 4) and longer writer-us (1000) values.
+ - Miscellaneous minor improvements
+
 v0.5.3 "One tool to rule them all"
  - Clarified README claim about torn reads (used actual test numbers) and 
    explained the significance of Splinter's magic number selection.

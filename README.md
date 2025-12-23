@@ -61,12 +61,26 @@ splinterctl list
 ```
 
 You're also welcome to skip using `splinterctl` and just use `splinter_cli` for
-an interactive REPL in order to do the same thing illustrated above. Plus, it has 
-tab completion and online help, so check it out 😃
+an interactive REPL in order to do the same thing illustrated above. Plus, it
+has tab completion and online help, so check it out 😃
 
-**Note worth mentioning**: `splinterctl` is a symlink to `splinter_cli`; the CLI 
-alters its behavior (safely, see the code) if invoked with that special name to 
+**Note worth mentioning**: `splinterctl` is a symlink to `splinter_cli`; the CLI
+alters its behavior (safely, see the code) if invoked with that special name to
 bypass the REPL and interactive bits. History is still preserved, however.
+
+## Persistent Mode Quick Start
+
+If you want to use persistent mode, use `splinterp_cli`, your store will be
+saved in whatever path you specify. You can then re-open it later using the
+`use` command.
+
+If you want to use persistent mode with `splinterctl`, you'll have to change the
+symbolic link to point to the persistent version of the CLI:
+
+`sudo ln -s -f /usr/local/bin/splinterp_cli /usr/local/bin/splintrctl`
+
+... depending on your installation preferences. See additional notes about
+persistent mode near the bottom of this file.
 
 ## How Does Splinter Compare With Other Stores?
 
@@ -195,6 +209,10 @@ The biggest things to remember about the CLI are that invoking it via
 the commands it offers in scripts), and that it's self- documenting in that
 `help` is online.
 
+Remember that persistent versions of the tests and the programs are available
+and built/installed as _**splinterp_cli**_, _**splinterp_test**_, etc. Just swap
+one for the other if / when you want persistence.
+
 #### Typical `splinter_cli` Interactive Use:
 
 ```cli
@@ -311,6 +329,14 @@ The persistent version:
 However, understand the limitations of the underlying file system and whatever
 media is backing it. NVMe storage will be quite fast, rotating media will be
 much slower.
+
+The MRSW stress tool will give you some indication of throughput, however you
+should scale it down to 4, max 8 threads unless you're using extremely fast and
+durable storage. You should also set the delay a little higher (1000 us is
+probably okay on slower systems, less on faster ones).
+
+In future releases, the stress test harness will auto detect persistent mode and
+run better tuned tests (along with monitoring iowait, etc).
 
 ---
 
