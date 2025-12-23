@@ -157,6 +157,15 @@ cli_module_t command_modules[] = {
         &cmd_init,
         &help_cmd_init
     },
+    {
+        13,
+        "vacuum",
+        6,
+        "Set vacuum mode on or off (1 or 0, respectively).",
+        2,
+        &cmd_config,
+        &help_cmd_config
+    },
     // The last null-filled element 
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
@@ -216,12 +225,14 @@ enum mode select_mode(const char *argv0) {
     tmp[sizeof(tmp) - 1] = '\0';
     prog = basename(tmp);
 
-    if (strncmp(prog, "splinterctl", 11) == 0) {
+    if (strncmp(prog, "splinterctl", 11) == 0 || strncmp(prog, "splinterpctl", 12) == 0) {
         return MODE_NO_REPL;
-    } else if (strncmp(prog, "splinter_cli", 13) == 0) {
+    } else if (strncmp(prog, "splinter_cli", 13) == 0 || strncmp(prog, "splinterp_cli", 14) == 0) {
         return MODE_REPL;
     }
 
+    // some kind of app armor messed with argv[0]?
+    // Just default to the REPL.
     return MODE_REPL;
 }
 
@@ -285,6 +296,9 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
         case 'u':
             linenoiseAddCompletion(lc, "use");
             linenoiseAddCompletion(lc, "unset");
+            break;
+        case 'v':
+            linenoiseAddCompletion(lc, "vacuum");
             break;
         case 'w':
             linenoiseAddCompletion(lc, "watch");
@@ -370,6 +384,12 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "set ";
     }
 
+    if (!strncasecmp(buf, "va", 6)) {
+        *color = 35;
+        *bold = 1;
+        return "cuum";
+    }
+    
     if (!strncasecmp(buf, "w", 5)) {
         *color = 36;
         *bold = 1;
