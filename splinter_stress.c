@@ -71,38 +71,50 @@ static void *writer_main(void *arg) {
     size_t payload_len = cfg->max_value_size / 2;
     if (payload_len < 64) payload_len = 64;
 
-    while (*sh->running) {
+    do {
         for (i = 0; i < sh->num_keys && *sh->running; i++) {
             unsigned long nonce = (unsigned long)now_ms();
-            int n = snprintf(buf, cfg->max_value_size,
-                             "ver:%u|nonce:%lu|data:", ver, nonce);
+
+            int n = snprintf(
+                buf, 
+                cfg->max_value_size,
+                "ver:%u|nonce:%lu|data:", ver, nonce);
+            
+            // We know out-of-bounds and zero-length keys will fail
+            // based on test geometry and value alone. We have gone
+            // so long metadata consumes all available room.
             if (n <= 0 || n >= cfg->max_value_size) {
                 atomic_fetch_add(&sh->ctr->set_too_big, 1);
                 atomic_fetch_add(&sh->ctr->set_fail, 1);
                 continue;
             }
 
+            // We know how many characters snprintf didn't print, so 
+            // subtract that from available space, and backfill.
             size_t remain = cfg->max_value_size - (size_t)n - 1;
             size_t fill = payload_len < remain ? payload_len : remain;
             memset(buf + n, 'A' + (ver % 26), fill);
             buf[n + fill] = '\0';
             size_t len = n + fill;
 
+            // Now we have a payload that should stick.
             int rc = splinter_set(sh->keys[i], buf, len);
             atomic_fetch_add(&sh->ctr->total_sets, 1);
             if (rc == 0) {
                 atomic_fetch_add(&sh->ctr->set_ok, 1);
             } else {
+                // I said *should* stick :P
                 atomic_fetch_add(&sh->ctr->set_fail, 1);
                 if (len > (size_t)cfg->max_value_size)
                     atomic_fetch_add(&sh->ctr->set_too_big, 1);
                 else
                     atomic_fetch_add(&sh->ctr->set_full, 1);
             }
+            // Pause between writes if told to. 
             if (cfg->writer_period_us > 0) usleep(cfg->writer_period_us);
         }
         ver++;
-    }
+    } while (*sh->running);
 
     free(buf);
     return NULL;
@@ -127,9 +139,17 @@ static void *reader_main(void *arg) {
     cfg_t *cfg = sh->cfg;
 
     char *buf = malloc((size_t)cfg->max_value_size + 1);
-    if (!buf) { perror("malloc"); return NULL; }
+    if (!buf) { 
+        perror("malloc"); 
+        return NULL; 
+    }
+    
     unsigned *observed = calloc((size_t)cfg->num_keys, sizeof(unsigned));
-    if (!observed) { perror("calloc"); free(buf); return NULL; }
+    if (!observed) { 
+        perror("calloc"); 
+        free(buf); 
+        return NULL; 
+    }
 
     size_t got_size = 0;
     while (*sh->running) {
@@ -200,7 +220,7 @@ static void print_stats(cfg_t *cfg, counters_t *c, long ms) {
         printf("\n");
     }
 #endif // HAVE_VALGRIND_H
-    printf("\n===== MRSW STRESS RESULTS =====\n");
+    puts("===== MRSW STRESS RESULTS =====");
     printf("Threads            : %d (readers=%d, writer=1)\n", cfg->num_threads, cfg->num_threads - 1);
     printf("Duration           : %d ms\n", cfg->test_duration_ms);
     printf("Hot keys           : %d\n", cfg->num_keys);
@@ -263,7 +283,7 @@ int main(int argc, char **argv) {
         .num_threads = 16, // 15 readers + 1 writer
         .test_duration_ms = 30000,
         .num_keys = 192000,
-        .writer_period_us = 250,
+        .writer_period_us = 0,
     };
 #endif /* SPLINTER_PERSISTENT */
 
@@ -290,14 +310,6 @@ int main(int argc, char **argv) {
 
     splinter_set_av(0);
 
-#ifdef HAVE_VALGRIND_H
-    if (RUNNING_ON_VALGRIND) {
-        puts("Valgrind Detected! This will likely quadruple (or more) the test duration.");
-        puts("Many errors will result from profiling - this is expected. We only test for");
-        puts("a total lack of violations during the process.");
-    }
-#endif
-
     char **keys = calloc((size_t)cfg.num_keys, sizeof(char*));
     if (!keys) { perror("calloc"); return 1; }
 
@@ -317,9 +329,9 @@ int main(int argc, char **argv) {
         .num_keys = cfg.num_keys,
     };
 
-    puts("Test Plan:");
+    puts("===== MRSW STRESS TEST PLAN =====");
     printf(
-        "Store    : %s\nThreads  : %d\nDuration : %d ms\nSlots    : %d\nHot Keys : %d\nBackoff  : %d ms\nMax Val  : %d bytes\n",
+        "Store    : %s\nThreads  : %d\nDuration : %d ms\nSlots    : %d\nHot Keys : %d\nW/Backoff: %d ms\nMax Val  : %d bytes\n",
         cfg.store_name,
         cfg.num_threads, 
         cfg.test_duration_ms, 
@@ -331,26 +343,29 @@ int main(int argc, char **argv) {
 
     #ifdef SPLINTER_PERSISTENT
     puts("");
-    puts("***WARNING***");
+    puts("*** WARNING: Persistent Mode Detected ***");
     puts("");
-    puts("Running this test can cause considerable wear on rotating media and older solid");
-    puts("state drives. Pausing for a few seconds so you can abort....");
-    sleep(3);
-    puts("Continuing ...");
+    puts("Running this test can cause considerable wear on rotating media and older SSDs");
+    puts("Additionally, it should not be run over rDMA or NFS.");
+    puts("Sleeping five seconds in case you need to abort ...");
     puts("");
+    sleep(5);
 #endif /* SPLINTER_PERSISTENT */
 
-    puts("Pre-populating ...");
+    printf("Pre-populating store with indexed backfill (%d keys) ...\n", cfg.num_keys);
     prepopulate(&sh);
 
     puts("Creating threadpool ...");
     pthread_t *th = calloc((size_t)cfg.num_threads, sizeof(pthread_t));
     if (!th) { perror("calloc"); return 1; }
 
+    printf(" -> Writers - (1): ");
     if (pthread_create(&th[0], NULL, writer_main, &sh) != 0) {
         perror("pthread_create writer");
         return 1;
     }
+
+    printf("+\n -> Readers - (%d): ", cfg.num_threads);
     for (i = 1; i < cfg.num_threads; i++) {
         if (pthread_create(&th[i], NULL, reader_main, &sh) != 0) {
             perror("pthread_create reader");
@@ -363,31 +378,31 @@ int main(int argc, char **argv) {
     }
 
     puts("");
-    puts("Beginning test sequence ...");
+    puts("Test is now running! Dots indicate progress...");
     long start = now_ms();
     int seq = 0;
+    char kibble[3] = { 0 };
+
     while (now_ms() - start < cfg.test_duration_ms) {
         seq++;       
         usleep(10000);
-        // every 15 cycles, fizzbuzz style 
-        // otherwise people might ctrl-c thinking nothing is happening
-        if (seq %3 == 0 && seq %5 == 0 && !quiet) {
-            seq = 0;
-            fputc('.', stdout);
+        if (!quiet) {
+            snprintf(kibble, sizeof(kibble) - 1, "%c", seq %15 == 0 ? '.' : '\0');
+            fputc(kibble[0], stdout);
             fflush(stdout);
-        } else if (seq %15 == 0) {
-            seq = 0;
-            fputc('\n', stdout);
-            fflush(stdout);
+            if (seq %500 == 0) {
+                fputc('\n', stdout);
+                fflush(stdout);
+            }
         }
     }
     running = 0;
-    printf("\n");
+    
+    puts("");
+    puts("\nCleaning up ...");
 
     for (i = 0; i < cfg.num_threads; i++) pthread_join(th[i], NULL);
     long elapsed = now_ms() - start;
-
-    puts("Cleaning up.");
     splinter_close();
     if (! keep_store) {
 #ifndef SPLINTER_PERSISTENT
@@ -402,6 +417,7 @@ int main(int argc, char **argv) {
     free(keys);
     free(th);
 
+    puts("");
     print_stats(&cfg, &ctr, elapsed);
 
 #ifdef HAVE_VALGRIND_H
