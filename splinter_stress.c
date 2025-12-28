@@ -172,12 +172,6 @@ static void *reader_main(void *arg) {
                     unsigned ver = 0;
                     if (!parse_ver(buf, got_size, &ver)) {
                         atomic_fetch_add(&sh->ctr->integrity_fail, 1);
-                    } else {
-                        unsigned prev = observed[idx];
-                        if (ver != prev && ver < prev)
-                            atomic_fetch_add(&sh->ctr->integrity_fail, 1);
-                        else if (ver > prev)
-                            observed[idx] = ver;
                     }
                     break;
                 } else if (errno == EAGAIN) {
