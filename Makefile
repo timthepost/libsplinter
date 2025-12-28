@@ -66,7 +66,10 @@ splinter_cli: $(CLI_SOURCES) $(CLI_HEADERS) splinter.o splinter.h
 splinterp_cli: $(CLI_SOURCES) $(CLI_HEADERS) splinter_p.o splinter.h
 	$(CC) $(CFLAGS) -DSPLINTER_PERSISTENT -o $@ $(CLI_SOURCES) splinter_p.o
 
-# Rust bindings; Deno bindings aren't quite automate-able yet.
+# Rust bindings - we only build against the in-memory version, not 
+# persistent,
+#
+# I'd love patches to help proper-ize this.
 .PHONY: rust_bindings
 
 rust_bindings: libsplinter.so
@@ -135,7 +138,14 @@ tests: splinter_test splinter_stress splinterp_test splinterp_stress
 	@echo "You can/should also run tests under valgrind if you have it installed."
 	@echo "Enable via HAVE_VALGRIND_H in config.h if you haven't already."
 
-test: tests
+test: splinter_test splinterp_test splinter_stress splinterp_stress 
+	@echo ""
+	@echo "Use 'make tests' to run Splinter's unit tests without Valgrind."
+	@echo "Use 'make valtest' to run Splinter's unit tests under Valgrind."
+	@echo "Use './splinter_stress or ./splinterp_stress to run torture tests,"
+	@echo "for in-memory and persistent stores respectively."
+	@echo "If you have valgrind/valgrind.h installed, edit 'config.h' to enable"
+	@echo "tighter test-Valgrind integration." 
 
 valtest: splinter_test splinterp_test
 	valgrind -s --leak-check=full ./splinter_test || false
