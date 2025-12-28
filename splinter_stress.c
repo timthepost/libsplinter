@@ -121,15 +121,20 @@ static void *writer_main(void *arg) {
 }
 
 static bool parse_ver(const char *val, size_t len, unsigned *out_ver) {
-    if (len < 6) return false;
-    if (memcmp(val, "ver:", 4) != 0) return false;
     char tmp[16] = {0};
     size_t i = 4, j = 0;
+
+    if (memcmp(val, "ver:", 4) != 0) 
+        return false;
+    
     while (i < len && j < sizeof(tmp)-1 && val[i] >= '0' && val[i] <= '9') {
         tmp[j++] = val[i++];
     }
+
     if (i >= len || val[i] != '|') return false;
+    
     *out_ver = (unsigned)strtoul(tmp, NULL, 10);
+    
     return true;
 }
 
@@ -165,11 +170,11 @@ static void *reader_main(void *arg) {
                 if (rc == 0) {
                     atomic_fetch_add(&sh->ctr->get_ok, 1);
                     unsigned ver = 0;
-                    if (got_size == 0 || !parse_ver(buf, got_size, &ver)) {
+                    if (!parse_ver(buf, got_size, &ver)) {
                         atomic_fetch_add(&sh->ctr->integrity_fail, 1);
                     } else {
                         unsigned prev = observed[idx];
-                        if (ver < prev)
+                        if (ver != prev && ver < prev)
                             atomic_fetch_add(&sh->ctr->integrity_fail, 1);
                         else if (ver > prev)
                             observed[idx] = ver;
