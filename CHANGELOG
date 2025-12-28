@@ -7,7 +7,9 @@ v0.5.5 "Multi-Poll Multiple Multiplexers!" (* = in progress / not yet done)
    (3 : Fun -> 3:Fun)
  - The `config` command now sets auto_vacuum. * 
  - Fixed bug that caused mrsw stress test results to not unlink 
-   automatically (persistent) *
+   automatically (persistent)
+ - Significantly improved MRSW stress test harness for persistent
+   use (now has a persistent config) and way better output.
 
 v0.5.4 "Persistence Pays Off"
  - Persistent mode is now a first-class feature / citizen. All binary
