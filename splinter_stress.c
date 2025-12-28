@@ -244,6 +244,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     snprintf(store, sizeof(store) -1, "mrsw_test_%u", pid);
+#ifndef SPLINTER_PERSISTENT
+    // We're abusing an in-memory store.
     cfg_t cfg = {
         .store_name = store,
         .slots = 50000,
@@ -253,8 +255,17 @@ int main(int argc, char **argv) {
         .num_keys = 20000,
         .writer_period_us = 0,
     };
-
-    fprintf(stderr, "Store name: %s\n", cfg.store_name);
+#else
+    cfg_t cfg = {
+        .store_name = store, 
+        .slots = 25000,
+        .max_value_size = 2048,
+        .num_threads = 16, // 15 readers + 1 writer
+        .test_duration_ms = 30000,
+        .num_keys = 192000,
+        .writer_period_us = 250,
+    };
+#endif /* SPLINTER_PERSISTENT */
 
     int i, quiet = 0;
 
@@ -279,13 +290,14 @@ int main(int argc, char **argv) {
 
     splinter_set_av(0);
 
-    printf("This is going to take a little while (60000 ms | 60 seconds)\n");
-    printf("On cpu-busy systems, it could take a little longer; please be patient.\n");
 #ifdef HAVE_VALGRIND_H
     if (RUNNING_ON_VALGRIND) {
-        printf("Valgrind Detected! This will likely quadruple (or more) the test duration.\n");
+        puts("Valgrind Detected! This will likely quadruple (or more) the test duration.");
+        puts("Many errors will result from profiling - this is expected. We only test for");
+        puts("a total lack of violations during the process.");
     }
 #endif
+
     char **keys = calloc((size_t)cfg.num_keys, sizeof(char*));
     if (!keys) { perror("calloc"); return 1; }
 
@@ -305,8 +317,33 @@ int main(int argc, char **argv) {
         .num_keys = cfg.num_keys,
     };
 
+    puts("Test Plan:");
+    printf(
+        "Store    : %s\nThreads  : %d\nDuration : %d ms\nSlots    : %d\nHot Keys : %d\nBackoff  : %d ms\nMax Val  : %d bytes\n",
+        cfg.store_name,
+        cfg.num_threads, 
+        cfg.test_duration_ms, 
+        cfg.slots, 
+        cfg.num_keys, 
+        cfg.writer_period_us,
+        cfg.max_value_size
+    );
+
+    #ifdef SPLINTER_PERSISTENT
+    puts("");
+    puts("***WARNING***");
+    puts("");
+    puts("Running this test can cause considerable wear on rotating media and older solid");
+    puts("state drives. Pausing for a few seconds so you can abort....");
+    sleep(3);
+    puts("Continuing ...");
+    puts("");
+#endif /* SPLINTER_PERSISTENT */
+
+    puts("Pre-populating ...");
     prepopulate(&sh);
 
+    puts("Creating threadpool ...");
     pthread_t *th = calloc((size_t)cfg.num_threads, sizeof(pthread_t));
     if (!th) { perror("calloc"); return 1; }
 
@@ -319,19 +356,28 @@ int main(int argc, char **argv) {
             perror("pthread_create reader");
             running = 0;
             break;
+        } else {
+            fputc('+', stdout);
+            fflush(stdout);
         }
     }
 
+    puts("");
+    puts("Beginning test sequence ...");
     long start = now_ms();
     int seq = 0;
     while (now_ms() - start < cfg.test_duration_ms) {
         seq++;       
         usleep(10000);
-        // every 15 cycles
+        // every 15 cycles, fizzbuzz style 
         // otherwise people might ctrl-c thinking nothing is happening
         if (seq %3 == 0 && seq %5 == 0 && !quiet) {
             seq = 0;
             fputc('.', stdout);
+            fflush(stdout);
+        } else if (seq %15 == 0) {
+            seq = 0;
+            fputc('\n', stdout);
             fflush(stdout);
         }
     }
@@ -344,7 +390,12 @@ int main(int argc, char **argv) {
     puts("Cleaning up.");
     splinter_close();
     if (! keep_store) {
+#ifndef SPLINTER_PERSISTENT
         snprintf(store_path, sizeof(store_path) -1, "/dev/shm/%s", cfg.store_name);
+#else
+        // maybe should resolve path here?
+        snprintf(store_path, sizeof(store_path) -1, "./%s", cfg.store_name);
+#endif /* SPLINTER_PERSISTENT */
         unlink(store_path);
     }
     for (i = 0; i < cfg.num_keys; i++) free(keys[i]);
