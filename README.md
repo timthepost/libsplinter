@@ -317,8 +317,8 @@ essential for safety.
 
 ## Persistence Mode
 
-If you want bus persistence between reboots, Link your application or FFI to
-`libsplinter_p.so` instead of `libsplinter.so`.
+If you want bus persistence, use the persistent CLI tool or link your application 
+or FFI to `libsplinter_p.so` instead of `libsplinter.so`.
 
 The persistent version:
 
@@ -331,13 +331,7 @@ media is backing it. NVMe storage will be quite fast, rotating media will be
 much slower.
 
 The MRSW stress tool will give you some indication of throughput, however you
-should scale it down to 4, max 8 threads unless you're using extremely fast and
-durable storage. You should also set the delay a little higher (1000 us is
-probably okay on slower systems, less on faster ones).
-
-In future releases, the stress test harness will auto detect persistent mode and
-run better tuned tests (along with monitoring iowait, etc).
-
+should scale it down thread-wise as well as payload.
 ---
 
 ## Network Synchronization
