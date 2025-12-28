@@ -89,6 +89,7 @@ install: $(SHARED_LIBS) $(STATIC_LIBS) $(BIN_PROGS) be_root
 	install -m 0644 $(STATIC_LIBS) $(PREFIX)/lib/
 	install -m 0755 $(BIN_PROGS) $(PREFIX)/bin/
 	ln -s -f $(PREFIX)/bin/splinter_cli $(PREFIX)/bin/splinterctl
+	ln -s -f $(PREFIX)/bin/splinterp_cli $(PREFIX)/bin/splinterpctl
 	install -m 0644 $(SHARED_HEADERS) $(PREFIX)/include/
 	ldconfig
 
@@ -100,6 +101,7 @@ uninstall: be_root
 	rm -f $(PREFIX)/lib/$(STATIC_LIBS)
 	rm -f $(PREFIX)/bin/$(BIN_PROGS)
 	rm -f $(PREFIX)/bin/splinterctl
+	rm -f $(PREFIX)/bin/splinterpctl
 	rm -f $(PREFIX)/include/$(SHARED_HEADERS)
 	ldconfig
 
