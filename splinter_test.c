@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <linux/limits.h>
 #include "splinter.h"
 #include "config.h"
 
@@ -28,10 +29,13 @@ static pid_t pid = 0;
   } \
 } while (0)
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 int main(void) {
   char bus[16] = { 0 };
-  char buspath[32] = { 0 };
+  char buspath[PATH_MAX] = { 0 };
   printf("1..26\n");
   pid = getpid();
 
@@ -113,8 +117,11 @@ int main(void) {
   // Cleanup
   splinter_close();
 
-  // TODO: kinda sloppy
-  snprintf(buspath, 32, "/dev/shm/%s", bus);
+#ifndef SPLINTER_PERSISTENT
+  snprintf(buspath, sizeof(buspath) -1, "/dev/shm/%s", bus);
+#else
+  snprintf(buspath, sizeof(buspath) -1, "./%s", bus);
+#endif /* SPLINTER_PERSISTENT */
   unlink(buspath);
 
 #ifdef HAVE_VALGRIND_H
