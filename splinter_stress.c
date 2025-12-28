@@ -152,7 +152,7 @@ static void *reader_main(void *arg) {
     }
 
     size_t got_size = 0;
-    while (*sh->running) {
+    do {
         for (t = 0; t < 256 && *sh->running; t++) {
             int idx = rand() % sh->num_keys;
             for (;;) {
@@ -188,7 +188,7 @@ static void *reader_main(void *arg) {
                 }
             }
         }
-    }
+    } while (*sh->running);
 
     free(observed);
     free(buf);
