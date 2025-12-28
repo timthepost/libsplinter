@@ -142,8 +142,12 @@ test: splinter_test splinterp_test splinter_stress splinterp_stress
 	@echo ""
 	@echo "Use 'make tests' to run Splinter's unit tests without Valgrind."
 	@echo "Use 'make valtest' to run Splinter's unit tests under Valgrind."
+	@echo ""
 	@echo "Use './splinter_stress or ./splinterp_stress to run torture tests,"
-	@echo "for in-memory and persistent stores respectively."
+	@echo "for in-memory and persistent stores respectively. Note that integrity"
+	@echo "failures are generally *expected* in this test due to highly-abnormal"
+	@echo "use; think of it like a break test."
+	@echo ""
 	@echo "If you have valgrind/valgrind.h installed, edit 'config.h' to enable"
 	@echo "tighter test-Valgrind integration." 
 
