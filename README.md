@@ -395,3 +395,4 @@ please give the code of conduct a read if you'd like to send patches.
 [3]: https://github.com/timthepost/tieto
 [4]: https://en.wikipedia.org/wiki/Splinter_(Teenage_Mutant_Ninja_Turtles)
 [5]: https://github.com/timthepost/libsplinter/tree/main/docs
+[6]: https://github.com/timthepost/libsplinter/tree/main/bindings/ts
