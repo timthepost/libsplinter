@@ -1,11 +1,13 @@
-v0.5.5 "Multi-Poll Multiple Multiplexers!" (* = in progress / not yet done)
- - Introduced `splinter_multi_watch()` to watch multiple keys mapped to 
+v0.9.1 "Almost There!" (Unreleased)
+ - Introduce `splinter_multi_watch()` to watch multiple keys mapped to 
    callbacks. *
+
+v0.5.5 "Periodic Maintenance Release" (* = in progress / not yet done)
  - Main entry point now understands persistent invocation (splinterpctl,
    splinterp_cli).
  - cli no longer pads length and keyval with spaces between colon 
    (3 : Fun -> 3:Fun)
- - The `config` command now sets auto_vacuum. * 
+ - The `config` command now sets auto_vacuum (config av (1/0)).
  - Fixed bug that caused mrsw stress test results to not unlink 
    automatically (persistent)
  - Now warn that MRSW torture tests can wear older media prematurely.
