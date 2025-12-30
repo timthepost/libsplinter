@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 
 #include "splinter_cli.h"
 
@@ -106,4 +107,19 @@ void cli_show_key_config(const char *key, const char *caller) {
     puts("");
 
     return;
+}
+
+// halts execution if strtol would overflow an integer.
+int cli_safer_atoi(const char *string) {
+
+    char *buff;
+    long l;
+
+    l = strtol(string, &buff, 10);
+    if (l <= INT_MAX) {
+        return (int) l;
+    } else {
+        fprintf(stderr, "Value or argument would overflow an integer. Exiting.\n");
+        exit(EXIT_FAILURE);
+    }
 }

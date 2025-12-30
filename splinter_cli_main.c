@@ -394,21 +394,6 @@ static const struct option long_options[] = {
 
 static const char *optstring = "h::H:l:Lnv";
 
-// halts execution if strtol would overflow an integer.
-static int safer_atoi(const char *string) {
-
-    char *buff;
-    long l;
-
-    l = strtol(string, &buff, 10);
-    if (l <= INT_MAX) {
-        return (int) l;
-    } else {
-        fprintf(stderr, "Value or argument would overflow an integer. Exiting.\n");
-        exit(EXIT_FAILURE);
-    }
-}
-
 static void cli_at_exit(void) {
     if (thisuser.store_conn)
         splinter_close();
@@ -428,7 +413,7 @@ int main (int argc, char *argv[]) {
     const char *tmp = getenv("SPLINTER_HISTORY_LEN");
     
     // We set history length initially from env if appropriate
-    if (tmp != NULL) historylen = safer_atoi(tmp);
+    if (tmp != NULL) historylen = cli_safer_atoi(tmp);
 
     if (historylen >= 0) linenoiseHistorySetMaxLen(historylen);
     if (historyfile != NULL && historylen > 0) linenoiseHistoryLoad(historyfile);
@@ -455,7 +440,7 @@ int main (int argc, char *argv[]) {
                 break;
             // --history-len / -l
             case 'l':
-                linenoiseHistorySetMaxLen(safer_atoi(optarg));
+                linenoiseHistorySetMaxLen(cli_safer_atoi(optarg));
                 break;
             // --list-modules / -L
             case 'L':
