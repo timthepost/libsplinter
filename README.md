@@ -73,7 +73,7 @@ TypeScript projects.
 ## How Does Splinter Compare With Other Stores?
 
 It's important to first re-state: Splinter isn’t a database — it’s a
-**shared-memory exchange**.
+**shared-memory exchange** that can persist.
 
 It’s designed for the **multi-reader, single-writer (MRSW)** case where speed
 matters more than schema, flow is anticipated, there just needs to be a bridge
