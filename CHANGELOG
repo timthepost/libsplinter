@@ -13,6 +13,8 @@ v0.5.5 "Periodic Maintenance Release" (* = in progress / not yet done)
  - Now warn that MRSW torture tests can wear older media prematurely.
  - Significantly improved MRSW stress test harness for persistent
    use (now has a persistent config) and way better output.
+ - Fixed command listing display in 'history' output for non-REPL mode
+   (nn  : result -> nn: result)
 
 v0.5.4 "Persistence Pays Off"
  - Persistent mode is now a first-class feature / citizen. All binary

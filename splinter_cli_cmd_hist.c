@@ -58,10 +58,10 @@ int cmd_hist(int argc, char *argv[]) {
     for (i = 0; history[i]; i++) {
         if (filter != NULL) {
             if (grawk_match(g, history[i])) {
-                printf("%-4d: %s\n", i+1, history[i]);
+                printf("%d: %s\n", i+1, history[i]);
             }
         } else {
-            printf("%-4d: %s\n", i+1, history[i]);
+            printf("%d: %s\n", i+1, history[i]);
         }
     }
     puts("");
