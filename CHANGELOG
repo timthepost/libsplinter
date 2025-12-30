@@ -2,7 +2,7 @@ v0.9.1 "Almost There!" (Unreleased - Next Sprint)
  - Introduce `splinter_multi_watch()` to watch multiple keys mapped to 
    callbacks. *
 
-v0.5.5 "Periodic Maintenance Release" (Unreleased - In Progress)
+v0.5.5 "Periodic Maintenance Release"
  - Main entry point now understands persistent invocation (splinterpctl,
    splinterp_cli).
  - cli no longer pads length and keyval with spaces between colon 
