@@ -53,9 +53,12 @@ GNU/Linux hosting GCC 12.1 with glibc 2.35 or newer. Any fairly-recent
 distribution should work just fine; the author uses Debian. Windows users should
 use WSL.
 
+### MacOS Isn't Supported (For Now)
+
 Work would be needed to "spoof" `memfd()` on MacOS with some sketchy/racey
 `unlink()` magic; if you want to attempt and maintain a port, I'm happy to have
-it! But, I have no plans to attempt it (nor a Mac to attempt it with).
+it! But, I have no plans to attempt it (nor a Mac to attempt it with). Some
+poly/backfill for glibc extensions would also be needed (not much, off hand).
 
 ### Prerequisites:
 
