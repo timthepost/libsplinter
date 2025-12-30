@@ -87,7 +87,7 @@ It was created when the author was thinking
 > without mounting anything new. Something like XenStore but no hypervisor ..._"
 
 Essentially, Splinter provides _auditable_, _consistent_ and _safe_ access to 
-shared memory with no other opinions imposed.
+shared memory, across languages and entire workflows, with no other opinions imposed.
 
 And, because it was developed specifically _**for LLM workloads**_, like:
 
@@ -117,11 +117,6 @@ LLM levels" of paranoia in their engineering**_, so Splinter gives you a choice:
   value length (up to the max value length) could result in fetching random
   stale data. This isn't possible through normal use of the library, but could
   happen if you've got synchronization issues going on in your code.
-
-Leaks are a very unlikely scenario, but it would be irresponsible not to call it
-out as a possibility. _**Most non-scientific users won't ever care about or
-notice scrubbing and vacuum settings.**_ Splinter "just works" - it was built to
-be intuitive and (relatively) fool-proof.
 
 Splinter was written because nothing else was lean enough with the very specific
 set of desired features present and verifiable. The choice was to eviscerate and
