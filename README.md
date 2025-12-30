@@ -60,32 +60,18 @@ splinterctl unset foo
 splinterctl list
 ```
 
-You're also welcome to skip using `splinterctl` and just use `splinter_cli` for
-an interactive REPL in order to do the same thing illustrated above. Plus, it
-has tab completion and online help, so check it out 😃
+These commands also work if you just use `splinter_cli` interactively.
 
-**Note worth mentioning**: `splinterctl` is a symlink to `splinter_cli`; the CLI
-alters its behavior (safely, see the code) if invoked with that special name to
-bypass the REPL and interactive bits. History is still preserved, however.
-
-## Persistent Mode Quick Start
-
-If you want to use persistent mode, use `splinterp_cli`, your store will be
-saved in whatever path you specify. You can then re-open it later using the
-`use` command.
-
-If you want to use persistent mode with `splinterctl`, you'll have to change the
-symbolic link to point to the persistent version of the CLI:
-
-`sudo ln -s -f /usr/local/bin/splinterp_cli /usr/local/bin/splintrctl`
-
-... depending on your installation preferences. See additional notes about
-persistent mode near the bottom of this file.
+You can now explore [the code docs][5] to understand the C api, or check out the
+counter part [TypeScript bindings][6]. Note, not all hosts provide access to
+`memfd()` in their security layer, so you may need to use persistent mode for
+TypeScript projects.
 
 ## How Does Splinter Compare With Other Stores?
 
 It's important to first re-state: Splinter isn’t a database — it’s a
-**shared-memory exchange**.\
+**shared-memory exchange**.
+
 It’s designed for the **multi-reader, single-writer (MRSW)** case where speed
 matters more than schema, flow is anticipated, there just needs to be a bridge
 for information to flow through. Splinter was created to provide _just enough_
@@ -94,7 +80,7 @@ share memory together and synchronize work.
 
 It was created when the author was thinking
 
-> "_I need something like `/proc` but that I can do in userspace, preferably
+> "_I need something like `/proc` but that I can do in user space, preferably
 > without mounting anything new. Something like XenStore but no hypervisor ..._"
 
 There are limits to what a very creative GNU/Linux hacker can do with core
@@ -105,23 +91,17 @@ lock-free design constraints. Splinter is just enough code to make a high-volume
 
 And, because it was developed specifically _**for LLM workloads**_, like:
 
-- Caching, comnbining and feeding output from sanitation workflows
+- Caching, combining and feeding output from sanitation workflows
 - Providing short-term, manageable, auditable and persistent memory capabilities
   to serverless MCP servers (see [Tieto][3] for a companion project)
 - Providing real-time auditable and replay-able feedback mechanisms for NLP
   training in assistive-use (cognitive assist for brain cancer survivors),
-- Ephemeral caching of multiple linear vector states (RWKV) as well as
-  namespaced for multi-head transformer-based attention schemes.
+- Ephemeral caching where mutations need to trigger other reactions.
 
-It is designed to not ever allow old information to leak into new, which is
-something very innovative for a store that (by primary design) operates in
-shared memory without persistence. Splinter also has no build dependencies
-outside of glibc (including parsers, etc) and this is very intentional, because
-it makes splinter much easier to include in larger applications that must
-undergo rigorous requirements testing and certifications.
-
-But: _**not everyone needs "hyperscale LLM levels" of paranoia in their
-engineering**_, so Splinter gives you a choice:
+It is designed to (by default) not ever allow old information to leak into new,
+which is something very innovative for a store that (by primary design) operates
+in shared memory without persistence. But: _**not everyone needs "hyper scale
+LLM levels" of paranoia in their engineering**_, so Splinter gives you a choice:
 
 - **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before
   reuse. Perfect for LLM scratchpads and training contexts where stale data must
@@ -141,10 +121,9 @@ out as a possibility. _**Most non-scientific users won't ever care about or
 notice scrubbing and vacuum settings.**_ Splinter "just works" - it was built to
 be intuitive and (relatively) fool-proof.
 
-It's easy (and cheap) to toggle between auto / no vacuum mode using code; just a
-single call either way. The author did not write Splinter because he wanted to,
-he wrote it because he _**had**_ to, because nothing else available did quite
-what splinter does.
+Splinter was written because nothing else was lean enough with the very specific
+set of desired features present and verifiable. The choice was to eviscerate and
+contort SQLite, or just write Splinter. The latter made so much more sense.
 
 Here's a table to help you see where Splinter lands in contrast with what's
 around, and why it's novel:
@@ -168,12 +147,12 @@ combines:
 - Single-writer atomicity without global mutexes
 - Optional "sterile memory" mode for training-safe hygiene
 - Lightweight enough to double as a pub/sub message bus
+- Auto vacuuming you can toggle cheaply like a light switch
+- Persistence / Ephemera treated as unique and different first-class features
 
-This is easily shared and synchronized between languages through Splinter's
-bindings - you can easily share address space between Inference (in C /
-llama.cpp) and TypeScript (Deno / Oak) for instance. Moving model context
-histories around can really become just changing pointer locations, and so many
-other high-performance pub/sub workflows!
+Sharing address space between languages (and entire workflows) is easier when
+you have something like splinter managing the guard rails you need to do it
+dynamically. Just figure out your key space naming and go!
 
 ---
 
@@ -184,34 +163,27 @@ programs to help illustrate how to use the C version of the library, as well as
 a comprehensive CLI for managing splinter stores in debugging / production
 monitoring.
 
-### Simple / Demonstration Programs:
+### TAP-Compatible Tests & Stress / Perf Tests:
 
 - `splinter_test`: Unit tests (`make test` or `make valtest`) which also
-  illustrate the C library quite well.
+  illustrate the C library quite well, and,
+
 - `splinter_stress`: MRSW-contract stress test (many millions of ops / sec with
-  random writes) The defaults take several minutes to run; please be patient. At
-  the level of torture introduced, Less than ~.5% integrity failures is normal
-  for lock-free schemes and why we use serialization. However: we frequently
-  score _**zero**_ `:)`.
+  random writes). At the level of torture introduced, Less than ~.5% integrity
+  failures is normal for lock-free schemes and why we use serialization.
+
+Be advised that `splinterp_stress` could cause premature wear on rotating media
+and older solid state drives . It should also be used with extreme care over a
+network.
 
 ### Robust `splinterctl` and `splinter_cli` Tools:
 
-The simple programs are great for showing how the library works and for basic
-scripting automation tasks. If that's all you need, then you probably don't need
-the full-blown CLI/REPL. However, if you plan to use Splinter for a large
-workload and need a way to keep an eye on things, this tool has you covered.
-
-`splinter_cli` is a pure C REPL which I wrote in a very similar way that I write
-full-blown shells, such as [BDSH][1] for [HelenOS][2].
+*For persistent mode, use `splinterpctl` and `splinterp_cli`.
 
 The biggest things to remember about the CLI are that invoking it via
 `splinterctl` will cause it to turn into non-interactive mode (so you can use
 the commands it offers in scripts), and that it's self- documenting in that
 `help` is online.
-
-Remember that persistent versions of the tests and the programs are available
-and built/installed as _**splinterp_cli**_, _**splinterp_test**_, etc. Just swap
-one for the other if / when you want persistence.
 
 #### Typical `splinter_cli` Interactive Use:
 
@@ -227,7 +199,7 @@ __debug                           | 2               | 4
 
 splinter_debug # set foo "{I think this is a perfectly reasonable value for foo.}"
 splinter_debug # get foo
-55 : {I think this is a perfectly reasonable value for foo.}
+55:{I think this is a perfectly reasonable value for foo.}
 
 splinter_debug # list
 Key Name                          | Epoch           | Value Length   
@@ -242,6 +214,9 @@ __debug                           | 2               | 4
 
 splinter_debug # watch foo
 Press Ctrl-] To Stop ...
+
+(any changes get printed here)
+
 splinter_debug #
 ```
 
@@ -317,8 +292,8 @@ essential for safety.
 
 ## Persistence Mode
 
-If you want bus persistence, use the persistent CLI tool or link your application 
-or FFI to `libsplinter_p.so` instead of `libsplinter.so`.
+If you want bus persistence, use the persistent CLI tool or link your
+application (or set dlopen()) to `libsplinter_p.so` instead of `libsplinter.so`.
 
 The persistent version:
 
@@ -332,6 +307,7 @@ much slower.
 
 The MRSW stress tool will give you some indication of throughput, however you
 should scale it down thread-wise as well as payload.
+
 ---
 
 ## Network Synchronization
@@ -396,20 +372,22 @@ seconds with the included FFI bindings and TS class for Splinter.
 
 ### Next Major Feature Goals:
 
-- [ ] `splinterd` daemon to enforce ttl eviction
+- [ ] `splinter_multi_poll()` to watch multiple keys simultaneously
 
 ### Long-term Feature Goals:
 
+- [ ] `splinterd` daemon to enforce ttl eviction (tedious, but not hard)
+- [ ] Better support for using ephemeral + persistent mode simultaneously?
+      (hard)
 - [ ] Ability to merge stores and manage multiple stores separately and
       concurrently (for 'big memory' systems and those with large persistent
-      stores)
+      stores) (also hard)
 
----
-
-For developer docs, see `docs/` in the repo root. Doygen users can generate auto
-documentation by just typing `doxygen`.
+For developer docs, see `docs/` in the repo root, the CONTRIBUTING info and
+please give the code of conduct a read if you'd like to send patches.
 
 [1]: https://github.com/HelenOS/helenos/tree/master/uspace/app/bdsh
 [2]: https://helenos.ogr
 [3]: https://github.com/timthepost/tieto
 [4]: https://en.wikipedia.org/wiki/Splinter_(Teenage_Mutant_Ninja_Turtles)
+[5]: https://github.com/timthepost/libsplinter/tree/main/docs

@@ -27,8 +27,8 @@ services.
   powerful message bus.
 - **Unopinionated**: You can use any wire protocol you want: just write it over
   the bus instead of over a socket. Or, build your own from the base envelope
-  protocol that is included with this documentation: `base-protocol.md`, which is
-  the basis of the author's LLM runtime.
+  protocol that is included with this documentation: `base-protocol.md`, which
+  is the basis of the author's LLM runtime.
 
 ## Building
 
@@ -47,9 +47,9 @@ To generate Rust bindings automatically, type:
 make rust_bindings
 ```
 
-Deno bindings are kept up-to-date with any public header updates through a manual
-process I hope to automate at some point. PRs welcome to sort that out (and add 
-more proper tests).
+Deno bindings are kept up-to-date with any public header updates through a
+manual process I hope to automate at some point. PRs welcome to sort that out
+(and add more proper tests).
 
 To generate and build everything, including all bindings, type `make world`.
 
@@ -60,42 +60,44 @@ container.
 
 ## Basic Usage: Key-Value Store
 
-This is the most fundamental use of Splinter: sharing data between two processes.
+This is the most fundamental use of Splinter: sharing data between two
+processes.
 
-If you already feel strongly that you need neither serialization nor encapsulation,
-feel free to skip the following at your peril:
+If you already feel strongly that you need neither serialization nor
+encapsulation, feel free to skip the following at your peril:
 
 ### First - Encapsulation Or Serialization?
 
-Regarding encapsulation or serialization or (just writing naked streams) - that's 
-entirely up to you. What I can tell you is this:
+Regarding encapsulation or serialization or (just writing naked streams) -
+that's entirely up to you. What I can tell you is this:
 
 `{this is my data}`
 
-Can be spot-checked for corruption by just testing the first and last bytes. However, 
-this:
+Can be spot-checked for corruption by just testing the first and last bytes.
+However, this:
 
 `this is my data`
 
-Can not be spot-checked, it has to be hashed and verified. Remember that lock-free 
-MRSW schemas are incredibly resilient, but they do have their limits. On an i3, you'll
-start seeing torn reads north of 12 million concurrent operations/sec. On an i7, it's
-more like 18 - 21 million.
+Can not be spot-checked, it has to be hashed and verified. Remember that
+lock-free MRSW schemas are incredibly resilient, but they do have their limits.
+On an i3, you'll start seeing torn reads north of 12 million concurrent
+operations/sec. On an i7, it's more like 18 - 21 million.
 
-So unless you're serving all of Facebook from `/dev/shm`, you might not even notice
-this. But if you run `splinter_stress` you might (like me) start having thoughts about
-lock-free design in the shower and want to reduce that to zero all the time just out 
-of spite for mutexes.
+So unless you're serving all of Facebook from `/dev/shm`, you might not even
+notice this. But if you run `splinter_stress` you might (like me) start having
+thoughts about lock-free design in the shower and want to reduce that to zero
+all the time just out of spite for mutexes.
 
-Just remember: _torn reads_ happen when the library says _this is 117 bytes_ and 
+Just remember: _torn reads_ happen when the library says _this is 117 bytes_ and
 sends you fewer, or sends you exactly 117 but it's truncated somehow. It happens
-in the rare moments when a read lands between atomic updates due to severe system
-strain or lag (that would also choke a relational database server).
+in the rare moments when a read lands between atomic updates due to severe
+system strain or lag (that would also choke a relational database server).
 
-As a rule, you generally ***should*** use some kind of encapsulation of your data. 
+As a rule, you generally _**should**_ use some kind of encapsulation of your
+data.
 
-Serialization may or may not be necessary, but adding one byte to each end just to 
-check is cheap and sensible. 
+Serialization may or may not be necessary, but adding one byte to each end just
+to check is cheap and sensible.
 
 ### Basic IPC: `writer.c` - Creates a store and writes a value
 
@@ -106,8 +108,12 @@ check is cheap and sensible.
 
 int main() {
     // Create a store named "my_store" with 128 slots
-    // and a max value size of 256 bytes.
-    // Or, open it if it already exists.
+    // and a max value size of 256 bytes, or open one with that
+    // name if it exists.
+    // 
+    // If using persistent, full paths are ideal, otherwise any
+    // identifier you can recognize in /dev/shm is fine.
+    //
     if (splinter_create_or_open("my_store", 128, 256) != 0) {
         perror("splinter_create_or_open");
         return 1;
@@ -120,7 +126,9 @@ int main() {
     
     // Set the value for the key
     if (splinter_set(key, value, strlen(value)) != 0) {
+        perror("splinter_set");
         fprintf(stderr, "Failed to set key\n");
+        return 1;
     }
 
     splinter_close();
@@ -230,38 +238,69 @@ int main() {
 }
 ```
 
-***All of the public API functions are tested rigorously in `splinter_test.c`; see this
-simple procedural file for working code using any/all of the implemented methods.***
-
+_**All of the public API functions are tested rigorously in `splinter_test.c`;
+see this simple procedural file for working code using any/all of the
+implemented methods.**_
 
 ## Auto Vacuum (Auto-scrubbing) And Lock-Free Methodology
 
-Libsplinter uses a single value region and stores offsets for recalling specific values 
-by key. Value slots can be up to a configurable length, typically 4k. By default, splinter 
-zeros out the entire 4k prior to every update, so that writes that are smaller than the 
-current occupied size don't leave fragments old values behind, becaus they aren't large 
-enough to overwrite them completely. 
+Libsplinter uses a single value region and stores offsets for recalling specific
+values by key. Value slots can be up to a configurable length, typically 4k. By
+default, splinter zeros out the entire 4k prior to every update, so that writes
+that are smaller than the current occupied size don't leave fragments old values
+behind, becaus they aren't large enough to overwrite them completely.
 
-This is the default because, for LLM workloads, even a slight nonzero chance of stale data 
-leaking back into active keys and corrupting training or context is unnacceptable. Those 
-piping LLM workflows are also using serializiation and protocols _that are easy to test 
-for tearing_ but _extremely difficult to test for staleness or leakage_ In most cases, 
-LLM workflows _want_ torn reads because they're easier to spot.
+This is the default because, for LLM workloads, even a slight nonzero chance of
+stale data leaking back into active keys and corrupting training or context is
+un-acceptable. Those piping LLM workflows are also using serialization and
+protocols _that are easy to test for tearing_ but _extremely difficult to test
+for staleness or leakage_ In most cases, LLM workflows _want_ torn reads because
+they're easier to spot.
 
-The circumstances under which torn reads can happen aren't even a supported use case, 
-but if you have any kind of synchronization issues where threads flip from being readers 
-to writers erroneously, it becomes likely enough to happen accidentally that I coded 
-defensively against it.
+The circumstances under which torn reads can happen aren't even a supported use
+case, but if you have any kind of synchronization issues where threads flip from
+being readers to writers erroneously, it becomes likely enough to happen
+accidentally that I coded defensively against it.
 
-So, in "Facebook / Anthropic" scale levels (which we're not even designed to serve), 
-you can turn off the extra `memset()` call and get insignificant torn reads instead 
-of no leak guarantee:
+So, in "Facebook / Anthropic" scale levels (which we're not even designed to
+serve), you can turn off the extra `memset()` call and get insignificant torn
+reads instead of no leak guarantee:
 
-`splinter_set_av(0);` (set it to 1 to turn it back on again; toggle all you want)
+`splinter_set_av(0);` (set it to 1 to turn it back on again; toggle all you
+want)
 
-See `splinter_stress.c` for more. 
+See `splinter_stress.c` for more.
 
 ---
+
+## Script Usage (non-interactive CLI)
+
+The `splinterctl` and `splinterpctl` commands are symbolic links to
+`splinter_cli` and `splinterp_cli` (in-memory and persistent, respectively),
+which cause them to start in non-REPL mode automatically.
+
+The following would create a small store with default geometry, set auto-vacuum
+to off, create a key with a value and then establish a blocking watch waiting
+for that value to change:
+
+```bash
+# create the store with  defaults
+splinterctl init splinter_demo
+
+# quick shortcut to save keyboard miles
+alias splinterctl="splinterpctl --use splinter_demo"
+
+# create a key with a value
+splinterctl set foo_key "Come hear Uncle John's band"
+
+# watch the key for changes (new value is printed on change):
+splinterctl watch foo_key
+```
+
+For persistent mode, just use `splinterpctl` :)
+
+You can also explore the `splinter_cli` and `splinterp_cli` REPL tools for
+interactive use.
 
 ## API Reference
 
@@ -287,14 +326,17 @@ See `splinter_stress.c` for more.
   an array with pointers to all keys in the store.
 
 ### Bus Management
- - `int splinter_set_av(unsigned int mode)` Sets the auto vacuum mode of the current
-   bus to `mode` (0 = off, 1 = on, default = 1). See the docs prior to changing this.
- - `int splinter_get_av(void)` Gets the (atomic) value of the auto vacuum toggle.
- - `int splinter_get_header_snapshot(splinter_header_snapshot_t *snapshot)` gets a
-   snapshot of the state of the global atomic bus operation and configuration bus.
- - `int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapshot)`
-   gets a snapshot of any given _slot_ by its key name relatively cheaply (half to
-   two-thirds the cost of a `splinter_get` operation, roughly). 
+
+- `int splinter_set_av(unsigned int mode)` Sets the auto vacuum mode of the
+  current bus to `mode` (0 = off, 1 = on, default = 1). See the docs prior to
+  changing this.
+- `int splinter_get_av(void)` Gets the (atomic) value of the auto vacuum toggle.
+- `int splinter_get_header_snapshot(splinter_header_snapshot_t *snapshot)` gets
+  a snapshot of the state of the global atomic bus operation and configuration
+  bus.
+- `int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapshot)`
+  gets a snapshot of any given _slot_ by its key name relatively cheaply (half
+  to two-thirds the cost of a `splinter_get` operation, roughly).
 
 ### Pub/Sub
 
@@ -302,12 +344,12 @@ See `splinter_stress.c` for more.
   specified key is updated by a `splinter_set` call, or until the timeout is
   reached.
 
-
 ### Adding Additional Bus Feature Flags:
 
-Right now we only have one feature (`auto_vacuum`), so there's no reason to build support for 
-having many, but if the need arises there is a plan (which you can implement yourself if you 
-need more flags *right now* without breaking bus compatibility):
+Right now we only have one feature (`auto_vacuum`), so there's no reason to
+build support for having many, but if the need arises there is a plan (which you
+can implement yourself if you need more flags _right now_ without breaking bus
+compatibility):
 
 Currently, Splinter's global bus data structure looks like this:
 
@@ -334,14 +376,14 @@ struct splinter_header {
 
 This is later type-defined as `splinter_header_t` opqauely in the library.
 
-The only _current_ feature flag is `auto_vacuum`, which consumes the entire 
-`atomic_uint_least32_t`. This isn't wasteful because we have no other features; 
+The only _current_ feature flag is `auto_vacuum`, which consumes the entire
+`atomic_uint_least32_t`. This isn't wasteful because we have no other features;
 there's no other purpose it can currently serve but holding this one simple bit.
 
-Should that change, we can easily just break that down into 32 individual flags, 
-with the first few being reserved for system use and the rest being available as 
-`USR_FLAG_NN`.  The bus structure itself doesn't change (well, the variable name 
-changes from `auto_vacuum` to `flags`), and then instead of treating it like a 
+Should that change, we can easily just break that down into 32 individual flags,
+with the first few being reserved for system use and the rest being available as
+`USR_FLAG_NN`. The bus structure itself doesn't change (well, the variable name
+changes from `auto_vacuum` to `flags`), and then instead of treating it like a
 Boolean value, we do something like:
 
 ```c
@@ -359,10 +401,10 @@ Boolean value, we do something like:
 #define SPL_FLAG_USR16         (1u << 31)
 ```
 
-But we don't want to have to expose (in addition to these new constants) anything 
-more than `splinter_header_t` in the public header. So, rather than just inviting
-callers to operate on `flags` directly by exposing the structure, we create some
-helpers, for instance:
+But we don't want to have to expose (in addition to these new constants)
+anything more than `splinter_header_t` in the public header. So, rather than
+just inviting callers to operate on `flags` directly by exposing the structure,
+we create some helpers, for instance:
 
 ```c
 void splinter_flag_set(splinter_bus_header_t *hdr, uint32_t mask) {
@@ -382,18 +424,19 @@ uint32_t splinter_flag_snapshot(const splinter_bus_header_t *hdr) {
 }
 ```
 
-Finally, we will need to update `splinter_set_av()` and `splinter_get_av()` to set 
-the first flag instead, and also clear flags / flip the auto vacuum flag to on by 
-default in `splinter_create()`.
+Finally, we will need to update `splinter_set_av()` and `splinter_get_av()` to
+set the first flag instead, and also clear flags / flip the auto vacuum flag to
+on by default in `splinter_create()`.
 
-This plan just splits use of them down the middle which isn't strictly necessary; I 
-can't imagine ever needing more than a few flags ever for internal housekeeping use, 
-so the majority (28 - 30) of the rest of them could be implementation-defined pretty 
-safely. It would depend on what the additional need was. 
+This plan just splits use of them down the middle which isn't strictly
+necessary; I can't imagine ever needing more than a few flags ever for internal
+housekeeping use, so the majority (28 - 30) of the rest of them could be
+implementation-defined pretty safely. It would depend on what the additional
+need was.
 
-Either way, you don't need to do anything other than set it to 0 before changing the 
-header over, if you're currently using persistent mode. 
+Either way, you don't need to do anything other than set it to 0 before changing
+the header over, if you're currently using persistent mode.
 
-***If it looks like Splinter needs more than one feature flag***, this is definitely 
-how I'll implement it. I'm just not doing it yet as it adds weight to the public 
-header without more than one consumer of the field. 
+_**If it looks like Splinter needs more than one feature flag**_, this is
+definitely how I'll implement it. I'm just not doing it yet as it adds weight to
+the public header without more than one consumer of the field.
