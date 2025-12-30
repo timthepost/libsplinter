@@ -1,8 +1,6 @@
 #!/bin/sh
-
-# This helps me better support people who pull from the (soon upcoming)
-# development branch. It'll also be in the last commit before each release.
-# Could probably stand to be a little more robust.
+# This helps me better support people who pull from splinter-devel
+# as well as those who use tarball releases.
 
 HASH=$(git rev-parse --short HEAD) || HASH="local-build"
 
