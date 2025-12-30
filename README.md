@@ -86,22 +86,20 @@ It was created when the author was thinking
 > "_I need something like `/proc` but that I can do in user space, preferably
 > without mounting anything new. Something like XenStore but no hypervisor ..._"
 
-There are limits to what a very creative GNU/Linux hacker can do with core
-utilities and access to `/dev/shm`; Splinter is there to pick up where those
-tools leave off, and aren't specialized enough to accommodate "hyper scale"
-lock-free design constraints. Splinter is just enough code to make a high-volume
-/ high-traffic sanitized store safe and practical.
+Essentially, Splinter provides _auditable_, _consistent_ and _safe_ access to 
+shared memory with no other opinions imposed.
 
 And, because it was developed specifically _**for LLM workloads**_, like:
 
-- Caching, combining and feeding output from sanitation workflows
+- Combining and feeding output from sanitation workflows
 - Providing short-term, manageable, auditable and persistent memory capabilities
   to serverless MCP servers (see [Tieto][3] for a companion project)
 - Providing real-time auditable and replay-able feedback mechanisms for NLP
-  training in assistive-use (cognitive assist for brain cancer survivors),
-- Ephemeral caching where mutations need to trigger other reactions.
+  training in assistive-use scenarios,
+- Ephemeral caching where mutations need to trigger or happen as part of other
+  reactions.
 
-It is designed to (by default) not ever allow old information to leak into new,
+Splinter is designed to (by default) not ever allow old information to leak into new,
 which is something very innovative for a store that (by primary design) operates
 in shared memory without persistence. But: _**not everyone needs "hyper scale
 LLM levels" of paranoia in their engineering**_, so Splinter gives you a choice:
