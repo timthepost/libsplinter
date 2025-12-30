@@ -1,8 +1,8 @@
-v0.9.1 "Almost There!" (Unreleased)
+v0.9.1 "Almost There!" (Unreleased - Next Sprint)
  - Introduce `splinter_multi_watch()` to watch multiple keys mapped to 
    callbacks. *
 
-v0.5.5 "Periodic Maintenance Release" (* = in progress / not yet done)
+v0.5.5 "Periodic Maintenance Release" (Unreleased - In Progress)
  - Main entry point now understands persistent invocation (splinterpctl,
    splinterp_cli).
  - cli no longer pads length and keyval with spaces between colon 
@@ -58,6 +58,8 @@ v0.5.1 "Take Zero Dot Five One"
  - Created ffi_types.ts definition for TS bindings (for header / slot snapshots)
  - Dropped 'base protocol' definition since it was being mistaken for mandatory and not broadly   
    useful.
+
+Sprints between minor versions usually last 1 - 3 weeks, depending. 
 
 Older entries are available at Github:
 
