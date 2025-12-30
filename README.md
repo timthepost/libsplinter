@@ -29,17 +29,20 @@ speaks unless spoken to, but is always ready.
 
 - 🧠 Shared memory layout: low-overhead, mmap-based store
 - 📥 `set`, `unset`, `get`, `list`, and `poll` operations
-- 🔑 Lock-free design (utilizes atomic operations with seqlock for contention,
-  EAGAIN for non-block operation)
-- 🧹 Auto-vacuuming by default for hygienic memory mode; toggle instantly
-  without reloading or restarting anything.
+- 🔑 Lock-free atomic ops, seqlock for contention, EAGAIN for non-block i/o)
+- 🧹 Auto-vacuuming for hygienic memory mode; toggle on/off instantly.
 - 🧵 Thread-safe single-writer, multi-reader semantics.
 - ✨ 100% Valgrind clean! Well-tested and easy to integrate.
 - 🕰️ Built-in version tracking via atomic epoch counters
 - 🔧 Configurable slot count and max value size
 - 💾 Optional persistent mode via file-backed `mmap`
 - 🦕 Deno and Rust bindings included!
-- ⚙️ Embeddable and extendable; easy to build upon! Dual-license on request.
+- ⚙️ Embeddable and extendable; easy to build upon!
+- 🔎 Epoch-based semantics provides performant watches & easy pub/sub.
+
+Splinter is _entirely self-contained_; it has no external dependencies other than the GNU C 
+library. The CLI uses [line noise](https://github.com/antirez/linenoise) to manage history,
+completion and suggestions, but it ships in the repo with Splinter.
 
 ---
 
