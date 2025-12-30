@@ -4,11 +4,11 @@
 that operates in shared memory (`memfd`) or uses memory-mapped files for
 persistent backing.
 
-Designed to support AI ephemeral memory workflows and IPC, Splinter synchronizes 
-state between inference, retrieval, UI, and coordination layers through convenient
-but guarded shared memory regions. Rust, TypeScript and even Bash scripts can all
-communicate using the same memory region, with a simple and convenient
-interface.
+Designed to support AI ephemeral memory workflows and IPC, Splinter synchronizes
+state between inference, retrieval, UI, and coordination layers through
+convenient but guarded shared memory regions. Rust, TypeScript and even Bash
+scripts can all communicate using the same memory region, with a simple and
+convenient interface.
 
 But, Splinter isn't limited to inference, training and generation workflows; it
 can power advanced IPC and messaging systems at extreme scales, or just act as a
@@ -40,11 +40,37 @@ speaks unless spoken to, but is always ready.
 - ⚙️ Embeddable and extendable; easy to build upon!
 - 🔎 Epoch-based semantics provides performant watches & easy pub/sub.
 
-Splinter is _entirely self-contained_; it has no external dependencies other than the GNU C 
-library. The CLI uses [line noise](https://github.com/antirez/linenoise) to manage history,
-completion and suggestions, but it ships in the repo with Splinter.
+Splinter is _entirely self-contained_; it has no external dependencies other
+than the GNU C library. The CLI uses
+[line noise](https://github.com/antirez/linenoise) to manage history, completion
+and suggestions, but it ships in the repo with Splinter.
 
 ---
+
+## System Requirements:
+
+GNU/Linux hosting GCC 12.1 with glibc 2.35 or newer. Any fairly-recent
+distribution should work just fine; the author uses Debian. Windows users should
+use WSL.
+
+Work would be needed to "spoof" `memfd()` on MacOS with some sketchy/racey
+`unlink()` magic; if you want to attempt and maintain a port, I'm happy to have
+it! But, I have no plans to attempt it (nor a Mac to attempt it with).
+
+### Prerequisites:
+
+You'll need `build-essential`, or the equivalent of it for your distribution of
+choice. It installs the compiler, development headers, etc. No additional
+libraries are needed for a regular build.
+
+### Testing & Profiling:
+
+For testing, [Valgrind][7] is used to make sure no memory access violations
+occur, even under extreme circumstances. You can install it using your distro's
+package manager, along with the development headers which Splinter can use in
+its test harnesses for tighter integration. It's not required, but highly
+recommended, especially if you intend to make major modifications to the
+library.
 
 ## Quick Start:
 
@@ -86,8 +112,9 @@ It was created when the author was thinking
 > "_I need something like `/proc` but that I can do in user space, preferably
 > without mounting anything new. Something like XenStore but no hypervisor ..._"
 
-Essentially, Splinter provides _auditable_, _consistent_ and _safe_ access to 
-shared memory, across languages and entire workflows, with no other opinions imposed.
+Essentially, Splinter provides _auditable_, _consistent_ and _safe_ access to
+shared memory, across languages and entire workflows, with no other opinions
+imposed.
 
 And, because it was developed specifically _**for LLM workloads**_, like:
 
@@ -99,17 +126,18 @@ And, because it was developed specifically _**for LLM workloads**_, like:
 - Ephemeral caching where mutations need to trigger or happen as part of other
   reactions.
 
-Splinter is designed to (by default) not ever allow old information to leak into new,
-which is something very innovative for a store that (by primary design) operates
-in shared memory without persistence. But: _**not everyone needs "hyper scale
-LLM levels" of paranoia in their engineering**_, so Splinter gives you a choice:
+Splinter is designed to (by default) not ever allow old information to leak into
+new, which is something very innovative for a store that (by primary design)
+operates in shared memory without persistence. But: _**not everyone needs "hyper
+scale LLM levels" of paranoia in their engineering**_, so Splinter gives you a
+choice:
 
 - **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before
   reuse. Splinter uses static geometry, so there's no row reclamation needed.
-  This is perfect for LLM scratchpads and training contexts where stale data must
-  never leak back. It's like boiling a hotel room every time a new guest arrives
-  (if only that were possible!!!). No contamination, but it takes time to write
-  twice.
+  This is perfect for LLM scratchpads and training contexts where stale data
+  must never leak back. It's like boiling a hotel room every time a new guest
+  arrives (if only that were possible!!!). No contamination, but it takes time
+  to write twice.
 
 - **Throughput mode (`auto_vacuum=off`)** — skips scrubbing for maximum raw
   speed. Ideal for message buses, ephemeral caches, or event streams where
@@ -389,3 +417,4 @@ please give the code of conduct a read if you'd like to send patches.
 [4]: https://en.wikipedia.org/wiki/Splinter_(Teenage_Mutant_Ninja_Turtles)
 [5]: https://github.com/timthepost/libsplinter/tree/main/docs
 [6]: https://github.com/timthepost/libsplinter/tree/main/bindings/ts
+[7]: https://valgrind.org
