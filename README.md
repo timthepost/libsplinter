@@ -4,9 +4,9 @@
 that operates in shared memory (`memfd`) or uses memory-mapped files for
 persistent backing.
 
-Designed to support AI ephemeral memory workflows, Splinter synchronizes state
-between inference, retrieval, UI, and coordination layers through convenient but
-guarded shared memory regions. Rust, TypeScript and even Bash scripts can all
+Designed to support AI ephemeral memory workflows and IPC, Splinter synchronizes 
+state between inference, retrieval, UI, and coordination layers through convenient
+but guarded shared memory regions. Rust, TypeScript and even Bash scripts can all
 communicate using the same memory region, with a simple and convenient
 interface.
 
