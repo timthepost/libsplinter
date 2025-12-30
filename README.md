@@ -107,7 +107,8 @@ in shared memory without persistence. But: _**not everyone needs "hyper scale
 LLM levels" of paranoia in their engineering**_, so Splinter gives you a choice:
 
 - **Sterile mode (`auto_vacuum=on`)** — every write zeroes old contents before
-  reuse. Perfect for LLM scratchpads and training contexts where stale data must
+  reuse. Splinter uses static geometry, so there's no row reclamation needed.
+  This is perfect for LLM scratchpads and training contexts where stale data must
   never leak back. It's like boiling a hotel room every time a new guest arrives
   (if only that were possible!!!). No contamination, but it takes time to write
   twice.
