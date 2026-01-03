@@ -351,7 +351,7 @@ If you'd like to help in this way, please email me directly at
 That said, you have some options you can try right now, and I'll do my best to
 help if I can:
 
-### Funded Startup Budget
+### Working With A Funded Startup Budget:
 
 For **high-bandwidth** network solutions like 25G RoCE, RDMA becomes very
 practical (albeit latency goes from a few nanoseconds to maybe 10ms). If that's
@@ -360,7 +360,7 @@ NVIDIA/Mellanox Cards go up to. You can also use the persistent mode on
 NVMe/RDMA setups. This won't be as fast as "native", and can still get racey if
 latency is inconsistent.
 
-### Broke College Student Self-Funding A Research Project Budget
+### Working With Self-Funding A College Research Project Budget:
 
 You have options! They just require a little more time on your part.
 
@@ -398,19 +398,36 @@ seconds with the included FFI bindings and TS class for Splinter.
 
 ---
 
-### Next Major Feature Goals:
+### Next Version Major Feature Goals:
 
-- [ ] `splinter_multi_poll()` to watch multiple keys simultaneously
+- [ ] `splinter_poll_dispatch()` and supporting functions to watch multiple keys
+      simultaneously utilizing `epoll()` in the client to do the lifting (Splinter
+      just remembers watch -> callback plumbing) (not hard, moderately tedious)
+      
+- [ ] Allow 16 user atomic feature flags per store, along with 16 reserved
+      for bus status and management (converting auto_vacuum into a bitwise
+      field) (easy, modestly tedious)
+
+### Must-have Before 1.0.0 Feature Goals:
+
+- [ ] `splinterd` shard daemon to load and manage 'shards', which are loadable
+      modules linked with whatever libraries you want to do things on a schedule.
+      Included will be a shard to manage policy-driven TTL evictions, and maybe
+      one to pipe FS inotify events into splinter subscribable keys based on logic
+      that the loadable module does; this is useful for knowing when any file gets
+      updated or accessed in certain ways - helps orchestrate things. (not hard, but
+      somewhat tedious)
 
 ### Long-term Feature Goals:
 
-- [ ] `splinterd` daemon to enforce ttl eviction (tedious, but not hard)
 - [ ] Better support for using ephemeral + persistent mode simultaneously?
-      (hard)
+      (extremely tedious and hard)
+      
 - [ ] Ability to merge stores and manage multiple stores separately and
       concurrently (for 'big memory' systems and those with large persistent
-      stores) (also hard)
+      stores) (tedious and hard)
 
+      
 For developer docs, see `docs/` in the repo root, the CONTRIBUTING info and
 please give the code of conduct a read if you'd like to send patches.
 
