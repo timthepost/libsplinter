@@ -401,8 +401,9 @@ seconds with the included FFI bindings and TS class for Splinter.
 ### Next Version Major Feature Goals:
 
 - [ ] `splinter_poll_dispatch()` and supporting functions to watch multiple keys
-      simultaneously utilizing `epoll()` in the client to do the lifting (Splinter
-      just remembers watch -> callback plumbing) (not hard, moderately tedious)
+      simultaneously utilizing `epoll()` in the client to do the lifting. Splinter
+      keeps track of what's being watched, and manages removal / eviction orderly.
+      (not hard, moderately tedious)
       
 - [ ] Allow 16 user atomic feature flags per store, along with 16 reserved
       for bus status and management (converting auto_vacuum into a bitwise
@@ -425,7 +426,7 @@ seconds with the included FFI bindings and TS class for Splinter.
       
 - [ ] Ability to merge stores with user-defined conflict resolution callbacks
       in case of duplicates, bounds violations, etc. (tedious and hard) (requires special
-      hardware)
+      hardware to test)
 
 For developer docs, see `docs/` in the repo root, the CONTRIBUTING info and
 please give the code of conduct a read if you'd like to send patches.
