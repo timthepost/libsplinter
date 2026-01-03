@@ -413,8 +413,10 @@ seconds with the included FFI bindings and TS class for Splinter.
 - [ ] `splinterd` shard daemon to load and manage 'shards', which are loadable
       modules linked with whatever libraries you want to do things on a schedule.
       Included will be a shard to manage policy-driven TTL evictions, and maybe
-      one to pipe FS inotify events into splinter subscribable keys. (not hard,
-      but somewhat tedious)
+      one to pipe FS inotify events into splinter subscribable keys based on logic
+      that the loadable module does; this is useful for knowing when any file gets
+      updated or accessed in certain ways - helps orchestrate things. (not hard, but
+      somewhat tedious)
 
 ### Long-term Feature Goals:
 
