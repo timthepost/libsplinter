@@ -10,8 +10,8 @@ v0.9.0 "Almost There!" (Unreleased - Next Sprint)
    integrity failures by operation count for A+, 0.00n for B-, quickly fail
    at or past 0.01) (with auto vacuum off) *
  - Add `export` command to dump a store to a file in JSON/YAML format with
-   grawk-assisted optional filtering. Not sure if I want this as part
-   of the core or not. Thinking not, it'll be done all in the CLI. *
+   grawk-assisted optional filtering as part of the CLI. This is the first
+   step to early merge capabilities. *
  - Implement reserved and user defined feature flags (as planned in docs/). * 
 
 v0.5.5 "Periodic Maintenance Release"
