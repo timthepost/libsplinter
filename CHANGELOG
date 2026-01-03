@@ -1,8 +1,10 @@
-v0.9.1 "Almost There!" (Unreleased - Next Sprint)
+v0.9.0 "Almost There!" (Unreleased - Next Sprint)
  - Introduce `splinter_watch_dispatch()`, `splinter_watch_add()`, 
    `splinter_watch_eject()` and supporting allocating functions to watch 
    multiple keys mapped to callbacks (use `epoll()` in the client
    under the hood). *
+ - Allow `oneshot` operation for the `watch` command so it can exit
+   after one update, allowing  the client to re-establish if it wishes. *
  - MRSW Harness should report failure percentage and grade meaningfully
    in addition to raw numbers (0.000nnnnn% is the space we want to be for
    integrity failures by operation count for A+, 0.00n for B-, quickly fail
@@ -10,6 +12,7 @@ v0.9.1 "Almost There!" (Unreleased - Next Sprint)
  - Add `export` command to dump a store to a file in JSON/YAML format with
    grawk-assisted optional filtering. Not sure if I want this as part
    of the core or not. Thinking not, it'll be done all in the CLI. *
+ - Implement reserved and user defined feature flags (as planned in docs/). * 
 
 v0.5.5 "Periodic Maintenance Release"
  - Main entry point now understands persistent invocation (splinterpctl,
