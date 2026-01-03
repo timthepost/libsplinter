@@ -420,14 +420,13 @@ seconds with the included FFI bindings and TS class for Splinter.
 
 ### Long-term Feature Goals:
 
-- [ ] Better support for using ephemeral + persistent mode simultaneously?
-      (extremely tedious and hard)
+- [ ] Better support for multiple open persistent stores along with a single in-memory
+      store simultaneously (requires API and core changes) (very tedious / very hard) 
       
-- [ ] Ability to merge stores and manage multiple stores separately and
-      concurrently (for 'big memory' systems and those with large persistent
-      stores) (tedious and hard)
+- [ ] Ability to merge stores with user-defined conflict resolution callbacks
+      in case of duplicates, bounds violations, etc. (tedious and hard) (requires special
+      hardware)
 
-      
 For developer docs, see `docs/` in the repo root, the CONTRIBUTING info and
 please give the code of conduct a read if you'd like to send patches.
 
