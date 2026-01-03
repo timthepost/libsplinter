@@ -351,7 +351,7 @@ If you'd like to help in this way, please email me directly at
 That said, you have some options you can try right now, and I'll do my best to
 help if I can:
 
-### Funded Startup Budget
+### Working With A Funded Startup Budget:
 
 For **high-bandwidth** network solutions like 25G RoCE, RDMA becomes very
 practical (albeit latency goes from a few nanoseconds to maybe 10ms). If that's
@@ -360,7 +360,7 @@ NVIDIA/Mellanox Cards go up to. You can also use the persistent mode on
 NVMe/RDMA setups. This won't be as fast as "native", and can still get racey if
 latency is inconsistent.
 
-### Broke College Student Self-Funding A Research Project Budget
+### Working With Self-Funding A College Research Project Budget:
 
 You have options! They just require a little more time on your part.
 
