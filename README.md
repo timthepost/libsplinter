@@ -173,10 +173,13 @@ combines:
 
 - Lock-free reads (seqlock snapshots)
 - Single-writer atomicity without global mutexes
-- Optional "sterile memory" mode for training-safe hygiene
-- Lightweight enough to double as a pub/sub message bus
-- Auto vacuuming you can toggle cheaply like a light switch
-- Persistence / Ephemera treated as unique and different first-class features
+- Optional "sterile memory" mode for training-safe hygiene which can be toggled
+  at will / whim instantly without structural concern under normal use
+- Lightweight enough to double as a pub/sub message bus or IPC backing
+- No external dependencies by default / drop-in two files to use the C API,
+  or use dynamic linking
+
+It's a _systems workbench_ as much as it is a library.
 
 Sharing address space between languages (and entire workflows) is easier when
 you have something like splinter managing the guard rails you need to do it
