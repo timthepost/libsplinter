@@ -1,20 +1,28 @@
 v0.9.2 "Bits & Bolts" (Unreleased: Next Next Sprint)
+ - Implement `set_with_embeddings`, `get_with_embeddings`, `get_embeddings`,
+   `set_embeddings` and other API methods needed to manage embeddings. No
+   indexing, just storage.
+ - Implement cosine similarity filtering ***in CLI*** (as a demo of one way 
+   to consume embeddings), maybe also populating a watch dispatch?
  - Implement INCR, DECR, AND, OR, NOT, XOR for named integer keys
    (in function form).
  - Implement conditional `set_if_(eq|lt|gt)`, `incr_if_(eq|lt|gt)`,
    `decr_if_(eq|lt|gt)` operations.
  - Implement the ability to populate a watch for dispatching based
-   on bloom filter content
+   on bloom filter content.
  
 v0.9.1 "The Restructuring" (Unreleased: Next Sprint)
  - Implement 16 (8 reserved / 8 user defined) flags per slot
+ - Implement `born` epoch per-slot (automatically the first epoch of the slot)
  - Implement 64 bit per-slot bloom filter for ctags style scoping
  - Implement vector storage backing + offset in slot header 
  - Implement reserved and user defined feature flags (as planned in docs/).
- - Implement atomic_uint_least64_t expires_at per-slot for expiry (doesn't
+ - Implement atomic_uint_least64_t `ttl_ms` per-slot for expiry (doesn't
    implement eviction, it only declares a shelf life eviction can use in the
-   absence of any other policy)
- - Implement all public-facing API changes required for the above.
+   absence of any other policy) (see also: `born`)
+ - Implement minimal public-facing API changes required for the above to
+   work (might not yet include actually storing embeddings).
+ - Implement CLI changes necessary for new feature flag / slot layout
 
 v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress)
  - Introduce `splinter_watch_dispatch()`, `splinter_watch_add()`, 
@@ -30,6 +38,10 @@ v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress)
  - Add `export` command to dump a store to a file in JSON/YAML format with
    grawk-assisted optional filtering as part of the CLI. This is the first
    step to early merge capabilities. *
+ - Implement `using` in the CLI as an alias of `use` that sets a namespace 
+   string stored in `thisuser`, and prepended to `_get` `_set` and (future) 
+   ops. This will be a demo of how to implement name spaces outside of the 
+   core lib. *
 
 v0.5.5 "Periodic Maintenance Release"
  - Main entry point now understands persistent invocation (splinterpctl,
