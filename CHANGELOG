@@ -1,4 +1,22 @@
-v0.9.0 "Almost There!" (Unreleased - Next Sprint)
+v0.9.2 "Bits & Bolts" (Unreleased: Next Next Sprint)
+ - Implement INCR, DECR, AND, OR, NOT, XOR for named integer keys
+   (in function form).
+ - Implement conditional `set_if_(eq|lt|gt)`, `incr_if_(eq|lt|gt)`,
+   `decr_if_(eq|lt|gt)` operations.
+ - Implement the ability to populate a watch for dispatching based
+   on bloom filter content
+ 
+v0.9.1 "The Restructuring" (Unreleased: Next Sprint)
+ - Implement 16 (8 reserved / 8 user defined) flags per slot
+ - Implement 64 bit per-slot bloom filter for ctags style scoping
+ - Implement vector storage backing + offset in slot header 
+ - Implement reserved and user defined feature flags (as planned in docs/).
+ - Implement atomic_uint_least64_t expires_at per-slot for expiry (doesn't
+   implement eviction, it only declares a shelf life eviction can use in the
+   absence of any other policy)
+ - Implement all public-facing API changes required for the above.
+
+v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress)
  - Introduce `splinter_watch_dispatch()`, `splinter_watch_add()`, 
    `splinter_watch_eject()` and supporting allocating functions to watch 
    multiple keys mapped to callbacks (use `epoll()` in the client
@@ -12,7 +30,6 @@ v0.9.0 "Almost There!" (Unreleased - Next Sprint)
  - Add `export` command to dump a store to a file in JSON/YAML format with
    grawk-assisted optional filtering as part of the CLI. This is the first
    step to early merge capabilities. *
- - Implement reserved and user defined feature flags (as planned in docs/). * 
 
 v0.5.5 "Periodic Maintenance Release"
  - Main entry point now understands persistent invocation (splinterpctl,
