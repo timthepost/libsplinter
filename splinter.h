@@ -183,4 +183,3 @@ int splinter_poll(const char *key, uint64_t timeout_ms);
 #endif
 
 #endif // SPLINTER_H
-
