@@ -23,6 +23,8 @@ void help_cmd_get(unsigned int level) {
 
 int cmd_get(int argc, char *argv[]) {
     char buf[4096] = { 0 };
+    char key[SPLINTER_KEY_MAX] = { 0 };
+
     size_t received = 0;
     int rc = -1;
 
@@ -31,9 +33,11 @@ int cmd_get(int argc, char *argv[]) {
         return -1;
     }
     
-    rc = splinter_get(argv[1], buf, sizeof(buf), &received);
+    snprintf(key, sizeof(key) -1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+
+    rc = splinter_get(key, buf, sizeof(buf), &received);
     if (rc != 0) {
-        fprintf(stderr, "%s: unable to retrieve key '%s'\n", modname, argv[1]);
+        fprintf(stderr, "%s: unable to retrieve key '%s'\n", modname, key);
         return rc;
     }
 
