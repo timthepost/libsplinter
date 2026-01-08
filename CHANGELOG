@@ -15,8 +15,7 @@ v0.9.4 "Private Eyes (they're watching you)" (Unreleased: Next Next Next Sprint)
  - Implement cosine similarity filtering ***in CLI*** (as a demo of one way 
    to consume embeddings), maybe also populating a watch dispatch?
  - Implement embedding shard that updates / adds embeddings 
- - Implement policy eviction shard
- - Implement shard daemon / cron crank
+ - Implement policy eviction shard (that can optionally daemonize)
 
 v0.9.3 "Bits & Bolts" (Unreleased: Next Next Sprint) Feb / March 2026
  - Implement `set_with_embeddings`, `get_with_embeddings`, `get_embeddings`,
