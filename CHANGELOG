@@ -4,7 +4,7 @@ v0.9.5 "The Web We Weave" (Unreleased: Next Next Next Next Sprint) June 2026
  - Index directory page (Apache Style) that shows keys as links to values
    (requires some mime helpers)
 
-v0.9.4 "Private Eyes (they're watching you)" (Unreleased: Next Next Next Sprint) May 2026
+v0.9.4 "Private Eyes 👏 (Duran Duran Tribute)" (Unreleased: Next Next Next Sprint) May 2026
  - Introduce `splinter_watch_dispatch(watch)`, `splinter_watch_add(array of keys)`, 
    `splinter_watch_eject(array of keys)` and supporting allocating functions to watch 
    multiple keys mapped to callbacks (use `epoll()` in the client
