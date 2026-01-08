@@ -249,11 +249,14 @@ void print_usage(char *progname) {
     fprintf(stderr, "  --history-len / -l  <len>    Set the CLI history length to <len>\n");
     fprintf(stderr, "  --list-modules / -L          List available commands.\n");
     fprintf(stderr, "  --no-repl / -n               Don't enter interactive mode.\n");
+    fprintf(stderr, "  --prefix / -p <prefix>       Prepend <prefix> to read/write ops (namespace)\n");
     fprintf(stderr, "  --use / -u <store>           Connect to <store> after starting.\n");
     fprintf(stderr, "  --version / -v               Print splinter version information and exit.\n");
     fprintf(stderr, "\n%s will look for SPLINTER_HISTORY_FILE and SPLINTER_HISTORY_LEN in the\n", progname);
     fprintf(stderr, "environment and use them. However, argument values will always take precedence.\n");
     fprintf(stderr, "\nIf invoked as \"splinterctl\", %s automatically turns on --no-repl.\n", progname);
+    fprintf(stderr, "\nPrefixes (via --prefix) can contain any printing character but '='. This uses\n");
+    fprintf(stderr, "the SPLINTER_NS_PREFIX environmental variable.\n");
     fprintf(stderr, "\nPlease report bugs to https://github.com/timthepost/libsplinter");
     return;
 } 
@@ -387,6 +390,7 @@ static const struct option long_options[] = {
     { "history-len", required_argument, NULL, 'l' },
     { "list-modules", no_argument, NULL, 'L' },
     { "no-repl", no_argument, NULL, 'n' },
+    { "prefix", required_argument, NULL, 'p' },
     { "use", required_argument, NULL, 'u' },
     { "version", no_argument, NULL, 'v' },
     {NULL, 0, NULL, 0}
@@ -403,7 +407,7 @@ static void cli_at_exit(void) {
 }
 
 int main (int argc, char *argv[]) {
-    int rc = 0, _argc = 0, idx = -1, opt, historylen = -1;
+    int rc = 0, _argc = 0, idx = -1, opt, historylen = -1, prefix_len = 0;
     char *progname = basename(argv[0]), *buff = NULL;
     char prompt[128] = { 0 };
     char **mod_args = { 0 };
@@ -411,7 +415,7 @@ int main (int argc, char *argv[]) {
     // These can also be set via command line. 
     char *historyfile = getenv("SPLINTER_HISTORY_FILE");
     const char *tmp = getenv("SPLINTER_HISTORY_LEN");
-    
+
     // We set history length initially from env if appropriate
     if (tmp != NULL) historylen = cli_safer_atoi(tmp);
 
@@ -451,6 +455,13 @@ int main (int argc, char *argv[]) {
             case 'n':
                 m = MODE_NO_REPL;
                 break;
+            // --prefix = ... 
+            case 'p':
+                if (setenv("SPLINTER_NS_PREFIX", optarg, 1) != 0) {
+                    perror("setenv");
+                    exit(EXIT_FAILURE);
+                }
+                break;
             // --use / -u
             case 'u':
                 if (splinter_open(optarg) == 0) {
@@ -481,6 +492,20 @@ int main (int argc, char *argv[]) {
                     progname);
                 exit(EXIT_FAILURE);
         }
+    }
+
+    // anticipate someone trying <uuid>::<uuid>::<uuid>::__SomethingLikeThis:: as a prefix.
+    // perhaps not intentionally, but warn if it's getting close, or keys could be truncated
+    prefix_len = strnlen(getenv("SPLINTER_NS_PREFIX"), SPLINTER_KEY_MAX - 1);
+    if (prefix_len >= (SPLINTER_KEY_MAX / 2)) {
+        fprintf(stderr, 
+            "%s warning! Prefix (SPLINTER_NS_PREFIX) length of %d is 50%% or more of the field size of %d bytes.\n",
+            progname,
+            prefix_len,
+            SPLINTER_KEY_MAX);
+        fprintf(stderr, "Adjust the value of SPLINTER_KEY_MAX and recompile if this really can't be helped.\n");
+        fprintf(stderr,"Keys will likely be truncated unless the value is increased, or the prefix length is reduced.\n");
+        fflush(stderr);
     }
 
     if (m == MODE_REPL) {
