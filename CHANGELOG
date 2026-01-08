@@ -3,6 +3,9 @@ v0.9.5 "The Web We Weave" (Unreleased: Next Next Next Next Sprint) June 2026
    features for consuming and manipulating keys over HTTP(S).
  - Index directory page (Apache Style) that shows keys as links to values
    (requires some mime helpers)
+ - Implement new Lume based website / documentation hub / blog & changelog
+ - Implement GH discussions
+ - Bugfix releases until 1.0.0 🎉 
 
 v0.9.4 "Private Eyes 👏 (Duran Duran Tribute)" (Unreleased: Next Next Next Sprint) May 2026
  - Introduce `splinter_watch_dispatch(watch)`, `splinter_watch_add(array of keys)`, 
@@ -16,6 +19,8 @@ v0.9.4 "Private Eyes 👏 (Duran Duran Tribute)" (Unreleased: Next Next Next Spr
    to consume embeddings), maybe also populating a watch dispatch?
  - Implement embedding shard that updates / adds embeddings 
  - Implement policy eviction shard (that can optionally daemonize)
+ - Implement LRU-policy eviction shard that implements its own storage to 
+   track access time per key (will also daemonize)
 
 v0.9.3 "Bits & Bolts" (Unreleased: Next Next Sprint) Feb / March 2026
  - Implement `set_with_embeddings`, `get_with_embeddings`, `get_embeddings`,
