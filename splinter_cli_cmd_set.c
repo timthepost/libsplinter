@@ -27,10 +27,13 @@ void help_cmd_set(unsigned int level) {
 }
 
 int cmd_set(int argc, char *argv[]) {
+    char key[SPLINTER_KEY_MAX] = { 0 };
+
     if (argc < 3) {
         help_cmd_set(1);
         return 1;
     }
 
-    return splinter_set(argv[1], argv[2], strnlen(argv[2], 4096));
+    snprintf(key, sizeof(key) -1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+    return splinter_set(key, argv[2], strnlen(argv[2], 4096));
 }

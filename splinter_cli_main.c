@@ -408,7 +408,7 @@ static void cli_at_exit(void) {
 
 int main (int argc, char *argv[]) {
     int rc = 0, _argc = 0, idx = -1, opt, historylen = -1, prefix_len = 0;
-    char *progname = basename(argv[0]), *buff = NULL;
+    char *progname = basename(argv[0]), *buff = NULL, *ptmp = NULL;
     char prompt[128] = { 0 };
     char **mod_args = { 0 };
 
@@ -496,16 +496,19 @@ int main (int argc, char *argv[]) {
 
     // anticipate someone trying <uuid>::<uuid>::<uuid>::__SomethingLikeThis:: as a prefix.
     // perhaps not intentionally, but warn if it's getting close, or keys could be truncated
-    prefix_len = strnlen(getenv("SPLINTER_NS_PREFIX"), SPLINTER_KEY_MAX - 1);
-    if (prefix_len >= (SPLINTER_KEY_MAX / 2)) {
-        fprintf(stderr, 
-            "%s warning! Prefix (SPLINTER_NS_PREFIX) length of %d is 50%% or more of the field size of %d bytes.\n",
-            progname,
-            prefix_len,
-            SPLINTER_KEY_MAX);
-        fprintf(stderr, "Adjust the value of SPLINTER_KEY_MAX and recompile if this really can't be helped.\n");
-        fprintf(stderr,"Keys will likely be truncated unless the value is increased, or the prefix length is reduced.\n");
-        fflush(stderr);
+    ptmp = getenv("SPLINTER_NS_PREFIX");
+    if (ptmp) {
+        prefix_len = strnlen(ptmp, SPLINTER_KEY_MAX - 1);
+        if (prefix_len && prefix_len >= (SPLINTER_KEY_MAX / 2)) {
+            fprintf(stderr, 
+                "%s warning! Prefix length of %d bytes is half or more of the field size of %d bytes.\n",
+                progname,
+                prefix_len,
+                SPLINTER_KEY_MAX);
+            fprintf(stderr, "Adjust the value of SPLINTER_KEY_MAX and recompile if this really can't be helped.\n");
+            fprintf(stderr,"Keys will likely be truncated unless the value is increased, or the prefix length is reduced.\n");
+            fflush(stderr);
+        }
     }
 
     if (m == MODE_REPL) {

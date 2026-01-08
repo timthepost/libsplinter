@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "splinter_cli.h"
 
 static const char *modname = "head";
@@ -21,12 +23,15 @@ void help_cmd_head(unsigned int level) {
 }
 
 int cmd_head(int argc, char *argv[]) {
+    char key[SPLINTER_KEY_MAX] = { 0 };
+
     if (argc != 2) {
         help_cmd_head(1);
         return -1;
     }
 
-    cli_show_key_config(argv[1], modname);
+    snprintf(key, sizeof(key) - 1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+    cli_show_key_config(key, modname);
     
     return 0;
 }

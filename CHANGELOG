@@ -57,12 +57,9 @@ v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress) Jan 2026
  - Add `export` command to dump a store to a file in JSON format with
    grawk-assisted optional filtering as part of the CLI. This is the first
    step to early merge capabilities. *
- - Implement `prefix` in the CLI as an alias of `use` that sets a namespace 
-   string stored in `thisuser`, and prepended to `_get` `_set` and (future) 
-   ops. This will be a demo of how to implement name spaces outside of the 
-   core lib. Add to main CLI options / long options too. *
- - Obtain value of `prefix` setting from `SPLINTER_PREFIX` environment 
-   variable, if set (command line overrides it) *
+ - Implement `prefix` in the CLI to use simple namespace prefixes.
+ - Obtain value of `prefix` setting from `SPLINTER_NS_PREFIX` environment 
+   variable, if set (command line overrides it)
  - Set default store from `SPLINTER_DEFAULT_STORE` if not specified when
    starting the CLI. `use` will still work as usual, this just loads a
    default if not specified. *

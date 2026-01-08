@@ -10,6 +10,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <fcntl.h>
 
 #include "splinter_cli.h"
@@ -61,25 +62,25 @@ void help_cmd_watch(unsigned int level) {
 int cmd_watch(int argc, char *argv[]) {
     char msg[4096];
     size_t msg_sz = 0;
-    char c, *key = NULL;
+
+    char c, key[SPLINTER_KEY_MAX] = { 0 };
     int rc = -1;
     unsigned int oneshot = 0;
 
-    if (argc >= 2) {
-        key = argv[1];
+    if (argc >= 2)
+        snprintf(key, sizeof(key) -1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+
+    if (! key[0]) {
+        fprintf(stderr, "Usage: %s <key> [--oneshot]\nTry 'help ext watch' for help.\n", modname);
+        return -1;
     }
-    
+
     if (argc == 3 ) {
         if (!strncasecmp(argv[2], "--oneshot", 10)) {
             oneshot = 1;
         } 
-    } 
-    
-    if (key == NULL) {
-        fprintf(stderr, "Usage: %s <key> [--oneshot]\nTry 'help ext watch' for help.\n", modname);
-        return -1;
     }
-    
+
     setup_terminal();
 
     if (! oneshot)
