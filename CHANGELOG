@@ -1,10 +1,10 @@
-v0.9.5 "The Web We Weave" (Unreleased: Next Next Next Next Sprint)
+v0.9.5 "The Web We Weave" (Unreleased: Next Next Next Next Sprint) June 2026
  - `serve` / `--serve` command that allows REST interaction with most CLI
    features for consuming and manipulating keys over HTTP(S).
  - Index directory page (Apache Style) that shows keys as links to values
    (requires some mime helpers)
 
-v0.9.4 "Private Eyes (they're watching you)" (Unreleased: Next Next Next Sprint)
+v0.9.4 "Private Eyes (they're watching you)" (Unreleased: Next Next Next Sprint) May 2026
  - Introduce `splinter_watch_dispatch(watch)`, `splinter_watch_add(array of keys)`, 
    `splinter_watch_eject(array of keys)` and supporting allocating functions to watch 
    multiple keys mapped to callbacks (use `epoll()` in the client
@@ -18,7 +18,7 @@ v0.9.4 "Private Eyes (they're watching you)" (Unreleased: Next Next Next Sprint)
  - Implement policy eviction shard
  - Implement shard daemon / cron crank
 
-v0.9.3 "Bits & Bolts" (Unreleased: Next Next Sprint)
+v0.9.3 "Bits & Bolts" (Unreleased: Next Next Sprint) Feb / March 2026
  - Implement `set_with_embeddings`, `get_with_embeddings`, `get_embeddings`,
    `set_embeddings` and other API methods needed to manage embeddings. No
    indexing, just storage.
@@ -30,7 +30,7 @@ v0.9.3 "Bits & Bolts" (Unreleased: Next Next Sprint)
    on bloom filter content.
  - Implement shard plumbing (TBD)
  
-v0.9.1 "The Restructuring" (Unreleased: Next Sprint)
+v0.9.1 "The Restructuring" (Unreleased: Next Sprint) Jan 2026
  - Implement 16 (8 reserved / 8 user defined) flags per slot
  - Implement `born` epoch per-slot (automatically the first epoch of the slot)
  - Implement 64 bit per-slot bloom filter for ctags style scoping
@@ -44,7 +44,7 @@ v0.9.1 "The Restructuring" (Unreleased: Next Sprint)
  - Implement CLI changes necessary for new feature flag / slot layout
  - Implement ctags per-slot inside CLI
 
-v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress)
+v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress) Jan 2026
  - Allow `oneshot` operation for the `watch` CLI command so it can exit
    after one update, allowing  the client to re-establish if it wishes. *
  - MRSW Harness should report failure percentage and grade meaningfully
