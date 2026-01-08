@@ -3,9 +3,12 @@ v0.9.5 "The Web We Weave" (Unreleased: Next Next Next Next Sprint) June 2026
    features for consuming and manipulating keys over HTTP(S).
  - Index directory page (Apache Style) that shows keys as links to values
    (requires some mime helpers)
+ - Make MRSW test harness less cryptic about pass / fail metrics in results.
+   Investigate write staggering -> torn read weird coupling (may be a short
+   sighted writer design as it only happens with this harness).
  - Implement new Lume based website / documentation hub / blog & changelog
  - Implement GH discussions
- - Bugfix releases until 1.0.0 🎉 
+ - Bugfix-only releases until 1.0.0 🎉 
 
 v0.9.4 "Private Eyes 👏 (Duran Duran Tribute)" (Unreleased: Next Next Next Sprint) May 2026
  - Introduce `splinter_watch_dispatch(watch)`, `splinter_watch_add(array of keys)`, 
@@ -49,12 +52,8 @@ v0.9.1 "The Restructuring" (Unreleased: Next Sprint) Jan 2026
  - Implement ctags per-slot inside CLI
 
 v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress) Jan 2026
- - Allow `oneshot` operation for the `watch` CLI command so it can exit
+ - Allow `--oneshot` operation for the `watch` CLI command so it can exit
    after one update, allowing  the client to re-establish if it wishes.
- - MRSW Harness should report failure percentage and grade meaningfully
-   in addition to raw numbers (0.000nnnnn% is the space we want to be for
-   integrity failures by operation count for A+, 0.00n for B-, quickly fail
-   at or past 0.01) (with auto vacuum off) *
  - Add `export` command to dump a store to a file in JSON format with
    grawk-assisted optional filtering as part of the CLI. This is the first
    step to early merge capabilities. *
