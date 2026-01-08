@@ -494,6 +494,22 @@ int main (int argc, char *argv[]) {
         }
     }
 
+    // we have no active store
+    if (thisuser.store_conn == 0) {
+        ptmp = getenv("SPLINTER_DEFAULT_STORE");
+        // okay, there's one actually specified - try it.        
+        if (ptmp) {
+            if (splinter_open(ptmp) == 0) {
+                thisuser.store_conn = 1;
+                strncpy(thisuser.store, ptmp, sizeof(thisuser.store) -1);
+            } else {
+                fprintf(stderr, "%s: could not connect to '%s'; will start disconnected.\n",
+                progname, ptmp);
+            }
+            ptmp = NULL;
+        }
+    }
+
     // anticipate someone trying <uuid>::<uuid>::<uuid>::__SomethingLikeThis:: as a prefix.
     // perhaps not intentionally, but warn if it's getting close, or keys could be truncated
     ptmp = getenv("SPLINTER_NS_PREFIX");
