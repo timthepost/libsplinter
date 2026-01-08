@@ -1,8 +1,15 @@
+v0.9.5 "The Web We Weave" (Unreleased: Next Next Next Next Sprint)
+ - `serve` / `--serve` command that allows REST interaction with most CLI
+   features for consuming and manipulating keys over HTTP(S).
+ - Index directory page (Apache Style) that shows keys as links to values
+   (requires some mime helpers)
+
 v0.9.4 "Private Eyes (they're watching you)" (Unreleased: Next Next Next Sprint)
  - Introduce `splinter_watch_dispatch(watch)`, `splinter_watch_add(array of keys)`, 
    `splinter_watch_eject(array of keys)` and supporting allocating functions to watch 
    multiple keys mapped to callbacks (use `epoll()` in the client
-   under the hood).
+   under the hood)
+ - Implement some kind of discrete watch cancellation plan (TBD)
  - Introduce `splinter_watch_add_tagged(array of tag strings)` to select swaths of keys 
    based on matching bloom filter
  - Implement cosine similarity filtering ***in CLI*** (as a demo of one way 
