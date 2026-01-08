@@ -50,7 +50,7 @@ v0.9.1 "The Restructuring" (Unreleased: Next Sprint) Jan 2026
 
 v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress) Jan 2026
  - Allow `oneshot` operation for the `watch` CLI command so it can exit
-   after one update, allowing  the client to re-establish if it wishes. *
+   after one update, allowing  the client to re-establish if it wishes.
  - MRSW Harness should report failure percentage and grade meaningfully
    in addition to raw numbers (0.000nnnnn% is the space we want to be for
    integrity failures by operation count for A+, 0.00n for B-, quickly fail
