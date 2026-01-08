@@ -82,7 +82,7 @@ struct splinter_slot {
     /** @brief The actual length of the stored value data (atomic). */
     atomic_uint_least32_t val_len;
     /** @brief The null-terminated key string. */
-    char key[KEY_MAX];
+    char key[SPLINTER_KEY_MAX];
 };
 
 /** @brief Base pointer to the memory-mapped region. */
@@ -307,7 +307,7 @@ int splinter_unset(const char *key) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
 
-        if (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0) {
+        if (slot_hash == h && strncmp(slot->key, key, SPLINTER_KEY_MAX) == 0) {
             uint64_t start_epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);
             if (start_epoch & 1) {
                 // Writer in progress
@@ -324,7 +324,7 @@ int splinter_unset(const char *key) {
 
             if (atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed) == 1) {
                 memset(VALUES + slot->val_off, 0, H->max_val_sz);
-                memset(slot->key, 0, KEY_MAX);
+                memset(slot->key, 0, SPLINTER_KEY_MAX);
             } else {
                 slot->key[0] = '\0';
             }
@@ -366,7 +366,7 @@ int splinter_set(const char *key, const void *val, size_t len) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
         uint64_t slot_hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
 
-        if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, KEY_MAX) == 0)) {
+        if (slot_hash == 0 || (slot_hash == h && strncmp(slot->key, key, SPLINTER_KEY_MAX) == 0)) {
             // Try to acquire the slot's seqlock: flip epoch from even -> odd.
             uint64_t e = atomic_load_explicit(&slot->epoch, memory_order_relaxed);
             if (e & 1ull) {
@@ -403,12 +403,12 @@ int splinter_set(const char *key, const void *val, size_t len) {
 
             // Update key (write full key buffer so readers can't see a partial key)
             if (atomic_load_explicit(&H->auto_vacuum, memory_order_relaxed) == 1) {
-                memset(slot->key, 0, KEY_MAX);
+                memset(slot->key, 0, SPLINTER_KEY_MAX);
             } else {
                 slot->key[0] = '\0';
             }
-            strncpy(slot->key, key, KEY_MAX - 1);
-            slot->key[KEY_MAX - 1] = '\0';
+            strncpy(slot->key, key, SPLINTER_KEY_MAX - 1);
+            slot->key[SPLINTER_KEY_MAX - 1] = '\0';
 
             // Ensure prior stores are visible before publishing hash
             atomic_thread_fence(memory_order_release);
@@ -448,7 +448,7 @@ int splinter_get(const char *key, void *buf, size_t buf_sz, size_t *out_sz) {
         struct splinter_slot *slot = &S[(idx + i) % H->slots];
 
         if (atomic_load_explicit(&slot->hash, memory_order_acquire) == h &&
-            strncmp(slot->key, key, KEY_MAX) == 0) {
+            strncmp(slot->key, key, SPLINTER_KEY_MAX) == 0) {
             uint64_t start = atomic_load_explicit(&slot->epoch, memory_order_acquire);
             if (start & 1) {
                 // writer in progress
@@ -535,7 +535,7 @@ int splinter_poll(const char *key, uint64_t timeout_ms) {
     for (i = 0; i < H->slots; ++i) {
         struct splinter_slot *s = &S[(idx + i) % H->slots];
         if (atomic_load_explicit(&s->hash, memory_order_acquire) == h &&
-            strncmp(s->key, key, KEY_MAX) == 0) {
+            strncmp(s->key, key, SPLINTER_KEY_MAX) == 0) {
             slot = s;
             break;
         }
@@ -611,7 +611,7 @@ int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapsh
     for (i = 0; i < H->slots; ++i) {
         struct splinter_slot *s = &S[(idx + i) % H->slots];
         if (atomic_load_explicit(&s->hash, memory_order_acquire) == h &&
-            strncmp(s->key, key, KEY_MAX) == 0) {
+            strncmp(s->key, key, SPLINTER_KEY_MAX) == 0) {
             slot = s;
             break;
         }
@@ -622,7 +622,7 @@ int splinter_get_slot_snapshot(const char *key, splinter_slot_snapshot_t *snapsh
         return -1;
     }
 
-    strncpy(snapshot->key, slot->key, KEY_MAX);
+    strncpy(snapshot->key, slot->key, SPLINTER_KEY_MAX);
     snapshot->val_off = slot->val_off;
     snapshot->hash = atomic_load_explicit(&slot->hash, memory_order_acquire);
     snapshot->epoch = atomic_load_explicit(&slot->epoch, memory_order_acquire);

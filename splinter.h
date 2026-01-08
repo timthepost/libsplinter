@@ -27,7 +27,7 @@ extern "C" {
 /** @brief Version of the splinter data format (not the library version). */
 #define SPLINTER_VER   1
 /** @brief Maximum length of a key string, including null terminator. */
-#define KEY_MAX        64
+#define SPLINTER_KEY_MAX        64
 /** @brief Nanoseconds per millisecond for time calculations. */
 #define NS_PER_MS      1000000ULL
 
@@ -71,7 +71,7 @@ typedef struct splinter_slot_snapshot {
     /** @brief The actual length of the stored value data (atomic). */
     uint32_t val_len;
     /** @brief The null-terminated key string. */
-    char key[KEY_MAX];
+    char key[SPLINTER_KEY_MAX];
 } splinter_slot_snapshot_t;
 
 /**
