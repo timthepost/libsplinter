@@ -9,14 +9,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "splinter_cli.h"
 
 static const char *modname = "set";
-
-// we need to get this dynamically from the bus
-// also have this issue in get. I'm just using a 4k
-// ceiling for now.
-#define SET_CMD_MAX_LEN 4096
 
 void help_cmd_set(unsigned int level) {
     printf("%s sets the value of a key in the store\n", modname);
