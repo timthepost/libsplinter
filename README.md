@@ -250,6 +250,39 @@ Press Ctrl-] To Stop ...
 
 splinter_debug #
 ```
+### Namespaces
+
+You can pass `--prefix=namespace::identifier` via the command line, or set 
+`SPLINTER_NS_PREFIX` in the environment. This is not enforced in the library, 
+but rather a convenience offered by the CLI: your custom string is just 
+pre-pended to I/O operations in a way that you don't have to always type
+the namespace:
+
+```txt
+splinter_cli version 0.9.0 build 4e09f5e
+To quit, press ctrl-c or ctrl-d.
+no-conn # init test
+Creating 'test' with default geometry.
+no-conn # use test
+use: now connected to test
+test # list
+Key Name                          | Epoch           | Value Length   
+------------------------------------------------------------------
+
+test # set foo bar
+test # list
+Key Name                          | Epoch           | Value Length   
+------------------------------------------------------------------
+demo::namespace::foo              | 2               | 3              
+
+test # get foo
+3:bar
+
+test # 
+```
+However, remember - this is a per-session setting, so each time you
+exit the CLI, it resets. If you want to make it automatic, set the
+`SPLINTER_NS_PREFIX` environmental variable.
 
 ### TypeScript Bindings
 
