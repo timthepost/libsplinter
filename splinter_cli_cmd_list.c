@@ -16,7 +16,7 @@
 
 static const char *modname = "list";
 
-#define LIST_CMD_MAX_KEYS 150
+static splinter_header_snapshot_t snap = {0};
 
 void help_cmd_list(unsigned int level) {
     (void) level;
@@ -45,30 +45,58 @@ int cmd_list(int argc, char *argv[]) {
         .quiet = 1
     };
 
-    splinter_slot_snapshot_t slots[LIST_CMD_MAX_KEYS] = { 0 };
-    char *keynames[LIST_CMD_MAX_KEYS] = { 0 };
+    splinter_slot_snapshot_t *slots = NULL;
+    char **keynames = NULL;
     size_t entry_count = 0;
-    int rc = -1, i, x = 0; 
+    size_t max_keys = 0;
+    int rc = -1, i, x = 0;
 
     if (argc > 2) {
         help_cmd_list(1);
         return -1;
     }
 
-    rc = splinter_list(keynames, LIST_CMD_MAX_KEYS, &entry_count);
+    // Get header snapshot to determine allocation size
+    splinter_get_header_snapshot(&snap);
+    max_keys = snap.slots;
+
+    if (max_keys == 0) {
+        fprintf(stderr, "%s: no slots available in current store.\n", modname);
+        return -1;
+    }
+
+    keynames = (char **)calloc(max_keys, sizeof(char *));
+    if (keynames == NULL) {
+        fprintf(stderr, "%s: unable to allocate memory for key names.\n", modname);
+        errno = ENOMEM;
+        return -1;
+    }
+
+    slots = (splinter_slot_snapshot_t *)calloc(max_keys, sizeof(splinter_slot_snapshot_t));
+    if (slots == NULL) {
+        fprintf(stderr, "%s: unable to allocate memory for slot snapshots.\n", modname);
+        errno = ENOMEM;
+        free(keynames);
+        return -1;
+    }
+
+    rc = splinter_list(keynames, max_keys, &entry_count);
     if (rc == 0) {
-            g = grawk_init();
-            if (g == NULL) {
-                fprintf(stderr, "%s: unable to allocate memory to filter keys.\n", modname);
-                errno = ENOMEM;
-                return -1;
-            }
-            grawk_set_options(g, &opts);
-            if (argc == 2) {
-                filter = grawk_build_pattern(argv[1]);
-                grawk_set_pattern(g, filter);
-            }
-        for (i =0; keynames[i]; i++) {
+        g = grawk_init();
+        if (g == NULL) {
+            fprintf(stderr, "%s: unable to allocate memory to filter keys.\n", modname);
+            errno = ENOMEM;
+            rc = -1;
+            goto cleanup;
+        }
+        
+        grawk_set_options(g, &opts);
+        if (argc == 2) {
+            filter = grawk_build_pattern(argv[1]);
+            grawk_set_pattern(g, filter);
+        }
+
+        for (i = 0; keynames[i]; i++) {
             if (keynames[i][0] != '\0') {
                 // if there's no filter, just add it
                 if (filter == NULL) {
@@ -84,10 +112,7 @@ int cmd_list(int argc, char *argv[]) {
             }
         }
 
-        if (g != NULL)
-            grawk_free(g);
-
-        // now, sort so the most-updated keys are at the top of the list
+        // Sort so the most-updated keys are at the top of the list
         qsort(slots, x, sizeof(splinter_slot_snapshot_t), compare_slots_by_epoch);
 
         printf("%-33s | %-15s | %-15s\n",
@@ -98,15 +123,32 @@ int cmd_list(int argc, char *argv[]) {
         for (i = 0; i < 66; i++)
             putchar('-');
         putchar('\n');
-        for (i = 0; slots[i].epoch > 0; i++) {
+        
+        for (i = 0; i < x && slots[i].epoch > 0; i++) {
             printf("%-33s | %-15lu | %-15u\n", 
                 slots[i].key,
                 slots[i].epoch,
                 slots[i].val_len
             );
         }
+
+        // Empty line is intentional (and uniform throughout commands) 
         puts("");
-        return 0;
+        rc = 0;
+    }
+
+cleanup:
+    // Free grawk resources
+    if (g != NULL) {
+        grawk_free(g);
+    }
+
+    if (slots != NULL) {
+        free(slots);
+    }
+    
+    if (keynames != NULL) {
+        free(keynames);
     }
 
     return rc;
