@@ -259,6 +259,7 @@ pre-pended to I/O operations in a way that you don't have to always type
 the namespace:
 
 ```txt
+user@system # splinter_cli --prefix demo::namespace::
 splinter_cli version 0.9.0 build 4e09f5e
 To quit, press ctrl-c or ctrl-d.
 no-conn # init test
