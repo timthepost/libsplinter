@@ -153,31 +153,19 @@ Splinter was written because nothing else was lean enough with the very specific
 set of desired features present and verifiable. The choice was to eviscerate and
 contort SQLite, or just write Splinter. The latter made so much more sense.
 
-Here's a table to help you see where Splinter lands in contrast with what's
-around, and why it's novel:
-
-| Feature / System      | **Splinter**                                  | SQLite (`:memory:` / shm)            | LMDB                                  | Tokyo/Kyoto Cabinet       | Kernel Seqlock/RCU                    |
-| --------------------- | --------------------------------------------- | ------------------------------------ | ------------------------------------- | ------------------------- | ------------------------------------- |
-| Language / API        | C (simple, flat API)                          | C (SQL layer)                        | C (B+tree API)                        | C                         | Kernel only                           |
-| Persistence           | Optional (mem-only focus)                     | Yes (journaling)                     | Yes (copy-on-write)                   | Yes (files/dbs)           | No                                    |
-| Concurrency Model     | **Single-writer, many-reader (MRSW)**         | Serialized via locks/transactions    | **Single-writer, many-reader (MRSW)** | Basic locks               | **Single-writer, many-reader (MRSW)** |
-| Lock-Free Reads       | ✅ Yes (seqlock snapshot)                     | ❌ No                                | ✅ Yes (MVCC pages)                   | ❌ No                     | ✅ Yes                                |
-| Write Safety          | Atomic + seqlock                              | Transaction journal                  | Page copy-on-write                    | Record lock               | Sequence lock                         |
-| Hygiene / Auto-Vacuum | **Toggleable (scrub or not)**                 | Heavyweight VACUUM                   | None (stale pages reclaimed)          | None                      | N/A                                   |
-| Typical Use           | **LLM scratchpad, message bus, ephemeral KV** | Relational queries, structured cache | Embedded KV DB with persistence       | Lightweight persistent KV | Kernel timekeeping, counters          |
-| Overhead per Write    | Low (memcpy + atomics)                        | High (SQL parse + journaling)        | Medium (page churn)                   | Medium                    | Low (in-kernel)                       |
-| Throughput Focus      | **Yes, bus-scale**                            | ❌ No                                | Balanced (read-heavy)                 | Balanced                  | Yes (in kernel)                       |
-
 Splinter is the only user-space C library that the author knows of that
 combines:
 
 - Lock-free reads (seqlock snapshots)
+- Easy TTL or LRU eviction for clients
 - Single-writer atomicity without global mutexes
 - Optional "sterile memory" mode for training-safe hygiene which can be toggled
   at will / whim instantly without structural concern under normal use
 - Lightweight enough to double as a pub/sub message bus or IPC backing
 - No external dependencies by default / drop-in two files to use the C API,
   or use dynamic linking
+- Global MRSW contract with disjointed-slot MRMW safety; splinter assumes you know
+  what you're doing.
 
 It's a _systems workbench_ as much as it is a library.
 
@@ -291,12 +279,14 @@ In the `bindings/ts/` directory you'll find FFI bindings for Deno as well as a
 utility class and some simple tests to show you that the installation was
 successful.
 
+Splinter works perfectly fine on Deno Deploy using persistent mode;
+[here is a demo][8] that includes code running on Deploy now that you can 
+grab and begin using now. 
+
 The _**primary driver**_ for this project was a ned to connect TypeScript (Deno)
 with Inference (in my case, llama.cpp) in a way that was close to bare-metal
 `select() / poll()` style latency. Sockets were the very first thing to get
 thrown out the window, and, well, here we are.
-
-Use whatever license you want with the TS code; the library is Apache 2.0.
 
 There's always special 3> for Deno (the author used to work there).
 
@@ -475,3 +465,4 @@ please give the code of conduct a read if you'd like to send patches.
 [5]: https://github.com/timthepost/libsplinter/tree/main/docs
 [6]: https://github.com/timthepost/libsplinter/tree/main/bindings/ts
 [7]: https://valgrind.org
+[8]: https://github.com/timthepost/splinter-deploy
