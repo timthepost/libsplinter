@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <getopt.h>
 
 #include "splinter_cli.h"
 #include "splinter.h"
@@ -50,42 +51,58 @@ void restore_terminal(void) {
 }
 
 void help_cmd_watch(unsigned int level) {
-    printf("%s watches a key in the current store for changes.\n", modname);
+    (void) level;
+
     printf("Usage: %s <key_name_to_watch> [--oneshot]\n", modname);
+    printf("%s watches a single key in the current store for changes.\n", modname);
     puts("If --oneshot is specified, watch will exit after one event.");
-    if (level) {
-        puts("\nYou can also use the 'splinter_recv' program to poll in scripts.");
-    }
+    puts("\nMulti-key watches are coming in Splinter 0.9.4, anticipated May 2026.");
+    puts("\nPressing CTRL-] will terminate a waiting watch.\n");
+    
     return;
 }
 
-int cmd_watch(int argc, char *argv[]) {
-    char msg[4096];
-    size_t msg_sz = 0;
+static const struct option long_options[] = {
+    { "help", optional_argument, NULL, 'h' },
+    { "oneshot", no_argument, NULL, 'o' },
+    {NULL, 0, NULL, 0}
+};
 
-    char c, key[SPLINTER_KEY_MAX] = { 0 };
+static const char *optstring = "h:o";
+
+int cmd_watch(int argc, char *argv[]) {
+    size_t msg_sz = 0;
+    char c, msg[4096], key[SPLINTER_KEY_MAX] = { 0 };
     char *tmp = getenv("SPLINTER_NS_PREFIX");
-    int rc = -1;
+    int rc = -1, opt = 0;
     unsigned int oneshot = 0;
 
-    if (argc >= 2)
-        snprintf(key, sizeof(key) -1, "%s%s", tmp == NULL ? "" : tmp, argv[1]);
+    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'h':
+                help_cmd_watch(1);
+                break;
+            case 'o':
+                oneshot = 1;
+                break;
+            case '?':
+                help_cmd_watch(1);
+                break;
+            default:
+                fprintf(stderr, "%s: unknown argument '%c'\n", modname, opt);
+                break;
+        }
+    }
+
+    if (optind < argc)
+        snprintf(key, sizeof(key) -1, "%s%s", tmp == NULL ? "" : tmp, argv[optind++]);
 
     if (! key[0]) {
         fprintf(stderr, "Usage: %s <key> [--oneshot]\nTry 'help ext watch' for help.\n", modname);
         return -1;
     }
 
-    if (argc == 3 ) {
-        if (!strncasecmp(argv[2], "--oneshot", 10)) {
-            oneshot = 1;
-        } 
-    }
-
     setup_terminal();
-
-    if (! oneshot)
-        puts("Press Ctrl-] To Stop ...");
     
     while (! thisuser.abort) {
         if (read(STDIN_FILENO, &c, 1) == 1) {
