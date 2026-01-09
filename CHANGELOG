@@ -56,13 +56,14 @@ v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress) Jan 2026
    after one update, allowing  the client to re-establish if it wishes.
  - Add `export` command to dump a store to a file in JSON format with
    grawk-assisted optional filtering as part of the CLI. This is the first
-   step to early merge capabilities. *
+   step to early merge capabilities.
  - Implement `prefix` in the CLI to use simple namespace prefixes.
  - Obtain value of `prefix` setting from `SPLINTER_NS_PREFIX` environment 
    variable, if set (command line overrides it)
  - Set default store from `SPLINTER_DEFAULT_STORE` if not specified when
    starting the CLI. `use` will still work as usual, this just loads a
    default if not specified.
+ - Internal commands need to use getopt like the main entry point. *
 
 v0.5.5 "Periodic Maintenance Release"
  - Main entry point now understands persistent invocation (splinterpctl,
