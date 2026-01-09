@@ -157,6 +157,15 @@ cli_module_t command_modules[] = {
         &cmd_init,
         &help_cmd_init
     },
+    {
+        13,
+        "export",
+        6,
+        "Export Splinter data in various formats.",
+        -1,
+        &cmd_export,
+        &help_cmd_export
+    },
     // The last null-filled element 
     { 0, NULL, 0, NULL, -1,  NULL , NULL }
 };
@@ -270,6 +279,9 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
             linenoiseAddCompletion(lc, "clear");
             linenoiseAddCompletion(lc, "config");
             break;
+        case 'e':
+            linenoiseAddCompletion(lc, "export");
+            break;
         case 'g':
             linenoiseAddCompletion(lc, "get");
             break;
@@ -327,6 +339,12 @@ static char *hints(const char *buf, int *color, int *bold) {
         return "fig ";
     }
 
+    if (!strncasecmp(buf, "ex", 6)) {
+        *color = 36;
+        *bold = 1;
+        return "port ";
+    }
+    
     if (!strncasecmp(buf, "g", 3)) {
         *color = 36;
         *bold = 1;
