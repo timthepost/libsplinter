@@ -64,11 +64,12 @@ int cmd_watch(int argc, char *argv[]) {
     size_t msg_sz = 0;
 
     char c, key[SPLINTER_KEY_MAX] = { 0 };
+    char *tmp = getenv("SPLINTER_NS_PREFIX");
     int rc = -1;
     unsigned int oneshot = 0;
 
     if (argc >= 2)
-        snprintf(key, sizeof(key) -1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+        snprintf(key, sizeof(key) -1, "%s%s", tmp == NULL ? "" : tmp, argv[1]);
 
     if (! key[0]) {
         fprintf(stderr, "Usage: %s <key> [--oneshot]\nTry 'help ext watch' for help.\n", modname);

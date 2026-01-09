@@ -23,6 +23,7 @@ void help_cmd_head(unsigned int level) {
 }
 
 int cmd_head(int argc, char *argv[]) {
+    char *tmp = getenv("SPLINTER_NS_PREFIX");
     char key[SPLINTER_KEY_MAX] = { 0 };
 
     if (argc != 2) {
@@ -30,7 +31,7 @@ int cmd_head(int argc, char *argv[]) {
         return -1;
     }
 
-    snprintf(key, sizeof(key) - 1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+    snprintf(key, sizeof(key) - 1, "%s%s", tmp == NULL ? "" : tmp, argv[1]);
     cli_show_key_config(key, modname);
     
     return 0;

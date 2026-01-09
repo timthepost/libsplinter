@@ -24,7 +24,7 @@ void help_cmd_get(unsigned int level) {
 int cmd_get(int argc, char *argv[]) {
     char buf[4096] = { 0 };
     char key[SPLINTER_KEY_MAX] = { 0 };
-
+    char *tmp = getenv("SPLINTER_NS_PREFIX");
     size_t received = 0;
     int rc = -1;
 
@@ -33,7 +33,7 @@ int cmd_get(int argc, char *argv[]) {
         return -1;
     }
     
-    snprintf(key, sizeof(key) -1, "%s%s", getenv("SPLINTER_NS_PREFIX"), argv[1]);
+    snprintf(key, sizeof(key) -1, "%s%s", tmp == NULL ? "" : tmp, argv[1]);
 
     rc = splinter_get(key, buf, sizeof(buf), &received);
     if (rc != 0) {
