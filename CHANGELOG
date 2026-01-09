@@ -49,10 +49,9 @@ v0.9.1 "The Restructuring" (Unreleased: Next Sprint) Jan 2026
  - Implement minimal public-facing API changes required for the above to
    work (might not yet include actually storing embeddings).
  - Implement CLI changes necessary for new feature flag / slot layout
- - Internal commands need to use getopt like the main entry point.
  - Implement ctags per-slot inside CLI
 
-v0.9.0 "Almost There!" (Unreleased: Current Sprint * = in progress) Jan 2026
+v0.9.0 "Almost There!" Jan 2026
  - Allow `--oneshot` operation for the `watch` CLI command so it can exit
    after one update, allowing  the client to re-establish if it wishes.
  - Add `export` command to dump a store to a file in JSON format with
