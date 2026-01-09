@@ -245,13 +245,13 @@ void print_version_info(char *progname) {
 }
 
 void print_usage(char *progname) {
-    fprintf(stderr, "%s provides a command line interface for Splinter bus interaction.\n", progname);
     fprintf(stderr, 
         "Usage:  %s [options] [aguments] *or*\n\t%s --no-repl <built in command> [arguments] *or*\n\t%s {no args for REPL}\n",
         progname, 
         progname,
         progname
     );
+    fprintf(stderr, "%s provides a command line interface for Splinter bus interaction.\n", progname);
     fprintf(stderr, "Where [options] are:\n");
     fprintf(stderr, "  --help / -h                  Show this help display.\n");
     fprintf(stderr, "  --history-file / -H <path>   Set the CLI history file to <path>\n");
@@ -266,7 +266,9 @@ void print_usage(char *progname) {
     fprintf(stderr, "\nIf invoked as \"splinterctl\", %s automatically turns on --no-repl.\n", progname);
     fprintf(stderr, "\nPrefixes (via --prefix) can contain any printing character but '='. This uses\n");
     fprintf(stderr, "the SPLINTER_NS_PREFIX environmental variable.\n");
-    fprintf(stderr, "\nPlease report bugs to https://github.com/timthepost/libsplinter");
+    fprintf(stderr, "\nPlease report bugs at https://github.com/timthepost/libsplinter, or to the author");
+    fprintf(stderr, "at <timthepost@protonmail.com>.");
+
     return;
 } 
 
