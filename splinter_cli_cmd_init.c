@@ -82,12 +82,8 @@ int cmd_init(int argc, char *argv[]) {
 
     rc = splinter_create(store, max_slots, max_val);
 
-    if (rc < 0) {
+    if (rc < 0)
         perror("splinter_create");
-        // Call close here because we *may* still have a dangling FD.
-        splinter_close(); 
-        goto restore_conn;
-    }
 
     splinter_close();
     goto restore_conn;
