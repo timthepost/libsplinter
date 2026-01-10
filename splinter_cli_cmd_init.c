@@ -84,7 +84,7 @@ int cmd_init(int argc, char *argv[]) {
 
     if (rc < 0)
         perror("splinter_create");
-
+  
     splinter_close();
     goto restore_conn;
 
