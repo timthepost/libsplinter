@@ -25,7 +25,7 @@ extern "C" {
 #define SPLINTER_MAGIC 0x534C4E54
 
 /** @brief Version of the splinter data format (not the library version). */
-#define SPLINTER_VER   1
+#define SPLINTER_VER   2
 /** @brief Maximum length of a key string, including null terminator. */
 #define SPLINTER_KEY_MAX        64
 /** @brief Nanoseconds per millisecond for time calculations. */
