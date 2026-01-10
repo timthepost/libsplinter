@@ -42,7 +42,7 @@ v0.9.2 "The Restructuring" (Unreleased: Next Sprint) Jan 2026
  - Implement `born` epoch per-slot (automatically the first epoch of the slot)
  - Implement 64 bit per-slot bloom filter for ctags style scoping
  - Implement vector storage backing + offset in slot header 
- - Implement reserved and user defined feature flags (as planned in docs/).
+ - Implement reserved and user defined feature flags (as planned in docs/). *
  - Implement atomic_uint_least64_t `ttl_ms` per-slot for expiry (doesn't
    implement eviction, it only declares a shelf life eviction can use in the
    absence of any other policy) (see also: `born`)
