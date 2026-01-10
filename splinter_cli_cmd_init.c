@@ -9,75 +9,83 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <getopt.h>
 
 #include "config.h"
 #include "splinter.h"
 #include "splinter_cli.h"
 
 static const char *modname = "init";
-static const unsigned long max_slots = DEFAULT_SLOTS;
-static const unsigned long max_val_len = DEFAULT_VAL_MAXLEN;
 
 void help_cmd_init(unsigned int level) {
     (void) level;
 
-    printf("%s creates a store to a default or specified geometry.\n", modname);
-    printf("Usage: %s [store_name] [slots] [max_val_len]\n", modname);
-    printf("If arguments are omitted, default values:\n\t%s -> (%lu x %lu)\n are used.\n",
+    printf("Usage: %s [store_name] [--slots num_slots] [--maxlen max_val_len]\n", modname);
+    printf("%s creates a Splinter store to default or specific geometry.\n", modname);
+    puts("If arguments are omitted, these compiled-in defaults are used:");
+    printf("\nname:  %s\nslots:  %lu\nmaxlen: %lu\n",
         DEFAULT_BUS,
-        max_slots, 
-        max_val_len);
-
+        (unsigned long) DEFAULT_SLOTS, 
+        (unsigned long) DEFAULT_VAL_MAXLEN);
+    
     return;
 }
 
+static const struct option long_options[] = {
+    { "help", no_argument, NULL, 'h' },
+    { "slots", required_argument, NULL, 's' },
+    { "maxlen", required_argument, NULL, 'l' },
+    { NULL, 0, NULL, 0 }
+};
+
+static const char *optstring = "hs:l:";
+
 int cmd_init(int argc, char *argv[]) {
-    char *buff = NULL, save[64] = { 0 };
-    int rc = 0;
+    char *buff = NULL, save[64] = { 0 }, store[64] = { 0 };
+    int rc = 0, opt = 0;
     unsigned int prev_conn = 0;
+    unsigned long max_slots = DEFAULT_SLOTS, max_val = DEFAULT_VAL_MAXLEN;
 
     if (thisuser.store_conn) {
         strncpy(save, thisuser.store, 64);
         prev_conn = 1;
     }
 
-    switch (argc) {
-        case 1:
-            printf("Creating default store '%s' with  default geometry (%lu x %lu).\n",
-                DEFAULT_BUS,
-                max_slots,
-                max_val_len);
-            rc = splinter_create(DEFAULT_BUS, max_slots, max_val_len);
-            break;
-        case 2:
-            printf("Creating '%s' with default geometry.\n", argv[1]);
-            rc = splinter_create(argv[1], max_slots,  max_val_len);
-            break;
-        case 3:
-            printf("Creating '%s' with %lu slots and default value length of %lu.\n", 
-                argv[1], strtol(argv[2], &buff, 10),
-                max_val_len);
-            rc = splinter_create(argv[1], strtol(argv[2], &buff, 10), max_val_len);
-            break;
-        case 4:
-            printf("Creating '%s' with %lu slots with a max value length of %lu.\n", 
-                argv[1], 
-                strtol(argv[2], &buff, 10),
-                strtol(argv[3], &buff, 10)
-            );
-            rc = splinter_create(
-                argv[1],
-                strtol(argv[2], &buff, 10),
-                strtol(argv[3], &buff, 10)
-            );
-            break;
-        default:
-            fprintf(stderr, "Unexpected number of arguments.\n");
-            rc = 127;
+    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'h':
+            case '?':
+                help_cmd_init(1);
+                rc = 0;
+                goto restore_conn;
+                break;
+            case 'o':
+                max_slots = strtoul(optarg, &buff, 10);
+                break;
+            case 'l':
+                max_val = strtoul(optarg, &buff, 10);
+                break;
+        }
     }
+
+    if (optind < argc)
+        snprintf(store, sizeof(store) -1, "%s", argv[optind++]);
+
+    if (! store[0])
+        snprintf(store, sizeof(store) - 1, DEFAULT_BUS);
+
+    printf("Creating '%s' with %lu slots, each with a max value length of %lu bytes.\n",
+        store,
+        max_slots, 
+        max_val
+    );
+
+    rc = splinter_create(store, max_slots, max_val);
 
     if (rc < 0) {
         perror("splinter_create");
+        // Call close here because we *may* still have a dangling FD.
+        splinter_close(); 
         goto restore_conn;
     }
 
