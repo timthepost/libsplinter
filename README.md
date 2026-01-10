@@ -182,62 +182,71 @@ programs to help illustrate how to use the C version of the library, as well as
 a comprehensive CLI for managing splinter stores in debugging / production
 monitoring.
 
-### TAP-Compatible Tests & Stress / Perf Tests:
 
-- `splinter_test`: Unit tests (`make test` or `make valtest`) which also
-  illustrate the C library quite well, and,
+### `splinter_cli` (and how it behaves when invoked as `splinterctl`):
 
-- `splinter_stress`: MRSW-contract stress test (many millions of ops / sec with
-  random writes). At the level of torture introduced, Less than ~.5% integrity
-  failures is normal for lock-free schemes and why we use serialization.
+*Note: For persistent mode, use `splinterpctl` and `splinterp_cli`, respectively.*
 
-Be advised that `splinterp_stress` could cause premature wear on rotating media
-and older solid state drives . It should also be used with extreme care over a
-network.
+`splinter_cli` offers a variety of commands to create, query, watch and update splinter
+stores in an interactive way with type completion, hinting, history and on-line help.
 
-### Robust `splinterctl` and `splinter_cli` Tools:
+`splinterctl` is a special invocation of `splinter_cli` that bypasses all of the
+interactive stuff and just does what is asked.
 
-*For persistent mode, use `splinterpctl` and `splinterp_cli`.
-
-The biggest things to remember about the CLI are that invoking it via
-`splinterctl` will cause it to turn into non-interactive mode (so you can use
-the commands it offers in scripts), and that it's self- documenting in that
-`help` is online.
+It's expected that you'll develop automation workflows, work on debugging and generally
+just _explore_ what Splinter can do using the interactive CLI. `splinterctl` is there
+for you when you're ready to script stuff, or just need one-off functionality.
 
 #### Typical `splinter_cli` Interactive Use:
 
 ```cli
-splinter_cli version 0.5.0 build 40e3633
+splinter_cli version 0.9.0 build 4e09f5e
 To quit, press ctrl-c or ctrl-d.
-no-conn # use splinter_debug
-use: now connected to splinter_debug
-splinter_debug # list
+no-conn # init splinter_test
+Creating 'splinter_test' with default geometry.
+no-conn # use splinter_test
+use: now connected to splinter_test
+splinter_test # set test_one "Hello, world!"
+splinter_test # set test_two "How are you?"
+splinter_test # list
 Key Name                          | Epoch           | Value Length   
 ------------------------------------------------------------------
-__debug                           | 2               | 4              
+test_two                          | 2               | 12             
+test_one                          | 2               | 13                         
 
-splinter_debug # set foo "{I think this is a perfectly reasonable value for foo.}"
-splinter_debug # get foo
-55:{I think this is a perfectly reasonable value for foo.}
+splinter_test # watch test_two --oneshot
+... update from another terminal ...
+13:Fine, thanks!
 
-splinter_debug # list
-Key Name                          | Epoch           | Value Length   
-------------------------------------------------------------------
-__debug                           | 2               | 4              
-foo                               | 2               | 55             
+splinter_test # export
+{
+  "store": {
+    "total_slots": 1024,
+    "active_keys": 2
+  },
+  "keys": [
+    {
+      "key": "test_two",
+      "epoch": 4,
+      "value_length": 13
+    },
+    {
+      "key": "test_one",
+      "epoch": 2,
+      "value_length": 13
+    }
+  ]
+}
 
-splinter_debug # list ^__
-Key Name                          | Epoch           | Value Length   
-------------------------------------------------------------------
-__debug                           | 2               | 4              
-
-splinter_debug # watch foo
-Press Ctrl-] To Stop ...
-
-(any changes get printed here)
-
-splinter_debug #
+splinter_test # 
 ```
+
+Splinter's CLI is designed just as much to show you how to embrace the library in
+code as it is to produce a functional tool. Splinter itself ***is for storage only***;
+that's what chiefly makes it not-a-database. The CLI adds opnionated sugar and 
+other functionality as needed (as well as shards, which are loadable modules, coming
+soon!).
+
 ### Namespaces
 
 You can pass `--prefix=namespace::identifier` via the command line, or set 
@@ -322,46 +331,30 @@ This builds:
 
 ---
 
-## Runtime Design
-
-Each Splinter instance is backed by a named region, either:
-
-- Memory-only (via `memfd_create()` or `shm_open()`)
-- Persistent (via `open()` + `mmap()` on a regular file)
-
-Slot region layout includes:
-
-- Key (constant-defined max length)
-- Atomic Value length + offset
-- Atomic epoch version
-- FNV-1a 64-bit hash of key
-
-Slot selection uses linear probing; polling uses version-check spin. The library
-includes utilities to take snapshots of slot structures by key name, as well as
-the global bus configuration and operation structure.
-
-Splinter doesn't try to 'hide' much from the user behind its API; only what's
-essential for safety.
-
----
-
-## Persistence Mode
+## Making Stores Persist (Persistence Mode) 
 
 If you want bus persistence, use the persistent CLI tool or link your
 application (or set dlopen()) to `libsplinter_p.so` instead of `libsplinter.so`.
 
+If you're just building `splinter.c` and `splinter.h` into your application
+(which is very encouraged), set `-DSPLINTER_PERSISTENT` when compiling.
+
 The persistent version:
 
-- Maps from a file instead of RAM.
-- Survives system reboots
-- Can be snapshot/dumped with `dd`, `cp`, etc.
+- Maps from a file instead of RAM (`open()` + `mmap()` instead of `memfd()` or
+  `shm_open()`.
+- Survives system reboots (does not require any external checking for integrity)
+  
+- Can be snapshot/dumped with `dd`, `cp` (if you can manage not writing to it
+  while that happens)
 
 However, understand the limitations of the underlying file system and whatever
 media is backing it. NVMe storage will be quite fast, rotating media will be
 much slower.
 
 The MRSW stress tool will give you some indication of throughput, however you
-should scale it down thread-wise as well as payload.
+should scale it down thread-wise as well as payload or you'll just thrash the
+storage and accomplish little else.
 
 ---
 
@@ -378,7 +371,7 @@ If you'd like to help in this way, please email me directly at
 That said, you have some options you can try right now, and I'll do my best to
 help if I can:
 
-### Working With A Funded Startup Budget:
+### If You're Working With A Funded Startup Budget:
 
 For **high-bandwidth** network solutions like 25G RoCE, RDMA becomes very
 practical (albeit latency goes from a few nanoseconds to maybe 10ms). If that's
@@ -387,7 +380,7 @@ NVIDIA/Mellanox Cards go up to. You can also use the persistent mode on
 NVMe/RDMA setups. This won't be as fast as "native", and can still get racey if
 latency is inconsistent.
 
-### Working With Self-Funding A College Research Project Budget:
+### If You're Working With A Small Budget:
 
 You have options! They just require a little more time on your part.
 
@@ -427,36 +420,8 @@ seconds with the included FFI bindings and TS class for Splinter.
 
 ### Next Version Major Feature Goals:
 
-- [ ] `splinter_poll_dispatch()` and supporting functions to watch multiple keys
-      simultaneously utilizing `epoll()` in the client to do the lifting. Splinter
-      keeps track of what's being watched, and manages removal / eviction orderly.
-      (not hard, moderately tedious)
-      
-- [ ] Allow 16 user atomic feature flags per store, along with 16 reserved
-      for bus status and management (converting auto_vacuum into a bitwise
-      field) (easy, modestly tedious)
-
-### Must-have Before 1.0.0 Feature Goals:
-
-- [ ] `splinterd` shard daemon to load and manage 'shards', which are loadable
-      modules linked with whatever libraries you want to do things on a schedule.
-      Included will be a shard to manage policy-driven TTL evictions, and maybe
-      one to pipe FS inotify events into splinter subscribable keys based on logic
-      that the loadable module does; this is useful for knowing when any file gets
-      updated or accessed in certain ways - helps orchestrate things. (not hard, but
-      somewhat tedious)
-
-### Long-term Feature Goals:
-
-- [ ] Better support for multiple open persistent stores along with a single in-memory
-      store simultaneously (requires API and core changes) (very tedious / very hard) 
-      
-- [ ] Ability to merge stores with user-defined conflict resolution callbacks
-      in case of duplicates, bounds violations, etc. (tedious and hard) (requires special
-      hardware to test)
-
-For developer docs, see `docs/` in the repo root, the CONTRIBUTING info and
-please give the code of conduct a read if you'd like to send patches.
+See the `CHANGELOG` file for plans for the next few versions, as well as changes already
+implemented (all managed in one place for convenience).
 
 [1]: https://github.com/HelenOS/helenos/tree/master/uspace/app/bdsh
 [2]: https://helenos.ogr
