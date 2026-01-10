@@ -151,10 +151,8 @@ choice:
 
 Splinter was written because nothing else was lean enough with the very specific
 set of desired features present and verifiable. The choice was to eviscerate and
-contort SQLite, or just write Splinter. The latter made so much more sense.
-
-Splinter is the only user-space C library that the author knows of that
-combines:
+contort SQLite, or just write Splinter. The latter made so much more sense. It's
+the only user-space C library that the author knows of that combines:
 
 - Lock-free reads (seqlock snapshots)
 - Easy TTL or LRU eviction for clients
@@ -330,6 +328,14 @@ This builds:
 - `libsplinter_p.a` : static version of the persistent bus
 
 ---
+
+## Tests
+
+Splinter is extensively tested with Valgrind, stress tests, unit tests and a fair
+amount of everyday use as gaffer's tape for DevOps in modern workflows.
+
+Run `make test` to see a selection (also look at `config.h` to enable tighter 
+Valgrind test integration). 
 
 ## Making Stores Persist (Persistence Mode) 
 
