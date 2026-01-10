@@ -32,8 +32,14 @@ void help_cmd_init(unsigned int level) {
 }
 
 int cmd_init(int argc, char *argv[]) {
-    char *buff = NULL;
+    char *buff = NULL, save[64] = { 0 };
     int rc = 0;
+    unsigned int prev_conn = 0;
+
+    if (thisuser.store_conn) {
+        strncpy(save, thisuser.store, 64);
+        prev_conn = 1;
+    }
 
     switch (argc) {
         case 1:
@@ -72,7 +78,26 @@ int cmd_init(int argc, char *argv[]) {
 
     if (rc < 0) {
         perror("splinter_create");
+        goto restore_conn;
     }
 
-    return 0;
+    splinter_close();
+    goto restore_conn;
+
+restore_conn:
+    if (prev_conn) {
+        rc = splinter_open(save);
+        if (rc != 0) {
+            perror("splinter_open");
+            fprintf(stderr, "warning: could not re-attach to %s, did something else remove it?",
+            save);
+            thisuser.store_conn = 0;
+            return rc;
+        } else {
+            strncpy(thisuser.store, save, 64);
+            thisuser.store_conn = 1;
+        }
+    }
+
+    return rc;
 }
