@@ -97,8 +97,9 @@ restore_conn:
         rc = splinter_open(save);
         if (rc != 0) {
             perror("splinter_open");
-            fprintf(stderr, "warning: could not re-attach to %s, did something else remove it?",
-            save);
+            fprintf(stderr, 
+                "warning: could not re-attach to %s, did something else remove it?",
+                save);
             thisuser.store_conn = 0;
             return rc;
         } else {
